@@ -1,0 +1,557 @@
+//#include <stdafx.h>
+#define WIN32_LEAN_AND_MEAN 
+
+#include <windows.h>
+#include <windowsx.h>
+#include <objidl.h>
+#include <shellapi.h>
+
+#include <gdiplus.h>
+using namespace Gdiplus;
+#pragma comment (lib,"Gdiplus.lib")
+
+
+#undef min // oiio got macro conflicts with gdi
+#undef max
+#include <OpenImageIO/imageio.h>
+#pragma comment (lib,"OpenImageIO.lib")
+#pragma comment (lib,"OpenImageIO_Util.lib")
+
+#include <chrono>
+
+#include "util.h"
+#include "playlist.h"
+#include "D4See.h"
+#include "ImageBuffer.h"
+#include "MemoryFrame.h"
+#include "WindowManager.h"
+
+
+WindowManager gWinMgr;
+
+MemoryFrame* frame = nullptr;
+MemoryFrame* frame2 = nullptr;
+
+Playlist* playlist;
+
+
+//void ClearWindow(HDC hdc) {
+//    HBRUSH newBrush = CreateSolidBrush(RGB(100, 100, 100));
+//    HGDIOBJ oldBrush = SelectObject(hdc, newBrush);
+//
+//    Rectangle(hdc, 0, 0, frame->image->xres, frame->image->yres);
+//
+//    SelectObject(hdc, oldBrush);
+//    DeleteObject(newBrush);
+//}
+
+void ClearWindowForFrame(HWND hWnd, MemoryFrame *f) {
+    HDC hdc = GetWindowDC(hWnd);
+    RECT rc;
+    //GetClientRect(hWnd, &rc);
+    rc.top = 0;
+    rc.left = 0;
+    rc.right = f->image->xres;
+    rc.bottom = f->image->yres;
+
+    //HBRUSH newBrush = CreateSolidBrush(RGB(80, 80, 80));
+    //FillRect(hdc, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
+    //FillRect(hdc, &rc, newBrush);
+    //DeleteObject(newBrush);
+    gWinMgr.ResizeForImage();
+
+
+    //GdiFlush();
+
+    // It's a bit better with ERASENOW, but it barely matters
+    //RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW|RDW_INVALIDATE);
+    RedrawWindow(hWnd, NULL, NULL, RDW_ERASE| RDW_INVALIDATE);
+    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+}
+
+VOID OnPaint(HDC hdc)
+{
+    using namespace std::chrono_literals;
+
+    //SetBkColor(hdc, RGB(0, 0, 0));
+    //SetBkMode(hdc, OPAQUE);
+
+    if (frame) {
+        //if (gWinMgr.newImagePending) {
+        //    gWinMgr.newImagePending = false;
+        //    if (frame->threadState == 0) {
+        //        std::cout << "Clearing before bitmap is ready" << std::endl;
+        //    }
+        //    ClearWindow(hdc);
+        //    gWinMgr.ResizeForImage(frame);
+        //}
+
+        if (frame->threadState > 0) {
+            
+            DIBImage* pImage = frame->GetActiveSubimage();
+
+            int width = pImage->width;
+            int height = pImage->height;
+
+            //HDC memDC = CreateCompatibleDC(hdc);
+
+            //frame->memDCmutex.lock();
+
+            
+            // TODO: Maybe should make the fast draw first even for images that are already decoded?
+            if (!gWinMgr.fastDrawDone || gWinMgr.isMovingOrSizing || !frame->image->IsSubimageLoaded(frame->curFrame)) {
+            //if (true) {
+                
+            
+                HGDIOBJ oldbmp = SelectObject(pImage->hdc, pImage->hBitmap);
+                //BitBlt(hdc, 0, 0, width, height, pImage->hdc, 0, 0, SRCCOPY);
+                SetStretchBltMode(hdc, COLORONCOLOR);
+                if (gWinMgr.isMaximized || gWinMgr.isFullscreen) {
+                    RECT rc;
+                    gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
+
+                    HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+                    SelectClipRgn(hdc, hRgn);
+
+                    StretchBlt(hdc, rc.left, rc.top, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, gWinMgr.x_poffset, gWinMgr.y_poffset, width, height, SRCCOPY);
+                } else {
+
+                    RECT rc;
+                    GetClientRect(gWinMgr.hWnd, &rc);
+
+                    HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+                    SelectClipRgn(hdc, hRgn);
+
+                    StretchBlt(hdc, 0, 0, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, gWinMgr.x_poffset, gWinMgr.y_poffset, width, height, SRCCOPY);
+                }
+                SelectObject(pImage->hdc, oldbmp);
+
+                std::cout << "REDRAW FAST " << gWinMgr.isMovingOrSizing  << " " << !frame->image->IsSubimageLoaded(frame->curFrame) <<std::endl;
+                gWinMgr.fastDrawDone = true;
+            } else {
+
+                /*HDC memDC = CreateCompatibleDC(hdc);
+
+                RECT rc;
+                GetClientRect(gWinMgr.hWnd, &rc);
+                HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+                SelectClipRgn(memDC, hRgn);
+
+                HBITMAP hbitmap = CreateCompatibleBitmap(hdc, width, height);
+                HGDIOBJ oldbmp = SelectObject(memDC, hbitmap);
+
+                Gdiplus::Graphics graphics(memDC);
+                // It's possible to draw directly into hdc at this point without using memDC and compatible bitmap.
+                // But using it helps with flickering and there's no noticable slowdown
+
+                //graphics.SetInterpolationMode(Gdiplus::InterpolationModeLowQuality); // Should use LQ while deconding and HQ when finished
+                graphics.SetInterpolationMode(Gdiplus::InterpolationModeBicubic);
+                Gdiplus::Bitmap* bitmap = Gdiplus::Bitmap::FromHBITMAP(pImage->hBitmap, NULL);
+                graphics.DrawImage(bitmap, 0, 0, gWinMgr.w_scaled, gWinMgr.h_scaled);
+
+                delete bitmap;
+
+                BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
+
+                std::cout << "REDRAW SMOOTH" << std::endl;
+
+                SelectObject(memDC, oldbmp);
+                DeleteObject(memDC);
+                */
+
+                //RECT rc;
+                //GetClientRect(gWinMgr.hWnd, &rc);
+                //HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+                //SelectClipRgn(hdc, hRgn);
+
+                Gdiplus::Graphics graphics(hdc);
+                Gdiplus::Bitmap* bitmap = Gdiplus::Bitmap::FromHBITMAP(pImage->hBitmap, NULL);
+                //graphics.SetInterpolationMode(Gdiplus::InterpolationModeLowQuality); // Should use LQ while deconding and HQ when finished
+                graphics.SetInterpolationMode(Gdiplus::InterpolationModeBicubic);
+
+                if (gWinMgr.isMaximized || gWinMgr.isFullscreen) {
+                    RECT rc;
+                    gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
+
+                    HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+                    SelectClipRgn(hdc, hRgn);
+
+                    graphics.DrawImage(bitmap, rc.left-gWinMgr.x_poffset, rc.top-gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled);
+                }
+                else {
+                    RECT rc;
+                    GetClientRect(gWinMgr.hWnd, &rc);
+
+                    HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+                    SelectClipRgn(hdc, hRgn);
+                    
+                    graphics.DrawImage(bitmap, -gWinMgr.x_poffset, -gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled);
+                }
+
+                delete bitmap;
+
+                std::cout << "REDRAW SMOOTH" << std::endl;
+            }
+
+            
+            //frame->memDCmutex.unlock();
+
+            
+
+            //SelectObject(memDC, oldbmp);
+            //DeleteObject(hbitmap);
+            //DeleteObject(memDC);
+        }
+    }
+}
+
+
+LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+
+INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdShow)
+{
+    HWND                hWnd;
+    MSG                 msg;
+    WNDCLASS            wndClass;
+    GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR           gdiplusToken;
+
+    //PWCHAR cmdLine = GetCommandLineW();
+    //int argc = 0;
+    //WCHAR** argv = CommandLineToArgvW(cmdLine, &argc);
+    //if (argc > 1) {
+    //    playlist = new Playlist(argv[1]);
+    //}
+    //else
+    //    return 0;
+
+    playlist = new Playlist(L"C:\\Users\\d87\\Desktop\\sdfsc_013.jpg");
+
+    
+    // Initialize GDI+.
+    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
+
+    wndClass.style = CS_HREDRAW | CS_VREDRAW;
+    wndClass.lpfnWndProc = WndProc;
+    wndClass.cbClsExtra = 0;
+    wndClass.cbWndExtra = 0;
+    wndClass.hInstance = hInstance;
+    wndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+    wndClass.lpszMenuName = NULL;
+    wndClass.lpszClassName = TEXT("D4See5000");
+
+    RegisterClass(&wndClass);
+
+    hWnd = CreateWindow(
+        TEXT("D4See5000"),       // window class name
+        TEXT("D4See5000"),       // window caption
+        WS_OVERLAPPEDWINDOW,      // window style
+        CW_USEDEFAULT,            // initial x position
+        CW_USEDEFAULT,            // initial y position
+        CW_USEDEFAULT,            // initial x size
+        CW_USEDEFAULT,            // initial y size
+        NULL,                     // parent window handle
+        NULL,                     // window menu handle
+        hInstance,                // program instance handle
+        NULL);                    // creation parameters
+
+    ShowWindow(hWnd, iCmdShow);
+    UpdateWindow(hWnd);
+    DragAcceptFiles(hWnd, true);
+
+    gWinMgr.hWnd = hWnd;
+    gWinMgr.GetWindowSize();
+
+    //HDC hdc = GetWindowDC(hWnd);
+    
+
+    frame = new MemoryFrame(hWnd, playlist->Current()->filename, playlist->Current()->format);
+    gWinMgr.SelectFrame(frame);
+
+    auto prevTime(std::chrono::steady_clock::now());
+
+    bool shouldShutdown = false;
+    while (!shouldShutdown) {
+
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            switch (msg.message) {
+                case WM_SIZING: {
+                    std::cout << "SIZING" << std::endl;
+                    continue;
+                }
+                case WM_SIZE: {
+
+                    continue;
+                }
+                case WM_FRAMEREADY: {
+                    MemoryFrame* f = (MemoryFrame*)msg.wParam;
+                    if (f == frame) {
+                        //gWinMgr.newImagePending = true;
+                        //RedrawWindow(hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
+                        
+                        ClearWindowForFrame(hWnd, frame);
+                    }
+                    break;
+                }
+                case WM_DROPFILES: {
+                    HDROP hDrop = (HDROP)msg.wParam;
+                    int fnSize = DragQueryFileW(hDrop, 0, NULL, 0);//Get Buffer Size
+
+                    std::wstring filename;
+                    filename.resize(fnSize);
+
+                    DragQueryFileW(hDrop, 0, &filename[0], fnSize+1);
+
+                    DragFinish(hDrop);
+
+
+                    delete playlist;
+                    playlist = new Playlist(filename);
+
+                    delete frame;
+                    auto cur = playlist->Current();
+                    frame = new MemoryFrame(hWnd, cur->filename, cur->format);
+                    gWinMgr.SelectFrame(frame);
+                    break;
+                }
+                case WM_KEYDOWN: {
+                    TranslateMessage(&msg);
+                    switch (msg.wParam) {
+                        case VK_ESCAPE: {
+                            PostQuitMessage(0);
+                            break;
+                        }
+                        case VK_RETURN: {
+                            gWinMgr.ToggleFullscreen();
+                            break;
+                        }
+                        case VK_LEFT: {
+                            gWinMgr.Pan(-60, 0);
+                            break;
+                        }
+                        case VK_RIGHT: {
+                            gWinMgr.Pan(60, 0);
+                            break;
+                        }
+                        case VK_UP: {
+                            gWinMgr.Pan(0, -60);
+                            break;
+                        }
+                        case VK_DOWN: {
+                            gWinMgr.Pan(0, 60);
+                            break;
+                        }
+                        
+                        case VK_PRIOR: {
+                            if (playlist->Move(-1)) {
+                                PlaylistEntry* cur = playlist->Current();
+                                PlaylistEntry* following = playlist->Prev();
+                                if (cur) {
+                                    delete frame;
+                                    bool prefetchHit = false;
+                                    if (frame2)
+                                        if (frame2->filename == wide_to_utf8(cur->filename))
+                                            prefetchHit = true;
+                                    if (prefetchHit) {
+                                        frame = frame2;
+                                        gWinMgr.SelectFrame(frame);
+                                        //frame->drawId = frame->decoderBatchId;
+                                        //gWinMgr.newImagePending = true;
+
+                                        //ClearWindowForFrame(hWnd, frame);
+                                        using namespace std::chrono_literals;
+                                        auto status = frame->threadInitFinished.wait_for(2ms);
+                                        if (status == std::future_status::ready){
+                                            ClearWindowForFrame(hWnd, frame);
+                                        }
+                                    } else { // Changed direction or jumped more than 1
+                                        frame = new MemoryFrame(hWnd, cur->filename, cur->format);
+                                        gWinMgr.SelectFrame(frame);
+                                        delete frame2;
+                                    }
+                                    frame2 = nullptr;
+                                }
+                                if (following) {
+                                    frame2 = new MemoryFrame(hWnd, following->filename, following->format);
+                                }
+                                else {
+                                    frame2 = nullptr;
+                                }
+                            }
+                            break;
+                        }
+                        case VK_NEXT: {
+                            if (playlist->Move(1)) {
+                                PlaylistEntry* cur = playlist->Current();
+                                PlaylistEntry* following = playlist->Next();
+                                if (cur) {
+                                    delete frame;
+                                    bool prefetchHit = false;
+                                    if (frame2)
+                                        if (frame2->filename == wide_to_utf8(cur->filename))
+                                            prefetchHit = true;
+                                    if (prefetchHit) {
+                                        frame = frame2;
+                                        gWinMgr.SelectFrame(frame);
+                                        //frame->drawId = frame->decoderBatchId;
+                                        //gWinMgr.newImagePending = true;
+
+                                        //ClearWindowForFrame(hWnd, frame);
+                                        using namespace std::chrono_literals;
+                                        auto status = frame->threadInitFinished.wait_for(2ms);
+                                        if (status == std::future_status::ready) {
+                                            ClearWindowForFrame(hWnd, frame);
+                                        }
+                                    }
+                                    else { // Changed direction or jumped more than 1
+                                        frame = new MemoryFrame(hWnd, cur->filename, cur->format);
+                                        gWinMgr.SelectFrame(frame);
+                                        delete frame2;
+                                    }
+                                    frame2 = nullptr;
+                                }
+                                if (following) {
+                                    frame2 = new MemoryFrame(hWnd, following->filename, following->format);
+                                }
+                                else {
+                                    frame2 = nullptr;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+
+                case WM_QUIT:
+                    shouldShutdown = true;
+            }
+
+            DispatchMessage(&msg);
+        }
+        using namespace std::literals;
+        auto now(std::chrono::steady_clock::now());
+        if (frame) {
+            if (!frame->isAnimated) {
+                if (frame->decoderBatchId != frame->drawId) {
+                    RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+                    frame->drawId = frame->decoderBatchId;
+                }
+            } else {
+
+                
+                auto delta = now - prevTime;
+                
+
+                if (frame->AdvanceAnimation(delta)) {
+                    //std::cout << "Redrawing" << std::endl;
+                    RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+                }
+            }
+        }
+        prevTime = now;
+
+        std::this_thread::sleep_for(1ms);
+    }
+
+    delete playlist;
+    GdiplusShutdown(gdiplusToken);
+    return msg.wParam;
+}  // WinMain
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
+    WPARAM wParam, LPARAM lParam)
+{
+    HDC          hdc;
+    PAINTSTRUCT  ps;
+
+    switch (message)
+    {
+    case WM_LBUTTONDOWN: {
+        int& sxPos = gWinMgr.mouseX;
+        int& syPos = gWinMgr.mouseY;
+        sxPos = GET_X_LPARAM(lParam);
+        syPos = GET_Y_LPARAM(lParam);
+        return 0;
+    }
+    case WM_MOUSEMOVE: {
+        int LMBDown = (wParam) & MK_LBUTTON;
+        if (LMBDown) {
+            int& sxPos = gWinMgr.mouseX;
+            int& syPos = gWinMgr.mouseY;
+
+            int xPos = GET_X_LPARAM(lParam);
+            int yPos = GET_Y_LPARAM(lParam);
+
+            if (sxPos != -1) {
+                int dx = xPos - sxPos;
+                int dy = yPos - syPos;
+
+                gWinMgr.Pan(-dx, -dy);
+            }
+
+            sxPos = xPos;
+            syPos = yPos;   
+        }
+        return 0;
+    }
+    case WM_SIZE: {
+        int eventType = (int)wParam;
+        if (eventType == SIZE_MAXIMIZED) {
+            gWinMgr.isMaximized = true;
+        }
+        else if (eventType == SIZE_RESTORED) {
+            gWinMgr.isMaximized = false;
+        }
+        gWinMgr.isMovingOrSizing = false;
+        return 0;
+    }
+    //case WM_MOVING:
+    //case WM_SIZING: {
+    //    gWinMgr.isMovingOrSizing = true;
+    //    return 0;
+    //}
+    case WM_ENTERSIZEMOVE: {
+        gWinMgr.isMovingOrSizing = true;
+        return 0;
+    }
+    case WM_EXITSIZEMOVE: {
+        gWinMgr.isMovingOrSizing = false;
+        RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+        return 0;
+    }
+    case WM_PAINT: {
+        std::cout << "WM_PAINT" << std::endl;
+        hdc = BeginPaint(hWnd, &ps);
+        OnPaint(hdc);
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+} // WndProc
+
+#ifdef _DEBUG
+int wmain(int argc, WCHAR* argv[], WCHAR* envp[]) {
+    // Set Properties -> Linker -> System -> SubSystem to Console
+
+    // Calling the wWinMain function to start the GUI program
+    // Parameters:
+    // GetModuleHandle(NULL) - To get a handle to the current instance
+    // NULL - Previous instance is not needed
+    // NULL - Command line parameters are not needed
+    // 1 - To show the window normally
+    wWinMain(GetModuleHandle(NULL), NULL, NULL, 1);
+
+    //system("pause");
+    return 0;
+}
+#endif
