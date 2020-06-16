@@ -92,8 +92,8 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 
 	basepath = initialFileDir;
 
-	TCHAR oldWD[1000];
-	GetCurrentDirectory(1000, oldWD);
+	WCHAR oldWD[1000];
+	GetCurrentDirectoryW(1000, oldWD);
 
 	SetCurrentDirectoryW(initialFileDir.c_str());
 
@@ -144,7 +144,7 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 		}
 	}
 
-	SetCurrentDirectory(oldWD);
+	SetCurrentDirectoryW(oldWD);
 
 	MoveCursor(initialFile);
 

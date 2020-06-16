@@ -227,6 +227,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     playlist = new Playlist(L"C:\\Users\\d87\\Desktop\\sdfsc_013.jpg");
 
+    gWinMgr.ReadOrigin();
     
     // Initialize GDI+.
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
@@ -258,11 +259,14 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         hInstance,                // program instance handle
         NULL);                    // creation parameters
 
+    gWinMgr.hWnd = hWnd;
+    gWinMgr._TouchSizeEventTimestamp();
+
     ShowWindow(hWnd, iCmdShow);
     UpdateWindow(hWnd);
     DragAcceptFiles(hWnd, true);
 
-    gWinMgr.hWnd = hWnd;
+    
     gWinMgr.GetWindowSize();
 
     //HDC hdc = GetWindowDC(hWnd);
@@ -522,6 +526,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     case WM_EXITSIZEMOVE: {
         gWinMgr.isMovingOrSizing = false;
         RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+        if (!gWinMgr.WasGeneratingEvents()) {
+            gWinMgr.UpdateOrigin();
+            gWinMgr.WriteOrigin();
+        }
         return 0;
     }
     case WM_PAINT: {

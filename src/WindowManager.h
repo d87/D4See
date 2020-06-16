@@ -1,6 +1,10 @@
 #pragma once
 
 #include <Windows.h>
+#include <shlobj.h>
+#include <iostream>
+#include <filesystem>
+#include <chrono>
 #include "MemoryFrame.h"
 
 struct WINDOW_SAVED_DATA {
@@ -26,6 +30,9 @@ public:
     int w_client;
     int h_client;
 
+    int x_origin;
+    int y_origin;
+
     int w_border;
     int h_border;
     int h_caption;
@@ -40,15 +47,23 @@ public:
     int mouseX = 0;
     int mouseY = 0;
 
+private:
+    std::chrono::system_clock::time_point lastGeneratedSizingEvent;
     WINDOW_SAVED_DATA stash;
 
-
+public:
     void SelectFrame(MemoryFrame* f);
     void ResizeForImage();
     void ToggleFullscreen();
+    void WriteOrigin();
+    void ReadOrigin();
+    void UpdateOrigin();
+    bool WasGeneratingEvents();
     void Pan(int x, int y);
     bool SaveWindowParams();
     void GetCenteredImageRect(RECT* rc);
     void GetWindowSize();
+    void _TouchSizeEventTimestamp();
 
+    
 };
