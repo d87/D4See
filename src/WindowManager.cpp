@@ -134,6 +134,9 @@ void WindowManager::SelectFrame(MemoryFrame* f) {
     StopTimer();
     x_poffset = 0;
     y_poffset = 0;
+    if (!zoomLock) {
+        scale_manual = 1.0f;
+    }
 }
 
 std::filesystem::path GetExecutableDir() {
