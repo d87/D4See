@@ -113,7 +113,7 @@ VOID OnPaint(HDC hdc)
                     HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
                     SelectClipRgn(hdc, hRgn);
 
-                    StretchBlt(hdc, rc.left, rc.top, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, gWinMgr.x_poffset, gWinMgr.y_poffset, width, height, SRCCOPY);
+                    StretchBlt(hdc, rc.left - gWinMgr.x_poffset, rc.top - gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, 0, 0, width, height, SRCCOPY);
                 } else {
 
                     RECT rc;
@@ -122,7 +122,8 @@ VOID OnPaint(HDC hdc)
                     HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
                     SelectClipRgn(hdc, hRgn);
 
-                    StretchBlt(hdc, 0, 0, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, gWinMgr.x_poffset, gWinMgr.y_poffset, width, height, SRCCOPY);
+                    //StretchBlt(hdc, 0, 0, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, gWinMgr.x_poffset, gWinMgr.y_poffset, width, height, SRCCOPY);
+                    StretchBlt(hdc, -gWinMgr.x_poffset, -gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, 0, 0, width, height, SRCCOPY);
                 }
                 SelectObject(pImage->hdc, oldbmp);
 
@@ -216,16 +217,14 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR           gdiplusToken;
 
-    //PWCHAR cmdLine = GetCommandLineW();
-    //int argc = 0;
-    //WCHAR** argv = CommandLineToArgvW(cmdLine, &argc);
-    //if (argc > 1) {
-    //    playlist = new Playlist(argv[1]);
-    //}
-    //else
-    //    return 0;
-
-    playlist = new Playlist(L"C:\\Users\\d87\\Desktop\\sdfsc_013.jpg");
+    PWCHAR cmdLine = GetCommandLineW();
+    int argc = 0;
+    WCHAR** argv = CommandLineToArgvW(cmdLine, &argc);
+    if (argc > 1) {
+        playlist = new Playlist(argv[1]);
+    }
+    else
+        return 0;
 
     gWinMgr.ReadOrigin();
     
@@ -242,13 +241,13 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wndClass.lpszMenuName = NULL;
-    wndClass.lpszClassName = TEXT("D4See5000");
+    wndClass.lpszClassName = TEXT("D4See");
 
     RegisterClass(&wndClass);
 
     hWnd = CreateWindow(
-        TEXT("D4See5000"),       // window class name
-        TEXT("D4See5000"),       // window caption
+        TEXT("D4See"),            // window class name
+        TEXT("D4See"),            // window caption
         WS_OVERLAPPEDWINDOW,      // window style
         CW_USEDEFAULT,            // initial x position
         CW_USEDEFAULT,            // initial y position
@@ -267,7 +266,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     DragAcceptFiles(hWnd, true);
 
     
-    gWinMgr.GetWindowSize();
+    //gWinMgr.GetWindowSize();
 
     //HDC hdc = GetWindowDC(hWnd);
     
@@ -512,13 +511,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             gWinMgr.isMaximized = false;
         }
         gWinMgr.isMovingOrSizing = false;
+        gWinMgr.UpdateWindowSizeInfo();
         return 0;
     }
-    //case WM_MOVING:
-    //case WM_SIZING: {
-    //    gWinMgr.isMovingOrSizing = true;
-    //    return 0;
-    //}
     case WM_ENTERSIZEMOVE: {
         gWinMgr.isMovingOrSizing = true;
         return 0;
@@ -533,7 +528,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         return 0;
     }
     case WM_PAINT: {
-        std::cout << "WM_PAINT" << std::endl;
         hdc = BeginPaint(hWnd, &ps);
         OnPaint(hdc);
         EndPaint(hWnd, &ps);

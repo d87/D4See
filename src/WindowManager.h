@@ -23,8 +23,8 @@ public:
     bool isMovingOrSizing = false;
     bool isMaximized = false;
     bool isFullscreen = false;
-    int w_working_area; //screen size excluding taskbar
-    int h_working_area;
+    //int w_working_area; //screen size excluding taskbar
+    //int h_working_area;
     int w_window;
     int h_window; // including borders and caption
     int w_client;
@@ -37,7 +37,7 @@ public:
     int h_border;
     int h_caption;
 
-    float scale = 1.0f;
+    float scale = 1.3f;
     
     int x_poffset = 0;
     int y_poffset = 0;
@@ -62,7 +62,7 @@ public:
     void Pan(int x, int y);
     bool SaveWindowParams();
     void GetCenteredImageRect(RECT* rc);
-    void GetWindowSize();
+    void UpdateWindowSizeInfo();
     void _TouchSizeEventTimestamp();
 
     

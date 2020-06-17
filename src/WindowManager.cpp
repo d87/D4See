@@ -18,11 +18,7 @@ void WindowManager::Pan(int x, int y) {
     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
 }
 
-void WindowManager::GetWindowSize() {
-    RECT warc;
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &warc, 0);
-    h_working_area = warc.bottom - warc.top;
-    w_working_area = warc.right - warc.left;
+void WindowManager::UpdateWindowSizeInfo() {
 
     RECT crc;
     GetClientRect(hWnd, &crc);
@@ -30,27 +26,10 @@ void WindowManager::GetWindowSize() {
     w_client = crc.right - crc.left;
     // Used for panning
 
-    RECT wrc;
-    GetWindowRect(hWnd, &wrc);
-    h_window = wrc.bottom - wrc.top;
-    w_window = wrc.right - wrc.left;
-
-    w_border = GetSystemMetrics(SM_CXBORDER);
-    h_border = GetSystemMetrics(SM_CYBORDER);
-    h_caption = GetSystemMetrics(SM_CYCAPTION);
-
-    //x_origin = crc.left + w_client / 2;
-    //y_origin = crc.top + h_client / 2;
-
-    MONITORINFO monitor_info;
-    monitor_info.cbSize = sizeof(monitor_info);
-    GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST), &monitor_info);
-    RECT& mrc = monitor_info.rcMonitor;
-
-
-
-    //w_border = GetSystemMetrics(SM_CXSIZEFRAME);;
-    //h_border = GetSystemMetrics(SM_CYSIZEFRAME);;
+    //RECT wrc;
+    //GetWindowRect(hWnd, &wrc);
+    //h_window = wrc.bottom - wrc.top;
+    //w_window = wrc.right - wrc.left;
 }
 
 void WindowManager::GetCenteredImageRect(RECT* rc) {
@@ -288,6 +267,10 @@ void WindowManager::ResizeForImage() {
 
     long style = GetWindowLong(hWnd, GWL_STYLE);
 
+    int w_border = GetSystemMetrics(SM_CXBORDER);
+    int h_border = GetSystemMetrics(SM_CYBORDER);
+    int h_caption = GetSystemMetrics(SM_CYCAPTION);
+
     int monitor_wawidth = mwrc.right - mwrc.left;
     int monitor_waheight = mwrc.bottom - mwrc.top;
 
@@ -393,5 +376,5 @@ void WindowManager::ResizeForImage() {
     //AdjustWindowRect(&rc, WS_CAPTION, false);
     //MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, false);
 
-    GetWindowSize();
+    UpdateWindowSizeInfo();
 }
