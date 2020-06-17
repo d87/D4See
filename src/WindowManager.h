@@ -6,6 +6,9 @@
 #include <filesystem>
 #include <chrono>
 #include "MemoryFrame.h"
+#include "resource.h"
+
+#define BOOLCOMMANDCHECK(x) ( (x) ? MF_CHECKED : MF_UNCHECKED )
 
 struct WINDOW_SAVED_DATA {
 	bool isMaximized;
@@ -24,6 +27,7 @@ public:
     bool isMovingOrSizing = false;
     bool isMaximized = false;
     bool isFullscreen = false;
+    bool alwaysOnTop = false;
 
     int w_client;
     int h_client;
@@ -71,6 +75,8 @@ public:
     void Pan(int x, int y);
     bool SaveWindowParams();
     void GetCenteredImageRect(RECT* rc);
+    void ShowPopupMenu(POINT &p);
+    void HandleMenuCommand(unsigned int uIDItem);
     void UpdateWindowSizeInfo();
     void _TouchSizeEventTimestamp();
 

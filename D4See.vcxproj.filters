@@ -15,15 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\playlist.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -44,6 +35,15 @@
     </ClInclude>
     <ClInclude Include="src\D4See.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\resource.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -67,15 +67,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="D4See.rc">
+    <ResourceCompile Include="src\D4See.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico">
+    <Image Include="src\D4See.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="D4See.ico">
+    <Image Include="src\small.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

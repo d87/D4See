@@ -218,6 +218,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wndClass.lpszMenuName = NULL;
+    //wndClass.lpszMenuName = MAKEINTRESOURCE(IDC_D4SEE);;
     wndClass.lpszClassName = TEXT("D4See");
 
     RegisterClass(&wndClass);
@@ -243,6 +244,18 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     DragAcceptFiles(hWnd, true);
 
     
+    
+    
+    //HMENU submenu = CreatePopupMenu();
+    //AppendMenuW(submenu, MF_STRING, 1001, L"submenu 1001");
+
+    //HMENU mainmenu = CreatePopupMenu();
+    //AppendMenuW(mainmenu, MF_STRING, 100, L"main 100");
+    //AppendMenuW(mainmenu, MF_SEPARATOR, 0, NULL);
+    //AppendMenuW(mainmenu, MF_STRING, 101, L"main 101");
+
+    //AppendMenuW(mainmenu, MF_POPUP, (UINT)submenu, L"&submenu");
+
     //gWinMgr.GetWindowSize();
 
     //HDC hdc = GetWindowDC(hWnd);
@@ -258,6 +271,11 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             switch (msg.message) {
+                case WM_COMMAND: {
+                    unsigned int wmId = LOWORD(msg.wParam);
+                    gWinMgr.HandleMenuCommand(wmId);
+                    break;
+                }
                 case WM_TIMER: {
                     gWinMgr.Redraw();
                     gWinMgr.StopTimer();
@@ -321,6 +339,13 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                             gWinMgr.Pan(0, 60);
                             break;
                         }
+                        case VK_TAB: {
+                            POINT p;
+                            GetCursorPos(&p);
+                            gWinMgr.ShowPopupMenu(p);
+                            break;
+                        }
+                                    
                         
                         case VK_PRIOR: {
                             if (playlist->Move(-1)) {
@@ -535,3 +560,23 @@ int wmain(int argc, WCHAR* argv[], WCHAR* envp[]) {
     return 0;
 }
 #endif
+
+// Message handler for about box.
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        return (INT_PTR)TRUE;
+
+    case WM_COMMAND:
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hDlg, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+        }
+        break;
+    }
+    return (INT_PTR)FALSE;
+}

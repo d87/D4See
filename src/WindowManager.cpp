@@ -283,9 +283,6 @@ void WindowManager::ResizeForImage() {
     RECT& mrc = monitor_info.rcMonitor;
     RECT& mwrc = monitor_info.rcWork;
 
-
-
-
     //-----------
     // Getting monitor and window sizes
 
@@ -296,6 +293,10 @@ void WindowManager::ResizeForImage() {
     int w_border = GetSystemMetrics(SM_CXBORDER);
     int h_border = GetSystemMetrics(SM_CYBORDER);
     int h_caption = GetSystemMetrics(SM_CYCAPTION);
+    int h_menu = 0;
+    if (GetMenu(hWnd)) {
+        h_menu = GetSystemMetrics(SM_CYMENU);
+    }
 
     int w_screenwa = screenrc.right - screenrc.left;
     int h_screenwa = screenrc.bottom - screenrc.top;
@@ -303,7 +304,7 @@ void WindowManager::ResizeForImage() {
     int hasBorder = style & WS_OVERLAPPEDWINDOW;
     if (hasBorder && !isFullscreen) {
         w_screenwa -= w_border * 2;
-        h_screenwa -= (h_border * 2 + h_caption);
+        h_screenwa -= (h_border * 2 + h_caption + h_menu);
     }
 
     //-----------
@@ -377,7 +378,7 @@ void WindowManager::ResizeForImage() {
         // Doing AdjustWindowRect manually, because it wasn't working out for some reason
         new_client_area.left -= w_border;
         new_client_area.right += w_border;
-        new_client_area.top -= h_border + h_caption;
+        new_client_area.top -= h_border + h_caption + h_menu;
         new_client_area.bottom += h_border;
     }
 
@@ -459,4 +460,55 @@ void WindowManager::ResizeForImage() {
     //MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, false);
 
     UpdateWindowSizeInfo();
+}
+
+void WindowManager::ShowPopupMenu(POINT& p) {
+    HMENU popupRootMenu = LoadMenu(NULL, MAKEINTRESOURCE(IDC_D4SEE_POPUP));
+    HMENU popupMenu = GetSubMenu(popupRootMenu, 0);
+    RemoveMenu(popupRootMenu, 0, MF_BYPOSITION);
+    DestroyMenu(popupRootMenu);
+
+
+    CheckMenuItem(popupMenu, ID_ALWAYSONTOP, MF_BYCOMMAND | BOOLCOMMANDCHECK(alwaysOnTop));
+    CheckMenuItem(popupMenu, ID_ZOOMLOCK, MF_BYCOMMAND | BOOLCOMMANDCHECK(zoomLock));
+    CheckMenuItem(popupMenu, ID_SHRINKTOWIDTH, MF_BYCOMMAND | BOOLCOMMANDCHECK(shrinkToScreenWidth));
+    CheckMenuItem(popupMenu, ID_SHRINKTOHEIGHT, MF_BYCOMMAND | BOOLCOMMANDCHECK(shrinkToScreenHeight));
+    CheckMenuItem(popupMenu, ID_STRETCHTOWIDTH, MF_BYCOMMAND | BOOLCOMMANDCHECK(stretchToScreenWidth));
+    CheckMenuItem(popupMenu, ID_STRETCHTOHEIGHT, MF_BYCOMMAND | BOOLCOMMANDCHECK(stretchToScreenHeight));
+
+
+    TrackPopupMenu(popupMenu, TPM_LEFTBUTTON, p.x, p.y, 0, hWnd, 0);
+    DestroyMenu(popupMenu);
+}
+
+void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
+    switch (uIDItem) {
+        case ID_ZOOMLOCK: {
+            zoomLock = !zoomLock;
+            break;
+        }
+        case ID_SHRINKTOWIDTH: {
+            shrinkToScreenWidth = !shrinkToScreenWidth;
+            break;
+        }
+        case ID_SHRINKTOHEIGHT: {
+            shrinkToScreenHeight = !shrinkToScreenHeight;
+            break;
+        }
+        case ID_STRETCHTOWIDTH: {
+            stretchToScreenWidth = !stretchToScreenWidth;
+            break;
+        }
+        case ID_STRETCHTOHEIGHT: {
+            stretchToScreenHeight = !stretchToScreenHeight;
+            break;
+        }
+        //case IDM_ABOUT:
+        //    DialogBox(hInstance, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+        //    break;
+        case IDM_EXIT: {
+            DestroyWindow(hWnd);
+            break;
+        }
+    }
 }
