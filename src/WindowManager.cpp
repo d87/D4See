@@ -266,13 +266,6 @@ void WindowManager::UpdateOrigin() {
 
 void WindowManager::ResizeForImage() {
 
-    w_scaled = frame->image->xres * scale;
-    h_scaled = frame->image->yres * scale;
-
-    int scw = frame->image->xres;
-    int sch = frame->image->yres;
-
-
     //----------
     // 1) Find appropriate monitor for origin point
     // 1a) Don't change origin unless window was manually moved
@@ -287,8 +280,13 @@ void WindowManager::ResizeForImage() {
     RECT& mrc = monitor_info.rcMonitor;
     RECT& mwrc = monitor_info.rcWork;
 
+
+
+
     //-----------
-    // 2) Calculate new window coords around that origin
+    // Getting monitor and window sizes
+
+    RECT& screenrc = (isFullscreen) ? monitor_info.rcMonitor : monitor_info.rcWork;
 
     long style = GetWindowLong(hWnd, GWL_STYLE);
 
@@ -296,17 +294,73 @@ void WindowManager::ResizeForImage() {
     int h_border = GetSystemMetrics(SM_CYBORDER);
     int h_caption = GetSystemMetrics(SM_CYCAPTION);
 
-    int monitor_wawidth = mwrc.right - mwrc.left;
-    int monitor_waheight = mwrc.bottom - mwrc.top;
+    int w_screenwa = screenrc.right - screenrc.left;
+    int h_screenwa = screenrc.bottom - screenrc.top;
 
     int hasBorder = style & WS_OVERLAPPEDWINDOW;
-    if (hasBorder) {
-        monitor_wawidth -= w_border * 2;
-        monitor_waheight -= (h_border * 2 + h_caption);
+    if (hasBorder && !isFullscreen) {
+        w_screenwa -= w_border * 2;
+        h_screenwa -= (h_border * 2 + h_caption);
     }
 
-    int cut_width = std::min(w_scaled, monitor_wawidth);
-    int cut_height = std::min(h_scaled, monitor_waheight);
+    //-----------
+    // 2a) Stretching, shrinking and scaling
+
+    int w_native = frame->image->xres;
+    int h_native = frame->image->yres;
+
+    float w_scale_candidate = 0.0;
+    if (w_native < w_screenwa && stretchToScreenWidth) {
+        w_scale_candidate = float(w_screenwa) / w_native;
+        std::cout << "Upscale horizonal candidate " << w_scale_candidate << std::endl;
+    }
+
+    if (w_native >= w_screenwa && shrinkToScreenWidth) {
+        w_scale_candidate = float(w_screenwa) / w_native;
+        std::cout << "Downscale horizonal candidate " << w_scale_candidate << std::endl;
+    }
+
+    float h_scale_candidate = 0.0;
+    if (h_native < h_screenwa && stretchToScreenHeight) {
+        h_scale_candidate = float(h_screenwa) / h_native;
+        std::cout << "Upscale horizonal candidate " << h_scale_candidate << std::endl;
+    }
+
+    if (h_native >= h_screenwa && shrinkToScreenHeight) {
+        h_scale_candidate = float(h_screenwa) / h_native;
+        std::cout << "Downscale horizonal candidate " << h_scale_candidate << std::endl;
+    }
+
+    float scale_candidate2;
+    if (w_scale_candidate > 0.0 && h_scale_candidate > 0.0) {
+        scale_candidate2 = std::min(w_scale_candidate, h_scale_candidate);
+    }
+    else {
+        scale_candidate2 = std::max(w_scale_candidate, h_scale_candidate);
+    }
+    std::cout << "Comparing candidates " << w_scale_candidate << " " << h_scale_candidate << "=" << scale_candidate2 << std::endl;
+
+    float endscale;
+    if (scale_manual == 1.0 && scale_candidate2 != 0.0) {
+        endscale = scale_candidate2;
+    }
+    else {
+        endscale = scale_manual;
+    }
+
+    w_scaled = w_native * endscale;
+    h_scaled = h_native * endscale;
+
+    scale_effective = endscale;
+
+    // if zoom lock is on it should override all autoscaling
+    // manual scaling should start from current effective scale
+    
+    // ---------
+    // 2b) Calculate new window coords around that origin
+
+    int cut_width = std::min(w_scaled, w_screenwa);
+    int cut_height = std::min(h_scaled, h_screenwa);
 
     RECT new_client_area;
     
@@ -328,26 +382,26 @@ void WindowManager::ResizeForImage() {
     // 3) Clamp new rect to that monitor rect
 
     RECT& new_window_area = new_client_area;
-    if (new_window_area.right > mwrc.right) {
-        int diff = new_window_area.right - mwrc.right;
+    if (new_window_area.right > screenrc.right) {
+        int diff = new_window_area.right - screenrc.right;
         new_window_area.right -= diff;
         new_window_area.left-= diff;
     }    
 
-    if (new_window_area.left < mwrc.left) {
-        int diff = new_window_area.left - mwrc.left;
+    if (new_window_area.left < screenrc.left) {
+        int diff = new_window_area.left - screenrc.left;
         new_window_area.right -= diff;
         new_window_area.left -= diff;
     }
 
-    if (new_window_area.bottom > mwrc.bottom) {
-        int diff = new_window_area.bottom - mwrc.bottom;
+    if (new_window_area.bottom > screenrc.bottom) {
+        int diff = new_window_area.bottom - screenrc.bottom;
         new_window_area.bottom -= diff;
         new_window_area.top -= diff;
     }
 
-    if (new_window_area.top < mwrc.top) {
-        int diff = new_window_area.top - mwrc.top;
+    if (new_window_area.top < screenrc.top) {
+        int diff = new_window_area.top - screenrc.top;
         new_window_area.bottom -= diff;
         new_window_area.top -= diff;
     }

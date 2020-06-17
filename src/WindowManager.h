@@ -18,7 +18,8 @@ class WindowManager {
 public:
     HWND hWnd;
     MemoryFrame * frame;
-    bool newImagePending = false;
+    //bool newImagePending = false;
+
     bool fastDrawDone = false;
     bool isMovingOrSizing = false;
     bool isMaximized = false;
@@ -34,7 +35,14 @@ public:
     int h_border;
     int h_caption;
 
-    float scale = 1.0f;
+    bool stretchToScreenWidth = true;
+    bool stretchToScreenHeight = false;
+    bool shrinkToScreenWidth = false;
+    bool shrinkToScreenHeight = false;
+
+
+    float scale_manual = 1.0f;
+    float scale_effective = 1.0f;
     
     int x_poffset = 0;
     int y_poffset = 0;
