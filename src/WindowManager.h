@@ -66,7 +66,7 @@ public:
     void ScheduleRedraw(unsigned int ms);
     void StopTimer();
     void SelectFrame(MemoryFrame* f);
-    void ResizeForImage();
+    void ResizeForImage(bool HQRedraw = false);
     void ToggleFullscreen();
     void WriteOrigin();
     void ReadOrigin();

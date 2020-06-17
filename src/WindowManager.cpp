@@ -267,7 +267,7 @@ void WindowManager::UpdateOrigin() {
     y_origin = wrc.top + h / 2;
 }
 
-void WindowManager::ResizeForImage() {
+void WindowManager::ResizeForImage( bool HQRedraw) {
 
     //----------
     // 1) Find appropriate monitor for origin point
@@ -449,7 +449,7 @@ void WindowManager::ResizeForImage() {
         stash.rc.bottom = y + h;
     }
 
-    fastDrawDone = false; // Fill paint LQ version fast on the next redraw
+    fastDrawDone = HQRedraw; // Normally false, Fill paint LQ version fast on the next redraw
     //frame->drawId--; // Will cause the redraw again after the first, and it'll be HQ
     //RECT rc;
     //rc.top = 0;
@@ -489,18 +489,26 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
         }
         case ID_SHRINKTOWIDTH: {
             shrinkToScreenWidth = !shrinkToScreenWidth;
+            ResizeForImage(true);
+            Redraw();
             break;
         }
         case ID_SHRINKTOHEIGHT: {
             shrinkToScreenHeight = !shrinkToScreenHeight;
+            ResizeForImage(true);
+            Redraw();
             break;
         }
         case ID_STRETCHTOWIDTH: {
             stretchToScreenWidth = !stretchToScreenWidth;
+            ResizeForImage(true);
+            Redraw();
             break;
         }
         case ID_STRETCHTOHEIGHT: {
             stretchToScreenHeight = !stretchToScreenHeight;
+            ResizeForImage(true);
+            Redraw();
             break;
         }
         //case IDM_ABOUT:
