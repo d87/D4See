@@ -23,10 +23,7 @@ public:
     bool isMovingOrSizing = false;
     bool isMaximized = false;
     bool isFullscreen = false;
-    //int w_working_area; //screen size excluding taskbar
-    //int h_working_area;
-    int w_window;
-    int h_window; // including borders and caption
+
     int w_client;
     int h_client;
 
@@ -37,7 +34,7 @@ public:
     int h_border;
     int h_caption;
 
-    float scale = 1.3f;
+    float scale = 1.0f;
     
     int x_poffset = 0;
     int y_poffset = 0;
@@ -52,6 +49,9 @@ private:
     WINDOW_SAVED_DATA stash;
 
 public:
+    void Redraw();
+    void ScheduleRedraw(unsigned int ms);
+    void StopTimer();
     void SelectFrame(MemoryFrame* f);
     void ResizeForImage();
     void ToggleFullscreen();

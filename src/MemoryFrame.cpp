@@ -114,7 +114,7 @@ void DecodingWork(MemoryFrame *self) {
 
         while (self->threadState < 3 && !image->IsSubimageLoaded(subimage)) {
 
-            DecoderBatchReturns decodeInfo = image->PartialLoad(30000, false);
+            DecoderBatchReturns decodeInfo = image->PartialLoad(100000, false);
 
 
             //self->memDCmutex.lock();

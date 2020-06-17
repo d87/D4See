@@ -46,13 +46,6 @@ Playlist* playlist;
 //}
 
 void ClearWindowForFrame(HWND hWnd, MemoryFrame *f) {
-    HDC hdc = GetWindowDC(hWnd);
-    RECT rc;
-    //GetClientRect(hWnd, &rc);
-    rc.top = 0;
-    rc.left = 0;
-    rc.right = f->image->xres;
-    rc.bottom = f->image->yres;
 
     //HBRUSH newBrush = CreateSolidBrush(RGB(80, 80, 80));
     //FillRect(hdc, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
@@ -73,9 +66,6 @@ VOID OnPaint(HDC hdc)
 {
     using namespace std::chrono_literals;
 
-    //SetBkColor(hdc, RGB(0, 0, 0));
-    //SetBkMode(hdc, OPAQUE);
-
     if (frame) {
         //if (gWinMgr.newImagePending) {
         //    gWinMgr.newImagePending = false;
@@ -93,13 +83,9 @@ VOID OnPaint(HDC hdc)
             int width = pImage->width;
             int height = pImage->height;
 
-            //HDC memDC = CreateCompatibleDC(hdc);
-
-            //frame->memDCmutex.lock();
-
-            
-            // TODO: Maybe should make the fast draw first even for images that are already decoded?
-            if (!gWinMgr.fastDrawDone || gWinMgr.isMovingOrSizing || !frame->image->IsSubimageLoaded(frame->curFrame)) {
+            bool imageComplete = frame->image->IsSubimageLoaded(frame->curFrame);
+          
+            if (!gWinMgr.fastDrawDone || gWinMgr.isMovingOrSizing || !imageComplete || frame->isAnimated) {
             //if (true) {
                 
             
@@ -193,15 +179,6 @@ VOID OnPaint(HDC hdc)
 
                 std::cout << "REDRAW SMOOTH" << std::endl;
             }
-
-            
-            //frame->memDCmutex.unlock();
-
-            
-
-            //SelectObject(memDC, oldbmp);
-            //DeleteObject(hbitmap);
-            //DeleteObject(memDC);
         }
     }
 }
@@ -281,20 +258,17 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             switch (msg.message) {
-                case WM_SIZING: {
-                    std::cout << "SIZING" << std::endl;
-                    continue;
-                }
-                case WM_SIZE: {
-
-                    continue;
+                case WM_TIMER: {
+                    gWinMgr.Redraw();
+                    gWinMgr.StopTimer();
+                    break;
                 }
                 case WM_FRAMEREADY: {
                     MemoryFrame* f = (MemoryFrame*)msg.wParam;
                     if (f == frame) {
                         //gWinMgr.newImagePending = true;
                         //RedrawWindow(hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
-                        
+                        std::cout << "- WM_FRAMEREADY " << std::endl;
                         ClearWindowForFrame(hWnd, frame);
                     }
                     break;
@@ -365,6 +339,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                                         //gWinMgr.newImagePending = true;
 
                                         //ClearWindowForFrame(hWnd, frame);
+
                                         using namespace std::chrono_literals;
                                         auto status = frame->threadInitFinished.wait_for(2ms);
                                         if (status == std::future_status::ready){
@@ -403,6 +378,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                                         //gWinMgr.newImagePending = true;
 
                                         //ClearWindowForFrame(hWnd, frame);
+
                                         using namespace std::chrono_literals;
                                         auto status = frame->threadInitFinished.wait_for(2ms);
                                         if (status == std::future_status::ready) {
@@ -440,6 +416,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         if (frame) {
             if (!frame->isAnimated) {
                 if (frame->decoderBatchId != frame->drawId) {
+                    std::cout << "batchIDs " << frame->drawId << " " << frame->decoderBatchId << std::endl;
                     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
                     frame->drawId = frame->decoderBatchId;
                 }
@@ -457,7 +434,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         }
         prevTime = now;
 
-        std::this_thread::sleep_for(1ms);
+        std::this_thread::sleep_for(5ms);
     }
 
     delete playlist;
@@ -528,6 +505,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         return 0;
     }
     case WM_PAINT: {
+        std::cout << "WM_PAINT" << std::endl;
         hdc = BeginPaint(hWnd, &ps);
         OnPaint(hdc);
         EndPaint(hWnd, &ps);

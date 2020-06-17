@@ -3,6 +3,17 @@
 
 namespace fs = std::filesystem;
 
+void WindowManager::Redraw() {
+    RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+}
+
+void WindowManager::ScheduleRedraw(unsigned int ms) {
+    SetTimer(hWnd, 1001, ms, NULL);
+}
+void WindowManager::StopTimer() {
+    KillTimer(hWnd, 1001);
+}
+
 void WindowManager::Pan(int x, int y) {
     x_poffset += x;
     int x_limit = w_scaled - w_client;
@@ -15,7 +26,9 @@ void WindowManager::Pan(int x, int y) {
     y_poffset = std::max(y_poffset, 0);
 
     fastDrawDone = false;
-    RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+    this->Redraw(); // 
+    this->ScheduleRedraw(50); // HQ redraw later
+    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
 }
 
 void WindowManager::UpdateWindowSizeInfo() {
@@ -114,7 +127,11 @@ void WindowManager::ToggleFullscreen() {
 }
 
 void WindowManager::SelectFrame(MemoryFrame* f) {
+    std::cout << "<<<<<<< FRAME SWITCH >>>>>>>" << std::endl;
     frame = f;
+    fastDrawDone = false;
+    //ScheduleRedraw(50);
+    StopTimer();
     x_poffset = 0;
     y_poffset = 0;
 }
@@ -209,11 +226,19 @@ void WindowManager::ReadOrigin() {
     fs::path path = root / file;
 
     std::vector<std::byte> bytes(sizeof(POINT));
-    bytes = load_file(path.string());
 
-    POINT* origin = (POINT*)&bytes[0];
-    x_origin = origin->x;
-    y_origin = origin->y;
+    try {
+        bytes = load_file(path.string());
+        POINT* origin = (POINT*)&bytes[0];
+        x_origin = origin->x;
+        y_origin = origin->y;
+    }
+    catch (const std::runtime_error& e) {
+        int mw = GetSystemMetrics(SM_CXSCREEN);
+        int mh = GetSystemMetrics(SM_CYSCREEN);
+        x_origin = mw/2;
+        y_origin = mh/2;
+    }    
 }
 
 void WindowManager::WriteOrigin() {
@@ -367,7 +392,7 @@ void WindowManager::ResizeForImage() {
     }
 
     fastDrawDone = false; // Fill paint LQ version fast on the next redraw
-    frame->drawId--; // Will cause the redraw again after the first, and it'll be HQ
+    //frame->drawId--; // Will cause the redraw again after the first, and it'll be HQ
     //RECT rc;
     //rc.top = 0;
     //rc.left = 0;
