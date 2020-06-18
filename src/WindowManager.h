@@ -78,7 +78,7 @@ public:
     void SelectFrame(MemoryFrame* f);
     void SelectPlaylist(Playlist* playlist);
     void ResizeForImage(bool HQRedraw = false);
-    void ManualZoom(float mod);
+    void ManualZoom(float mod, float absolute = 0.0);
     void ToggleFullscreen();
     void ToggleBorderless();
     void WriteOrigin();

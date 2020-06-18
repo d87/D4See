@@ -371,14 +371,18 @@ void WindowManager::UpdateOrigin() {
     y_origin = wrc.top + h / 2;
 }
 
-void WindowManager::ManualZoom(float mod) {
+void WindowManager::ManualZoom(float mod, float absolute) {
     float old_scale = scale_effective;
-    scale_manual = scale_effective + mod;
-    if (scale_manual < 0.10f) {
-        scale_manual = 0.10;
-    }
-    if (scale_manual > 10.0f) {
-        scale_manual = 10.0;
+    if (absolute != 0.0) {
+        scale_manual = absolute;
+    } else {
+        scale_manual = scale_effective + mod;
+        if (scale_manual < 0.10f) {
+            scale_manual = 0.10;
+        }
+        if (scale_manual > 10.0f) {
+            scale_manual = 10.0;
+        }
     }
     if (scale_manual == old_scale) {
         return;
@@ -653,8 +657,7 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             break;
         }
         case ID_ACTUALSIZE: {
-            scale_effective = 1.0;
-            ManualZoom(+0.0f);
+            ManualZoom(+0.0f, 1.0f);
             break;
         }
         case ID_ZOOMIN: {
