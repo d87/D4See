@@ -129,6 +129,24 @@ void WindowManager::ToggleFullscreen() {
     }
 }
 
+void WindowManager::ToggleBorderless() {
+    if (isFullscreen) return;
+
+    isBorderless = !isBorderless;
+
+    int style = GetWindowLong(hWnd, GWL_STYLE);
+    int exstyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+    if (isBorderless) {
+        SetWindowLong(hWnd, GWL_STYLE, style & ~(WS_CAPTION | WS_THICKFRAME));
+        SetWindowLong(hWnd, GWL_EXSTYLE, exstyle & ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
+    } else {
+        SetWindowLong(hWnd, GWL_STYLE, style | (WS_CAPTION | WS_THICKFRAME));
+        SetWindowLong(hWnd, GWL_EXSTYLE, exstyle | (WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
+    }
+    ResizeForImage();
+    Redraw();
+}
+
 void WindowManager::SelectFrame(MemoryFrame* f) {
     std::cout << "<<<<<<< FRAME SWITCH >>>>>>>" << std::endl;
     frame = f;
@@ -309,7 +327,7 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     int w_screenwa = screenrc.right - screenrc.left;
     int h_screenwa = screenrc.bottom - screenrc.top;
 
-    int hasBorder = style & WS_OVERLAPPEDWINDOW;
+    int hasBorder = style & (WS_CAPTION | WS_THICKFRAME);
     if (hasBorder && !isFullscreen) {
         w_screenwa -= w_border * 2;
         h_screenwa -= (h_border * 2 + h_caption + h_menu);
@@ -582,6 +600,10 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
         }
         case ID_TOGGLEFULLSCREEN: {
             ToggleFullscreen();
+            break;
+        }
+        case ID_TOGGLEBORDERLESS: {
+            ToggleBorderless();
             break;
         }
         //case IDM_ABOUT:

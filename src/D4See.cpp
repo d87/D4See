@@ -431,6 +431,10 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                             NextImage(hWnd);
                             break;
                         }
+                        case VK_TAB: {
+                            gWinMgr.ToggleBorderless();
+                            break;
+                        }
                     }
                     break;
                 }

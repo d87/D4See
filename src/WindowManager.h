@@ -33,6 +33,7 @@ public:
     bool isMovingOrSizing = false;
     bool isMaximized = false;
     bool isFullscreen = false;
+    bool isBorderless = false;
     bool alwaysOnTop = false;
 
     int w_client;
@@ -76,6 +77,7 @@ public:
     void ResizeForImage(bool HQRedraw = false);
     void ManualZoom(float mod);
     void ToggleFullscreen();
+    void ToggleBorderless();
     void WriteOrigin();
     void ReadOrigin();
 
