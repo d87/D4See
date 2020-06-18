@@ -13,16 +13,20 @@ void WindowManager::StopTimer() {
     KillTimer(hWnd, 1001);
 }
 
-void WindowManager::Pan(int x, int y) {
-    x_poffset += x;
+void WindowManager::LimitPanOffset() {
     int x_limit = w_scaled - w_client;
     x_poffset = std::min(x_poffset, x_limit);
     x_poffset = std::max(x_poffset, 0);
-
-    y_poffset += y;
+    
     int y_limit = h_scaled - h_client;
     y_poffset = std::min(y_poffset, y_limit);
     y_poffset = std::max(y_poffset, 0);
+}
+
+void WindowManager::Pan(int x, int y) {
+    x_poffset += x;
+    y_poffset += y;
+    LimitPanOffset();
 
     fastDrawDone = false;
     this->Redraw(); // 
@@ -346,6 +350,8 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
 
     w_scaled = w_native * endscale;
     h_scaled = h_native * endscale;
+
+    LimitPanOffset();
 
     scale_effective = endscale;
 

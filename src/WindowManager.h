@@ -86,6 +86,7 @@ public:
 
     void UpdateOrigin();
     bool WasGeneratingEvents();
+    void LimitPanOffset();
     void Pan(int x, int y);
     bool SaveWindowParams();
     void GetCenteredImageRect(RECT* rc);
