@@ -498,12 +498,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         break;
     }
     case WM_MOUSEWHEEL: {
+        int fwKeys = GET_KEYSTATE_WPARAM(wParam);
         int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-        if (zDelta < 0) {
-            NextImage(hWnd);
-        }
-        else if (zDelta > 0) {
-            PreviousImage(hWnd);
+        bool isCtrlDown = fwKeys & MK_CONTROL;
+        if (isCtrlDown) {
+            if (zDelta < 0) {
+                gWinMgr.ManualZoom(-0.10f);
+            }
+            else if (zDelta > 0) {
+                gWinMgr.ManualZoom(+0.10f);
+            }
+        } else {
+            if (zDelta < 0) {
+                NextImage(hWnd);
+            }
+            else if (zDelta > 0) {
+                PreviousImage(hWnd);
+            }
         }
         break;
     }

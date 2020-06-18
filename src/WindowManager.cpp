@@ -2,8 +2,8 @@
 
 namespace fs = std::filesystem;
 
-void WindowManager::Redraw() {
-    RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+void WindowManager::Redraw(unsigned int addFlags) {
+    RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | addFlags);
 }
 
 void WindowManager::ScheduleRedraw(unsigned int ms) {
@@ -253,6 +253,12 @@ void WindowManager::UpdateOrigin() {
     y_origin = wrc.top + h / 2;
 }
 
+void WindowManager::ManualZoom(float mod) {
+    scale_manual = scale_effective + mod;
+    ResizeForImage(true);
+    Redraw(RDW_ERASE);
+}
+
 void WindowManager::ResizeForImage( bool HQRedraw) {
 
     //----------
@@ -473,28 +479,41 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             zoomLock = !zoomLock;
             break;
         }
+        case ID_ACTUALSIZE: {
+            scale_effective = 1.0;
+            ManualZoom(+0.0f);
+            break;
+        }
+        case ID_ZOOMIN: {
+            ManualZoom(+0.10f);
+            break;
+        }
+        case ID_ZOOMOUT: {
+            ManualZoom(+0.10f);
+            break;
+        }
         case ID_SHRINKTOWIDTH: {
             shrinkToScreenWidth = !shrinkToScreenWidth;
             ResizeForImage(true);
-            Redraw();
+            Redraw(RDW_ERASE);
             break;
         }
         case ID_SHRINKTOHEIGHT: {
             shrinkToScreenHeight = !shrinkToScreenHeight;
             ResizeForImage(true);
-            Redraw();
+            Redraw(RDW_ERASE);
             break;
         }
         case ID_STRETCHTOWIDTH: {
             stretchToScreenWidth = !stretchToScreenWidth;
             ResizeForImage(true);
-            Redraw();
+            Redraw(RDW_ERASE);
             break;
         }
         case ID_STRETCHTOHEIGHT: {
             stretchToScreenHeight = !stretchToScreenHeight;
             ResizeForImage(true);
-            Redraw();
+            Redraw(RDW_ERASE);
             break;
         }
         case ID_TOGGLEFULLSCREEN: {

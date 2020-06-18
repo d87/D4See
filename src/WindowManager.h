@@ -14,6 +14,7 @@
 
 #define BOOLCOMMANDCHECK(x) ( (x) ? MF_CHECKED : MF_UNCHECKED )
 
+
 struct WINDOW_SAVED_DATA {
 	bool isMaximized;
 	long style;
@@ -67,12 +68,13 @@ private:
     WINDOW_SAVED_DATA stash;
 
 public:
-    void Redraw();
+    void Redraw(unsigned int addFlags = 0);
     void ScheduleRedraw(unsigned int ms);
     void StopTimer();
     void SelectFrame(MemoryFrame* f);
     //void SelectPlaylist(Playlist& playlist);
     void ResizeForImage(bool HQRedraw = false);
+    void ManualZoom(float mod);
     void ToggleFullscreen();
     void WriteOrigin();
     void ReadOrigin();

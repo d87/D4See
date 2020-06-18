@@ -15,17 +15,20 @@
 #define IDC_GDIPROJECT                  109
 #define IDC_D4SEE                       109
 #define IDR_MAINFRAME                   128
-#define ID_ZOOMLOCK						32771
-#define ID_SHRINKTOWIDTH			    32772
+#define ID_ZOOMLOCK                     32771
+#define ID_SHRINKTOWIDTH                32772
 #define ID_SHRINKTOHEIGHT               32773
-#define ID_STRETCHTOWIDTH				32774
-#define ID_STRETCHTOHEIGHT				32775
-#define ID_FULLSCREEN					32776
-#define ID_TOGGLEMENUBAR				32777
-#define ID_SEPARATOR					32778
-#define ID_ALWAYSONTOP					32779
-#define ID_OPENFILE						32780
-#define ID_TOGGLEFULLSCREEN				32781
+#define ID_STRETCHTOWIDTH               32774
+#define ID_STRETCHTOHEIGHT              32775
+#define ID_FULLSCREEN                   32776
+#define ID_TOGGLEMENUBAR                32777
+#define ID_SEPARATOR                    32778
+#define ID_ALWAYSONTOP                  32779
+#define ID_OPENFILE                     32780
+#define ID_TOGGLEFULLSCREEN             32781
+#define ID_ZOOMOUT                      32782
+#define ID_ZOOMIN                       32783
+#define ID_ACTUALSIZE                   32784
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -34,7 +37,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        130
-#define _APS_NEXT_COMMAND_VALUE         32788
+#define _APS_NEXT_COMMAND_VALUE         32794
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
