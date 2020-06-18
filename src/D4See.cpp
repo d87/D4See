@@ -243,7 +243,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     UpdateWindow(hWnd);
     DragAcceptFiles(hWnd, true);
 
-    
+    toml::value configData = gWinMgr.ReadConfig();
+    gWinMgr.RestoreConfigValues(configData);
     
     
     //HMENU submenu = CreatePopupMenu();
@@ -461,7 +462,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
         std::this_thread::sleep_for(5ms);
     }
-
+    gWinMgr.DumpConfigValues(configData);
+    gWinMgr.WriteConfig(configData);
     delete playlist;
     GdiplusShutdown(gdiplusToken);
     return msg.wParam;

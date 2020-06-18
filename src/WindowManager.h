@@ -7,6 +7,8 @@
 #include <chrono>
 #include "MemoryFrame.h"
 #include "resource.h"
+#include "util.h"
+#include "libs/toml11/toml.hpp"
 
 #define BOOLCOMMANDCHECK(x) ( (x) ? MF_CHECKED : MF_UNCHECKED )
 
@@ -70,6 +72,12 @@ public:
     void ToggleFullscreen();
     void WriteOrigin();
     void ReadOrigin();
+
+    toml::value ReadConfig();
+    void RestoreConfigValues(toml::value& data);
+    void DumpConfigValues(toml::value& data);
+    void WriteConfig(toml::value& data);
+
     void UpdateOrigin();
     bool WasGeneratingEvents();
     void Pan(int x, int y);
