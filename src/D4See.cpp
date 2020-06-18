@@ -269,8 +269,16 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     break;
                 }
                 case WM_TIMER: {
-                    gWinMgr.Redraw();
-                    gWinMgr.StopTimer();
+                    unsigned int id = msg.wParam;
+                    if (id == D4S_TIMER_HQREDRAW) {
+                        gWinMgr.Redraw();
+                        gWinMgr.StopTimer(id);
+                    }
+                    else if (id == D4S_PREFETCH_TIMEOUT) {
+                        gWinMgr.DiscardPrefetch();
+                        gWinMgr.StopTimer(id);
+                        std::cout << "Prefetch dropped from memory" << std::endl;
+                    }
                     break;
                 }
                 case WM_FRAMEREADY: {

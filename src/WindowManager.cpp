@@ -7,10 +7,10 @@ void WindowManager::Redraw(unsigned int addFlags) {
 }
 
 void WindowManager::ScheduleRedraw(unsigned int ms) {
-    SetTimer(hWnd, 1001, ms, NULL);
+    SetTimer(hWnd, D4S_TIMER_HQREDRAW, ms, NULL);
 }
-void WindowManager::StopTimer() {
-    KillTimer(hWnd, 1001);
+void WindowManager::StopTimer(UINT_PTR id) {
+    KillTimer(hWnd, id);
 }
 
 WindowManager::~WindowManager() {
@@ -36,6 +36,34 @@ WindowManager::~WindowManager() {
 //    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
 //}
 
+void WindowManager::ShowPrefetch() {
+    SelectFrame(frame2);
+    frame2 = nullptr;
+    //frame->drawId = frame->decoderBatchId;
+    //gWinMgr.newImagePending = true;
+
+    //ClearWindowForFrame(hWnd, frame);
+
+    using namespace std::chrono_literals;
+    auto status = frame->threadInitFinished.wait_for(2ms);
+    if (status == std::future_status::ready) {
+        ResizeForImage();
+        Redraw(RDW_ERASE);
+    }
+}
+
+void WindowManager::DiscardPrefetch() {
+    if (frame2)
+        delete frame2;
+    frame2 = nullptr;
+}
+
+void WindowManager::StartPrefetch(MemoryFrame* f) {
+    frame2 = f;
+    // Start 2 minute timer
+    SetTimer(hWnd, D4S_PREFETCH_TIMEOUT, 120000, NULL);
+}
+
 void WindowManager::PreviousImage() {
     if (playlist->Move(-1)) {
         PlaylistEntry* cur = playlist->Current();
@@ -46,27 +74,15 @@ void WindowManager::PreviousImage() {
                 if (frame2->filename == wide_to_utf8(cur->filename))
                     prefetchHit = true;
             if (prefetchHit) {
-                SelectFrame(frame2);
-                //frame->drawId = frame->decoderBatchId;
-                //gWinMgr.newImagePending = true;
-
-                //ClearWindowForFrame(hWnd, frame);
-
-                using namespace std::chrono_literals;
-                auto status = frame->threadInitFinished.wait_for(2ms);
-                if (status == std::future_status::ready) {
-                    ResizeForImage();
-                    Redraw(RDW_ERASE);
-                }
+                ShowPrefetch();
             }
             else { // Changed direction or jumped more than 1
+                DiscardPrefetch();
                 SelectFrame(new MemoryFrame(hWnd, cur->filename, cur->format));
-                delete frame2;
             }
-            frame2 = nullptr;
         }
         if (following) {
-            frame2 = new MemoryFrame(hWnd, following->filename, following->format);
+            StartPrefetch(new MemoryFrame(hWnd, following->filename, following->format));
         }
         else {
             frame2 = nullptr;
@@ -84,27 +100,15 @@ void WindowManager::NextImage() {
                 if (frame2->filename == wide_to_utf8(cur->filename))
                     prefetchHit = true;
             if (prefetchHit) {
-                SelectFrame(frame2);
-                //frame->drawId = frame->decoderBatchId;
-                //gWinMgr.newImagePending = true;
-
-                //ClearWindowForFrame(hWnd, frame);
-
-                using namespace std::chrono_literals;
-                auto status = frame->threadInitFinished.wait_for(2ms);
-                if (status == std::future_status::ready) {
-                    ResizeForImage();
-                    Redraw(RDW_ERASE);
-                }
+                ShowPrefetch();
             }
             else { // Changed direction or jumped more than 1
+                DiscardPrefetch();
                 SelectFrame(new MemoryFrame(hWnd, cur->filename, cur->format));
-                delete frame2;
             }
-            frame2 = nullptr;
         }
         if (following) {
-            frame2 = new MemoryFrame(hWnd, following->filename, following->format);
+            StartPrefetch(new MemoryFrame(hWnd, following->filename, following->format));
         }
         else {
             frame2 = nullptr;
@@ -257,7 +261,7 @@ void WindowManager::SelectFrame(MemoryFrame* f) {
     frame = f;
     fastDrawDone = false;
     //ScheduleRedraw(50);
-    StopTimer();
+    StopTimer(D4S_TIMER_HQREDRAW);
     x_poffset = 0;
     y_poffset = 0;
     if (!zoomLock) {

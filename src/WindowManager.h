@@ -14,6 +14,9 @@
 
 #define BOOLCOMMANDCHECK(x) ( (x) ? MF_CHECKED : MF_UNCHECKED )
 
+#define D4S_TIMER_HQREDRAW 1001
+#define D4S_PREFETCH_TIMEOUT 1003
+
 
 struct WINDOW_SAVED_DATA {
 	bool isMaximized;
@@ -73,9 +76,12 @@ private:
 public:
     void Redraw(unsigned int addFlags = 0);
     void ScheduleRedraw(unsigned int ms);
-    void StopTimer();
+    void StopTimer(UINT_PTR id);
     void NextImage();
     void PreviousImage();
+    void StartPrefetch(MemoryFrame* f);
+    void ShowPrefetch();
+    void DiscardPrefetch();
     void SelectFrame(MemoryFrame* f);
     void SelectPlaylist(Playlist* playlist);
     void ResizeForImage(bool HQRedraw = false);
