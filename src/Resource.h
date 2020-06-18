@@ -3,7 +3,7 @@
 // Used by D4See.rc
 //
 #define IDC_D4SEE_POPUP                 1
-#define IDC_MYICON                      2
+#define IDI_D4SEE_ICON                  2
 #define IDD_GDIPROJECT_DIALOG           102
 #define IDS_APP_TITLE                   103
 #define IDD_ABOUTBOX                    103

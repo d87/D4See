@@ -214,7 +214,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     wndClass.cbClsExtra = 0;
     wndClass.cbWndExtra = 0;
     wndClass.hInstance = hInstance;
-    wndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wndClass.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_D4SEE_ICON));
     wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndClass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wndClass.lpszMenuName = NULL;
@@ -235,6 +235,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         NULL,                     // window menu handle
         hInstance,                // program instance handle
         NULL);                    // creation parameters
+
+    HICON hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_D4SEE_ICON));
+    SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 
     gWinMgr.hWnd = hWnd;
     gWinMgr._TouchSizeEventTimestamp();
