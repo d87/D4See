@@ -23,6 +23,7 @@ void WindowManager::LimitPanOffset() {
     y_poffset = std::max(y_poffset, 0);
 }
 
+
 void WindowManager::Pan(int x, int y) {
     x_poffset += x;
     y_poffset += y;

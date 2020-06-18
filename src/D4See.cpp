@@ -522,6 +522,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         }
         break;
     }
+    //case WM_NCHITTEST: {
+    //    if (!GetAsyncKeyState(VK_MENU)) {
+    //        LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);
+    //        if (hit == HTCLIENT) hit = HTCAPTION;
+    //        return hit;
+    //    }
+    //    else {
+    //        return DefWindowProc(hWnd, message, wParam, lParam);
+    //    }
+    //    break;
+    //}
     case WM_MOUSEMOVE: {
         int LMBDown = (wParam) & MK_LBUTTON;
         if (LMBDown) {
