@@ -138,6 +138,10 @@ void WindowManager::SelectFrame(MemoryFrame* f) {
     }
 }
 
+//void WindowManager::SelectPlaylist(Playlist& playlist) {
+//    this->playlist = playlist;
+//}
+
 
 
 void WindowManager::_TouchSizeEventTimestamp() {
@@ -491,6 +495,10 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             stretchToScreenHeight = !stretchToScreenHeight;
             ResizeForImage(true);
             Redraw();
+            break;
+        }
+        case ID_TOGGLEFULLSCREEN: {
+            ToggleFullscreen();
             break;
         }
         //case IDM_ABOUT:

@@ -62,6 +62,86 @@ void ClearWindowForFrame(HWND hWnd, MemoryFrame *f) {
     //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
 }
 
+void PreviousImage(HWND hWnd) {
+    if (playlist->Move(-1)) {
+        PlaylistEntry* cur = playlist->Current();
+        PlaylistEntry* following = playlist->Prev();
+        if (cur) {
+            delete frame;
+            bool prefetchHit = false;
+            if (frame2)
+                if (frame2->filename == wide_to_utf8(cur->filename))
+                    prefetchHit = true;
+            if (prefetchHit) {
+                frame = frame2;
+                gWinMgr.SelectFrame(frame);
+                //frame->drawId = frame->decoderBatchId;
+                //gWinMgr.newImagePending = true;
+
+                //ClearWindowForFrame(hWnd, frame);
+
+                using namespace std::chrono_literals;
+                auto status = frame->threadInitFinished.wait_for(2ms);
+                if (status == std::future_status::ready) {
+                    ClearWindowForFrame(hWnd, frame);
+                }
+            }
+            else { // Changed direction or jumped more than 1
+                frame = new MemoryFrame(hWnd, cur->filename, cur->format);
+                gWinMgr.SelectFrame(frame);
+                delete frame2;
+            }
+            frame2 = nullptr;
+        }
+        if (following) {
+            frame2 = new MemoryFrame(hWnd, following->filename, following->format);
+        }
+        else {
+            frame2 = nullptr;
+        }
+    }
+}
+
+void NextImage(HWND hWnd) {
+    if (playlist->Move(1)) {
+        PlaylistEntry* cur = playlist->Current();
+        PlaylistEntry* following = playlist->Next();
+        if (cur) {
+            delete frame;
+            bool prefetchHit = false;
+            if (frame2)
+                if (frame2->filename == wide_to_utf8(cur->filename))
+                    prefetchHit = true;
+            if (prefetchHit) {
+                frame = frame2;
+                gWinMgr.SelectFrame(frame);
+                //frame->drawId = frame->decoderBatchId;
+                //gWinMgr.newImagePending = true;
+
+                //ClearWindowForFrame(hWnd, frame);
+
+                using namespace std::chrono_literals;
+                auto status = frame->threadInitFinished.wait_for(2ms);
+                if (status == std::future_status::ready) {
+                    ClearWindowForFrame(hWnd, frame);
+                }
+            }
+            else { // Changed direction or jumped more than 1
+                frame = new MemoryFrame(hWnd, cur->filename, cur->format);
+                gWinMgr.SelectFrame(frame);
+                delete frame2;
+            }
+            frame2 = nullptr;
+        }
+        if (following) {
+            frame2 = new MemoryFrame(hWnd, following->filename, following->format);
+        }
+        else {
+            frame2 = nullptr;
+        }
+    }
+}
+
 VOID OnPaint(HDC hdc)
 {
     using namespace std::chrono_literals;
@@ -343,84 +423,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                             gWinMgr.Pan(0, 60);
                             break;
                         }                                    
-                        
                         case VK_PRIOR: {
-                            if (playlist->Move(-1)) {
-                                PlaylistEntry* cur = playlist->Current();
-                                PlaylistEntry* following = playlist->Prev();
-                                if (cur) {
-                                    delete frame;
-                                    bool prefetchHit = false;
-                                    if (frame2)
-                                        if (frame2->filename == wide_to_utf8(cur->filename))
-                                            prefetchHit = true;
-                                    if (prefetchHit) {
-                                        frame = frame2;
-                                        gWinMgr.SelectFrame(frame);
-                                        //frame->drawId = frame->decoderBatchId;
-                                        //gWinMgr.newImagePending = true;
-
-                                        //ClearWindowForFrame(hWnd, frame);
-
-                                        using namespace std::chrono_literals;
-                                        auto status = frame->threadInitFinished.wait_for(2ms);
-                                        if (status == std::future_status::ready){
-                                            ClearWindowForFrame(hWnd, frame);
-                                        }
-                                    } else { // Changed direction or jumped more than 1
-                                        frame = new MemoryFrame(hWnd, cur->filename, cur->format);
-                                        gWinMgr.SelectFrame(frame);
-                                        delete frame2;
-                                    }
-                                    frame2 = nullptr;
-                                }
-                                if (following) {
-                                    frame2 = new MemoryFrame(hWnd, following->filename, following->format);
-                                }
-                                else {
-                                    frame2 = nullptr;
-                                }
-                            }
+                            PreviousImage(hWnd);
                             break;
                         }
                         case VK_NEXT: {
-                            if (playlist->Move(1)) {
-                                PlaylistEntry* cur = playlist->Current();
-                                PlaylistEntry* following = playlist->Next();
-                                if (cur) {
-                                    delete frame;
-                                    bool prefetchHit = false;
-                                    if (frame2)
-                                        if (frame2->filename == wide_to_utf8(cur->filename))
-                                            prefetchHit = true;
-                                    if (prefetchHit) {
-                                        frame = frame2;
-                                        gWinMgr.SelectFrame(frame);
-                                        //frame->drawId = frame->decoderBatchId;
-                                        //gWinMgr.newImagePending = true;
-
-                                        //ClearWindowForFrame(hWnd, frame);
-
-                                        using namespace std::chrono_literals;
-                                        auto status = frame->threadInitFinished.wait_for(2ms);
-                                        if (status == std::future_status::ready) {
-                                            ClearWindowForFrame(hWnd, frame);
-                                        }
-                                    }
-                                    else { // Changed direction or jumped more than 1
-                                        frame = new MemoryFrame(hWnd, cur->filename, cur->format);
-                                        gWinMgr.SelectFrame(frame);
-                                        delete frame2;
-                                    }
-                                    frame2 = nullptr;
-                                }
-                                if (following) {
-                                    frame2 = new MemoryFrame(hWnd, following->filename, following->format);
-                                }
-                                else {
-                                    frame2 = nullptr;
-                                }
-                            }
+                            NextImage(hWnd);
                             break;
                         }
                     }
@@ -487,6 +495,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         //p.x = GET_X_LPARAM(lParam);
         //p.y = GET_Y_LPARAM(lParam);
         gWinMgr.ShowPopupMenu(p);
+        break;
+    }
+    case WM_MOUSEWHEEL: {
+        int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+        if (zDelta < 0) {
+            NextImage(hWnd);
+        }
+        else if (zDelta > 0) {
+            PreviousImage(hWnd);
+        }
         break;
     }
     case WM_MOUSEMOVE: {

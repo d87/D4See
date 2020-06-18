@@ -8,6 +8,8 @@
 #include "MemoryFrame.h"
 #include "resource.h"
 #include "util.h"
+#include "Playlist.h"
+
 #include "libs/toml11/toml.hpp"
 
 #define BOOLCOMMANDCHECK(x) ( (x) ? MF_CHECKED : MF_UNCHECKED )
@@ -23,6 +25,7 @@ class WindowManager {
 public:
     HWND hWnd;
     MemoryFrame * frame;
+    //Playlist& playlist;
     //bool newImagePending = false;
 
     bool fastDrawDone = false;
@@ -68,6 +71,7 @@ public:
     void ScheduleRedraw(unsigned int ms);
     void StopTimer();
     void SelectFrame(MemoryFrame* f);
+    //void SelectPlaylist(Playlist& playlist);
     void ResizeForImage(bool HQRedraw = false);
     void ToggleFullscreen();
     void WriteOrigin();
