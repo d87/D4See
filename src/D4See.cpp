@@ -339,14 +339,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                         case VK_DOWN: {
                             gWinMgr.Pan(0, 60);
                             break;
-                        }
-                        case VK_TAB: {
-                            POINT p;
-                            GetCursorPos(&p);
-                            gWinMgr.ShowPopupMenu(p);
-                            break;
-                        }
-                                    
+                        }                                    
                         
                         case VK_PRIOR: {
                             if (playlist->Move(-1)) {
@@ -484,6 +477,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         sxPos = GET_X_LPARAM(lParam);
         syPos = GET_Y_LPARAM(lParam);
         return 0;
+    }
+    case WM_RBUTTONDOWN: {
+        POINT p;
+        GetCursorPos(&p);
+        //p.x = GET_X_LPARAM(lParam);
+        //p.y = GET_Y_LPARAM(lParam);
+        gWinMgr.ShowPopupMenu(p);
+        break;
     }
     case WM_MOUSEMOVE: {
         int LMBDown = (wParam) & MK_LBUTTON;
