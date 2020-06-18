@@ -13,6 +13,100 @@ void WindowManager::StopTimer() {
     KillTimer(hWnd, 1001);
 }
 
+
+//void ClearWindowForFrame(HWND hWnd, MemoryFrame* f) {
+//
+//    //HBRUSH newBrush = CreateSolidBrush(RGB(80, 80, 80));
+//    //FillRect(hdc, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
+//    //FillRect(hdc, &rc, newBrush);
+//    //DeleteObject(newBrush);
+//    gWinMgr.ResizeForImage();
+//
+//
+//    //GdiFlush();
+//
+//    // It's a bit better with ERASENOW, but it barely matters
+//    //RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW|RDW_INVALIDATE);
+//    RedrawWindow(hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
+//    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+//}
+
+void WindowManager::PreviousImage() {
+    if (playlist->Move(-1)) {
+        PlaylistEntry* cur = playlist->Current();
+        PlaylistEntry* following = playlist->Prev();
+        if (cur) {
+            bool prefetchHit = false;
+            if (frame2)
+                if (frame2->filename == wide_to_utf8(cur->filename))
+                    prefetchHit = true;
+            if (prefetchHit) {
+                SelectFrame(frame2);
+                //frame->drawId = frame->decoderBatchId;
+                //gWinMgr.newImagePending = true;
+
+                //ClearWindowForFrame(hWnd, frame);
+
+                using namespace std::chrono_literals;
+                auto status = frame->threadInitFinished.wait_for(2ms);
+                if (status == std::future_status::ready) {
+                    ResizeForImage();
+                    Redraw(RDW_ERASE);
+                }
+            }
+            else { // Changed direction or jumped more than 1
+                SelectFrame(new MemoryFrame(hWnd, cur->filename, cur->format));
+                delete frame2;
+            }
+            frame2 = nullptr;
+        }
+        if (following) {
+            frame2 = new MemoryFrame(hWnd, following->filename, following->format);
+        }
+        else {
+            frame2 = nullptr;
+        }
+    }
+}
+
+void WindowManager::NextImage() {
+    if (playlist->Move(1)) {
+        PlaylistEntry* cur = playlist->Current();
+        PlaylistEntry* following = playlist->Next();
+        if (cur) {
+            bool prefetchHit = false;
+            if (frame2)
+                if (frame2->filename == wide_to_utf8(cur->filename))
+                    prefetchHit = true;
+            if (prefetchHit) {
+                SelectFrame(frame2);
+                //frame->drawId = frame->decoderBatchId;
+                //gWinMgr.newImagePending = true;
+
+                //ClearWindowForFrame(hWnd, frame);
+
+                using namespace std::chrono_literals;
+                auto status = frame->threadInitFinished.wait_for(2ms);
+                if (status == std::future_status::ready) {
+                    ResizeForImage();
+                    Redraw(RDW_ERASE);
+                }
+            }
+            else { // Changed direction or jumped more than 1
+                SelectFrame(new MemoryFrame(hWnd, cur->filename, cur->format));
+                delete frame2;
+            }
+            frame2 = nullptr;
+        }
+        if (following) {
+            frame2 = new MemoryFrame(hWnd, following->filename, following->format);
+        }
+        else {
+            frame2 = nullptr;
+        }
+    }
+}
+
 void WindowManager::LimitPanOffset() {
     int x_limit = w_scaled - w_client;
     x_poffset = std::min(x_poffset, x_limit);
@@ -143,6 +237,10 @@ void WindowManager::ToggleBorderless() {
 }
 
 void WindowManager::SelectFrame(MemoryFrame* f) {
+    if (frame != nullptr) {
+        delete frame;
+    }
+
     std::cout << "<<<<<<< FRAME SWITCH >>>>>>>" << std::endl;
     frame = f;
     fastDrawDone = false;
@@ -155,9 +253,12 @@ void WindowManager::SelectFrame(MemoryFrame* f) {
     }
 }
 
-//void WindowManager::SelectPlaylist(Playlist& playlist) {
-//    this->playlist = playlist;
-//}
+void WindowManager::SelectPlaylist(Playlist* playlist) {
+    if (this->playlist != nullptr) {
+        delete this->playlist;
+    }
+    this->playlist = playlist;
+}
 
 
 

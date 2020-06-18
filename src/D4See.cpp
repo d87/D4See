@@ -29,12 +29,6 @@ using namespace Gdiplus;
 
 WindowManager gWinMgr;
 
-MemoryFrame* frame = nullptr;
-MemoryFrame* frame2 = nullptr;
-
-Playlist* playlist;
-
-
 //void ClearWindow(HDC hdc) {
 //    HBRUSH newBrush = CreateSolidBrush(RGB(100, 100, 100));
 //    HGDIOBJ oldBrush = SelectObject(hdc, newBrush);
@@ -45,106 +39,15 @@ Playlist* playlist;
 //    DeleteObject(newBrush);
 //}
 
-void ClearWindowForFrame(HWND hWnd, MemoryFrame *f) {
-
-    //HBRUSH newBrush = CreateSolidBrush(RGB(80, 80, 80));
-    //FillRect(hdc, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
-    //FillRect(hdc, &rc, newBrush);
-    //DeleteObject(newBrush);
-    gWinMgr.ResizeForImage();
 
 
-    //GdiFlush();
 
-    // It's a bit better with ERASENOW, but it barely matters
-    //RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW|RDW_INVALIDATE);
-    RedrawWindow(hWnd, NULL, NULL, RDW_ERASE| RDW_INVALIDATE);
-    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
-}
-
-void PreviousImage(HWND hWnd) {
-    if (playlist->Move(-1)) {
-        PlaylistEntry* cur = playlist->Current();
-        PlaylistEntry* following = playlist->Prev();
-        if (cur) {
-            delete frame;
-            bool prefetchHit = false;
-            if (frame2)
-                if (frame2->filename == wide_to_utf8(cur->filename))
-                    prefetchHit = true;
-            if (prefetchHit) {
-                frame = frame2;
-                gWinMgr.SelectFrame(frame);
-                //frame->drawId = frame->decoderBatchId;
-                //gWinMgr.newImagePending = true;
-
-                //ClearWindowForFrame(hWnd, frame);
-
-                using namespace std::chrono_literals;
-                auto status = frame->threadInitFinished.wait_for(2ms);
-                if (status == std::future_status::ready) {
-                    ClearWindowForFrame(hWnd, frame);
-                }
-            }
-            else { // Changed direction or jumped more than 1
-                frame = new MemoryFrame(hWnd, cur->filename, cur->format);
-                gWinMgr.SelectFrame(frame);
-                delete frame2;
-            }
-            frame2 = nullptr;
-        }
-        if (following) {
-            frame2 = new MemoryFrame(hWnd, following->filename, following->format);
-        }
-        else {
-            frame2 = nullptr;
-        }
-    }
-}
-
-void NextImage(HWND hWnd) {
-    if (playlist->Move(1)) {
-        PlaylistEntry* cur = playlist->Current();
-        PlaylistEntry* following = playlist->Next();
-        if (cur) {
-            delete frame;
-            bool prefetchHit = false;
-            if (frame2)
-                if (frame2->filename == wide_to_utf8(cur->filename))
-                    prefetchHit = true;
-            if (prefetchHit) {
-                frame = frame2;
-                gWinMgr.SelectFrame(frame);
-                //frame->drawId = frame->decoderBatchId;
-                //gWinMgr.newImagePending = true;
-
-                //ClearWindowForFrame(hWnd, frame);
-
-                using namespace std::chrono_literals;
-                auto status = frame->threadInitFinished.wait_for(2ms);
-                if (status == std::future_status::ready) {
-                    ClearWindowForFrame(hWnd, frame);
-                }
-            }
-            else { // Changed direction or jumped more than 1
-                frame = new MemoryFrame(hWnd, cur->filename, cur->format);
-                gWinMgr.SelectFrame(frame);
-                delete frame2;
-            }
-            frame2 = nullptr;
-        }
-        if (following) {
-            frame2 = new MemoryFrame(hWnd, following->filename, following->format);
-        }
-        else {
-            frame2 = nullptr;
-        }
-    }
-}
 
 VOID OnPaint(HDC hdc)
 {
     using namespace std::chrono_literals;
+
+    MemoryFrame* frame = gWinMgr.frame;
 
     if (frame) {
         //if (gWinMgr.newImagePending) {
@@ -277,11 +180,18 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     PWCHAR cmdLine = GetCommandLineW();
     int argc = 0;
     WCHAR** argv = CommandLineToArgvW(cmdLine, &argc);
+    Playlist* playlist;
     if (argc > 1) {
         playlist = new Playlist(argv[1]);
     }
-    else
-        return 0;
+    else {
+        auto exeDir = GetExecutableDir();
+        std::filesystem::path file(L"Splash.png");
+        auto default_image = exeDir / file;
+        playlist = new Playlist(default_image.wstring());
+    }
+
+    gWinMgr.SelectPlaylist(playlist);
 
     gWinMgr.ReadOrigin();
     
@@ -344,9 +254,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     //HDC hdc = GetWindowDC(hWnd);
     
-
-    frame = new MemoryFrame(hWnd, playlist->Current()->filename, playlist->Current()->format);
-    gWinMgr.SelectFrame(frame);
+    gWinMgr.SelectFrame(new MemoryFrame(hWnd, playlist->Current()->filename, playlist->Current()->format));
 
     auto prevTime(std::chrono::steady_clock::now());
 
@@ -367,11 +275,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                 }
                 case WM_FRAMEREADY: {
                     MemoryFrame* f = (MemoryFrame*)msg.wParam;
-                    if (f == frame) {
+                    if (f == gWinMgr.frame) {
                         //gWinMgr.newImagePending = true;
                         //RedrawWindow(hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
                         std::cout << "- WM_FRAMEREADY " << std::endl;
-                        ClearWindowForFrame(hWnd, frame);
+                        gWinMgr.ResizeForImage();
+                        gWinMgr.Redraw(RDW_ERASE);
                     }
                     break;
                 }
@@ -386,14 +295,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
                     DragFinish(hDrop);
 
+                    auto playlist = new Playlist(filename);
+                    gWinMgr.SelectPlaylist(playlist);
 
-                    delete playlist;
-                    playlist = new Playlist(filename);
-
-                    delete frame;
                     auto cur = playlist->Current();
-                    frame = new MemoryFrame(hWnd, cur->filename, cur->format);
-                    gWinMgr.SelectFrame(frame);
+                    gWinMgr.SelectFrame(new MemoryFrame(hWnd, cur->filename, cur->format));
+
                     break;
                 }
                 case WM_KEYDOWN: {
@@ -424,11 +331,11 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                             break;
                         }                                    
                         case VK_PRIOR: {
-                            PreviousImage(hWnd);
+                            gWinMgr.PreviousImage();
                             break;
                         }
                         case VK_NEXT: {
-                            NextImage(hWnd);
+                            gWinMgr.NextImage();
                             break;
                         }
                         case VK_TAB: {
@@ -447,7 +354,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         }
         using namespace std::literals;
         auto now(std::chrono::steady_clock::now());
-        if (frame) {
+        if (gWinMgr.frame) {
+            MemoryFrame* frame = gWinMgr.frame;
             if (!frame->isAnimated) {
                 if (frame->decoderBatchId != frame->drawId) {
                     std::cout << "batchIDs " << frame->drawId << " " << frame->decoderBatchId << std::endl;
@@ -514,10 +422,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             }
         } else {
             if (zDelta < 0) {
-                NextImage(hWnd);
+                gWinMgr.NextImage();
             }
             else if (zDelta > 0) {
-                PreviousImage(hWnd);
+                gWinMgr.PreviousImage();
             }
         }
         break;

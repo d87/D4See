@@ -25,8 +25,9 @@ struct WINDOW_SAVED_DATA {
 class WindowManager {
 public:
     HWND hWnd;
-    MemoryFrame * frame;
-    //Playlist& playlist;
+    MemoryFrame* frame = nullptr;
+    MemoryFrame* frame2 = nullptr;
+    Playlist* playlist;
     //bool newImagePending = false;
 
     bool fastDrawDone = false;
@@ -72,8 +73,10 @@ public:
     void Redraw(unsigned int addFlags = 0);
     void ScheduleRedraw(unsigned int ms);
     void StopTimer();
+    void NextImage();
+    void PreviousImage();
     void SelectFrame(MemoryFrame* f);
-    //void SelectPlaylist(Playlist& playlist);
+    void SelectPlaylist(Playlist* playlist);
     void ResizeForImage(bool HQRedraw = false);
     void ManualZoom(float mod);
     void ToggleFullscreen();
