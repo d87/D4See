@@ -177,24 +177,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR           gdiplusToken;
 
-    PWCHAR cmdLine = GetCommandLineW();
-    int argc = 0;
-    WCHAR** argv = CommandLineToArgvW(cmdLine, &argc);
-    Playlist* playlist;
-    if (argc > 1) {
-        playlist = new Playlist(argv[1]);
-    }
-    else {
-        auto exeDir = GetExecutableDir();
-        std::filesystem::path file(L"Splash.png");
-        auto default_image = exeDir / file;
-        playlist = new Playlist(default_image.wstring());
-    }
-
-    gWinMgr.SelectPlaylist(playlist);
-
-    gWinMgr.ReadOrigin();
-    
+       
     // Initialize GDI+.
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
@@ -212,6 +195,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     wndClass.lpszClassName = TEXT("D4See");
 
     RegisterClass(&wndClass);
+
+    //int defaultWindowStyle = WS_OVERLAPPEDWINDOW;
 
     hWnd = CreateWindow(
         TEXT("D4See"),            // window class name
@@ -232,13 +217,31 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     gWinMgr.hWnd = hWnd;
     gWinMgr._TouchSizeEventTimestamp();
 
-    ShowWindow(hWnd, iCmdShow);
     UpdateWindow(hWnd);
     DragAcceptFiles(hWnd, true);
 
     toml::value configData = gWinMgr.ReadConfig();
     gWinMgr.RestoreConfigValues(configData);
+
     
+    PWCHAR cmdLine = GetCommandLineW();
+    int argc = 0;
+    WCHAR** argv = CommandLineToArgvW(cmdLine, &argc);
+    Playlist* playlist;
+
+    if (argc > 1) {
+        playlist = new Playlist(argv[1], gWinMgr.sortMethod);
+    }
+    else {
+        auto exeDir = GetExecutableDir();
+        std::filesystem::path file(L"Splash.png");
+        auto default_image = exeDir / file;
+        playlist = new Playlist(default_image.wstring(), gWinMgr.sortMethod);
+    }
+
+    gWinMgr.ReadOrigin();
+    gWinMgr.SelectPlaylist(playlist);
+    gWinMgr.SelectFrame(new MemoryFrame(hWnd, playlist->Current()->path, playlist->Current()->format));
     
     //HMENU submenu = CreatePopupMenu();
     //AppendMenuW(submenu, MF_STRING, 1001, L"submenu 1001");
@@ -254,7 +257,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     //HDC hdc = GetWindowDC(hWnd);
     
-    gWinMgr.SelectFrame(new MemoryFrame(hWnd, playlist->Current()->path, playlist->Current()->format));
+    
+
+    ShowWindow(hWnd, iCmdShow);
 
     auto prevTime(std::chrono::steady_clock::now());
 
@@ -303,7 +308,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
                     DragFinish(hDrop);
 
-                    auto playlist = new Playlist(filename);
+                    auto playlist = new Playlist(filename, gWinMgr.sortMethod);
                     gWinMgr.SelectPlaylist(playlist);
 
                     auto cur = playlist->Current();
@@ -348,6 +353,16 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                         }
                         case VK_TAB: {
                             gWinMgr.ToggleBorderless();
+                            break;
+                        }
+                        case VK_END: {
+                            gWinMgr.playlist->Move(PlaylistPos::End, 0);
+                            gWinMgr.LoadImage(0);
+                            break;
+                        }
+                        case VK_HOME: {
+                            gWinMgr.playlist->Move(PlaylistPos::Start, 0);
+                            gWinMgr.LoadImage(0);
                             break;
                         }
                     }

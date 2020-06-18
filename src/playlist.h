@@ -6,6 +6,17 @@
 #include <vector>
 #include "ImageFormats.h"
 
+enum class PlaylistSortMethod {
+	ByName,
+	ByDateModified
+};
+
+enum class PlaylistPos {
+	Start,
+	Current,
+	End
+};
+
 struct PlaylistEntry {
 	std::wstring path;
 	std::wstring filename;
@@ -21,12 +32,16 @@ class Playlist {
 		int offset = 0;
 		std::wstring basepath;
 
+	private:
+		PlaylistSortMethod currentSortingMethod = PlaylistSortMethod::ByName;
+
 	public:
 		Playlist();
-		Playlist(const std::wstring initialFile);
+		Playlist(const std::wstring initialFile, PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName);
 		int GeneratePlaylist(const std::wstring initialFile);
+		void ChangeSortingMethod(PlaylistSortMethod sortMethod);
 		int MoveCursor(std::wstring filename);
-		bool Move(int mod);
+		bool Move(PlaylistPos pos, int mod);
 		PlaylistEntry* Current();
 		PlaylistEntry* Next();
 		PlaylistEntry* Prev();

@@ -65,54 +65,43 @@ void WindowManager::StartPrefetch(MemoryFrame* f) {
 }
 
 void WindowManager::PreviousImage() {
-    if (playlist->Move(-1)) {
-        PlaylistEntry* cur = playlist->Current();
-        PlaylistEntry* following = playlist->Prev();
-        if (cur) {
-            bool prefetchHit = false;
-            if (frame2)
-                if (frame2->filename == wide_to_utf8(cur->path))
-                    prefetchHit = true;
-            if (prefetchHit) {
-                ShowPrefetch();
-            }
-            else { // Changed direction or jumped more than 1
-                DiscardPrefetch();
-                SelectFrame(new MemoryFrame(hWnd, cur->path, cur->format));
-            }
-        }
-        if (following) {
-            StartPrefetch(new MemoryFrame(hWnd, following->path, following->format));
-        }
-        else {
-            frame2 = nullptr;
-        }
+    if (playlist->Move(PlaylistPos::Current, -1)) {
+        LoadImage(-1);
     }
 }
 
 void WindowManager::NextImage() {
-    if (playlist->Move(1)) {
-        PlaylistEntry* cur = playlist->Current();
-        PlaylistEntry* following = playlist->Next();
-        if (cur) {
-            bool prefetchHit = false;
-            if (frame2)
-                if (frame2->filename == wide_to_utf8(cur->path))
-                    prefetchHit = true;
-            if (prefetchHit) {
-                ShowPrefetch();
-            }
-            else { // Changed direction or jumped more than 1
-                DiscardPrefetch();
-                SelectFrame(new MemoryFrame(hWnd, cur->path, cur->format));
-            }
+    if (playlist->Move(PlaylistPos::Current, +1)) {
+        LoadImage(+1);
+    }
+}
+
+void WindowManager::LoadImage(int prefetchDir) {
+    PlaylistEntry* cur = playlist->Current();
+    PlaylistEntry* following = nullptr;
+    if (prefetchDir > 0)
+        following = playlist->Next();
+    else if (prefetchDir < 0)
+        following = playlist->Prev();
+
+    if (cur) {
+        bool prefetchHit = false;
+        if (frame2)
+            if (frame2->filename == wide_to_utf8(cur->path))
+                prefetchHit = true;
+        if (prefetchHit) {
+            ShowPrefetch();
         }
-        if (following) {
-            StartPrefetch(new MemoryFrame(hWnd, following->path, following->format));
+        else { // Changed direction or jumped more than 1
+            DiscardPrefetch();
+            SelectFrame(new MemoryFrame(hWnd, cur->path, cur->format));
         }
-        else {
-            frame2 = nullptr;
-        }
+    }
+    if (following) {
+        StartPrefetch(new MemoryFrame(hWnd, following->path, following->format));
+    }
+    else {
+        frame2 = nullptr;
     }
 }
 
@@ -228,7 +217,7 @@ void WindowManager::ToggleFullscreen() {
     }
 }
 
-void WindowManager::ToggleBorderless() {
+void WindowManager::ToggleBorderless(int doRedraw) {
     if (isFullscreen) return;
 
     if (!isBorderless) {
@@ -241,15 +230,19 @@ void WindowManager::ToggleBorderless() {
     int exstyle = GetWindowLong(hWnd, GWL_EXSTYLE);
     if (isBorderless) {
         SetWindowLong(hWnd, GWL_STYLE, style & ~(WS_CAPTION | WS_THICKFRAME));
-        SetWindowLong(hWnd, GWL_EXSTYLE, exstyle & ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
+        //SetWindowLong(hWnd, GWL_EXSTYLE, exstyle & ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
     } else {
-        SetWindowLong(hWnd, GWL_STYLE, borderlessStash.style);
-        SetWindowLong(hWnd, GWL_EXSTYLE, borderlessStash.exstyle);
+        //SetWindowLong(hWnd, GWL_STYLE, borderlessStash.style);
+        SetWindowLong(hWnd, GWL_STYLE, style | WS_CAPTION | WS_THICKFRAME);
+        //SetWindowLong(hWnd, GWL_EXSTYLE, borderlessStash.exstyle);
     }
     //SetWindowPos(hWnd, NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOREPOSITION | SWP_NOREDRAW);
-    ResizeForImage();
-    Redraw();
-    ScheduleRedraw(50);
+    if (doRedraw) {
+        
+        ResizeForImage();
+        Redraw();
+        ScheduleRedraw(50);
+    }
 }
 
 void WindowManager::SelectFrame(MemoryFrame* f) {
@@ -316,6 +309,18 @@ toml::value WindowManager::ReadConfig() {
 }
 
 void WindowManager::RestoreConfigValues(toml::value& data) {
+    if (data["general"]["StartBorderless"].as_boolean()) {
+        ToggleBorderless(0);
+    }
+
+    std::string sortStr = data["general"]["SortMethod"].as_string();
+    if (sortStr == "ByName") {
+        sortMethod = PlaylistSortMethod::ByName;
+    }
+    else if (sortStr == "ByDateModified") {
+        sortMethod = PlaylistSortMethod::ByDateModified;
+    }
+
     stretchToScreenWidth = data["scaling"]["StretchToScreenWidth"].as_boolean();
     stretchToScreenHeight = data["scaling"]["StretchToScreenHeight"].as_boolean();
     shrinkToScreenWidth = data["scaling"]["ShrinkToScreenWidth"].as_boolean();
@@ -323,6 +328,11 @@ void WindowManager::RestoreConfigValues(toml::value& data) {
 }
 
 void WindowManager::DumpConfigValues(toml::value& data) {
+
+    std::string sortStr = (sortMethod == PlaylistSortMethod::ByDateModified) ? "ByDateModified" : "ByName";
+
+    data["general"]["SortMethod"] = sortStr;
+
     data["scaling"]["StretchToScreenWidth"] = stretchToScreenWidth;
     data["scaling"]["StretchToScreenHeight"] = stretchToScreenHeight;
     data["scaling"]["ShrinkToScreenWidth"] = shrinkToScreenWidth;
@@ -604,6 +614,10 @@ void WindowManager::ShowPopupMenu(POINT& p) {
     CheckMenuItem(popupMenu, ID_SHRINKTOHEIGHT, MF_BYCOMMAND | BOOLCOMMANDCHECK(shrinkToScreenHeight));
     CheckMenuItem(popupMenu, ID_STRETCHTOWIDTH, MF_BYCOMMAND | BOOLCOMMANDCHECK(stretchToScreenWidth));
     CheckMenuItem(popupMenu, ID_STRETCHTOHEIGHT, MF_BYCOMMAND | BOOLCOMMANDCHECK(stretchToScreenHeight));
+    CheckMenuItem(popupMenu, ID_SORTBY_NAME, MF_BYCOMMAND | BOOLCOMMANDCHECK(sortMethod == PlaylistSortMethod::ByName));
+    CheckMenuItem(popupMenu, ID_SORTBY_DATEMODIFIED, MF_BYCOMMAND | BOOLCOMMANDCHECK(sortMethod == PlaylistSortMethod::ByDateModified));
+    EnableMenuItem(popupMenu, ID_ACTUALSIZE, MF_BYCOMMAND | BOOLCOMMANDENABLE(scale_manual != 1.0f));
+    
 
 
     TrackPopupMenu(popupMenu, TPM_LEFTBUTTON, p.x, p.y, 0, hWnd, 0);
@@ -712,6 +726,16 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
         }
         case ID_TOGGLEBORDERLESS: {
             ToggleBorderless();
+            break;
+        }
+        case ID_SORTBY_NAME: {
+            sortMethod = PlaylistSortMethod::ByName;
+            playlist->ChangeSortingMethod(sortMethod);
+            break;
+        }
+        case ID_SORTBY_DATEMODIFIED: {
+            sortMethod = PlaylistSortMethod::ByDateModified;
+            playlist->ChangeSortingMethod(sortMethod);
             break;
         }
         //case IDM_ABOUT:

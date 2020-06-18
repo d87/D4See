@@ -13,6 +13,7 @@
 #include "libs/toml11/toml.hpp"
 
 #define BOOLCOMMANDCHECK(x) ( (x) ? MF_CHECKED : MF_UNCHECKED )
+#define BOOLCOMMANDENABLE(x) ( (x) ? MF_ENABLED: MF_GRAYED )
 
 #define D4S_TIMER_HQREDRAW 1001
 #define D4S_PREFETCH_TIMEOUT 1003
@@ -31,6 +32,7 @@ public:
     MemoryFrame* frame = nullptr;
     MemoryFrame* frame2 = nullptr;
     Playlist* playlist = nullptr;
+    PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
     //bool newImagePending = false;
 
     bool fastDrawDone = false;
@@ -79,6 +81,7 @@ public:
     void StopTimer(UINT_PTR id);
     void NextImage();
     void PreviousImage();
+    void LoadImage(int prefetchDir);
     void StartPrefetch(MemoryFrame* f);
     void ShowPrefetch();
     void DiscardPrefetch();
@@ -87,7 +90,7 @@ public:
     void ResizeForImage(bool HQRedraw = false);
     void ManualZoom(float mod, float absolute = 0.0);
     void ToggleFullscreen();
-    void ToggleBorderless();
+    void ToggleBorderless(int doRedraw = 1);
     void WriteOrigin();
     void ReadOrigin();
 

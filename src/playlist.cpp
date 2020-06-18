@@ -36,7 +36,8 @@ Playlist::Playlist() {
 
 }
 
-Playlist::Playlist(std::wstring initialFile) {
+Playlist::Playlist(const std::wstring initialFile, PlaylistSortMethod sortMethod) {
+	currentSortingMethod = sortMethod;
 	GeneratePlaylist(initialFile);
 }
 
@@ -47,7 +48,7 @@ int Playlist::Add(std::wstring full_path, ImageFormat format, long long unixLast
 	file.path = full_path;
 	file.format = format;
 	file.filename = path.filename().wstring();
-	file.tFileWrite = unixLastWrite;
+	file.tmFileWrite = unixLastWrite;
 	list.push_back(file);
 	return 1;
 }
@@ -67,10 +68,19 @@ PlaylistEntry* Playlist::Current() {
 	return &*it;
 }
 
-bool Playlist::Move(int mod) {
+bool Playlist::Move(PlaylistPos pos, int mod) {
 	int offsetBefore = offset;
+
+	int offset_base = offset;
+	if (pos == PlaylistPos::Start) {
+		offset_base = 0;
+	}
+	else if (pos == PlaylistPos::End) {
+		offset_base = list.end() - list.begin();
+	}
+
 	int maxOffset = list.size() - 1; // important that it's int
-	offset += mod;
+	offset = offset_base + mod;
 	if (offset > maxOffset) {
 		offset = maxOffset;
 	}
@@ -164,7 +174,34 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 
 	SetCurrentDirectoryW(oldWD);
 
+	if (currentSortingMethod == PlaylistSortMethod::ByDateModified) {
+		std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
+			return a.tmFileWrite < b.tmFileWrite;
+		});
+	}
+
+	
+
 	MoveCursor(initialFile);
 
 	return filesAdded;
+}
+
+
+void Playlist::ChangeSortingMethod(PlaylistSortMethod sortMethod) {
+	auto cur = Current();
+	std::wstring oldCursor = cur->path;
+
+	if (sortMethod == PlaylistSortMethod::ByDateModified) {
+		std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
+			return a.tmFileWrite < b.tmFileWrite;
+		});
+	}
+	else {
+		std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
+			return a.filename < b.filename;
+		});
+	}
+	currentSortingMethod = sortMethod;
+	MoveCursor(oldCursor);
 }
