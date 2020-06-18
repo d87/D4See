@@ -1,12 +1,15 @@
 #pragma once
 
+#include <Windows.h>
 #include <string>
 #include <forward_list>
 #include <vector>
 #include "ImageFormats.h"
 
 struct PlaylistEntry {
+	std::wstring path;
 	std::wstring filename;
+	long long tmFileWrite;
 	ImageFormat format;
 };
 
@@ -27,5 +30,5 @@ class Playlist {
 		PlaylistEntry* Current();
 		PlaylistEntry* Next();
 		PlaylistEntry* Prev();
-		int Add(std::wstring filename, ImageFormat format);
+		int Add(std::wstring filename, ImageFormat format, long long unixLastWrite);
 };

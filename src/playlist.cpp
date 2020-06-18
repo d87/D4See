@@ -2,12 +2,23 @@
 
 #include <windows.h>
 #include <TCHAR.h>
-
+#include <filesystem>
 #include <unordered_map>
 #include <vector>
 #include <string>
 #include <algorithm>
 
+long long WindowsTickToUnixSeconds(FILETIME ft)
+{
+	const long long UNIX_TIME_START = 0x019DB1DED53E8000; //January 1, 1970 (start of Unix epoch) in "ticks"
+	const long long TICKS_PER_SECOND = 10000000; //a tick is 100ns
+
+	LARGE_INTEGER li;
+	li.LowPart = ft.dwLowDateTime;
+	li.HighPart = ft.dwHighDateTime;
+
+	return (li.QuadPart - UNIX_TIME_START) / TICKS_PER_SECOND;
+}
 
 const std::unordered_map<std::wstring, ImageFormat> exts = {
 	{ L".jpg", ImageFormat::JPEG },
@@ -29,17 +40,21 @@ Playlist::Playlist(std::wstring initialFile) {
 	GeneratePlaylist(initialFile);
 }
 
-int Playlist::Add(std::wstring filename, ImageFormat format) {
+int Playlist::Add(std::wstring full_path, ImageFormat format, long long unixLastWrite) {
 	PlaylistEntry file;
-	file.filename = filename;
+	std::filesystem::path path(full_path);
+
+	file.path = full_path;
 	file.format = format;
+	file.filename = path.filename().wstring();
+	file.tFileWrite = unixLastWrite;
 	list.push_back(file);
 	return 1;
 }
 
 int Playlist::MoveCursor(std::wstring filename) {
 	for ( auto it = list.begin(); it != list.end(); ++it) {
-		if (it->filename == filename) {
+		if (it->path == filename) {
 			offset = it - list.begin();
 			return offset;
 		}
@@ -121,7 +136,10 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 				auto search = exts.find(ext);
 				if (search != exts.end()) {
 
-					Add(std::wstring(basepath+fd.cFileName), search->second); // name, format
+					//SYSTEMTIME stLastWriteTime;
+					long long unixLastWrite = WindowsTickToUnixSeconds(fd.ftLastWriteTime);
+					//FileTimeToSystemTime(&fd.ftLastWriteTime, &stLastWriteTime);
+					Add(std::wstring(basepath+fd.cFileName), search->second, unixLastWrite); // name, format
 					filesAdded++;
 				}
 			}

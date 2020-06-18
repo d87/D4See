@@ -71,18 +71,18 @@ void WindowManager::PreviousImage() {
         if (cur) {
             bool prefetchHit = false;
             if (frame2)
-                if (frame2->filename == wide_to_utf8(cur->filename))
+                if (frame2->filename == wide_to_utf8(cur->path))
                     prefetchHit = true;
             if (prefetchHit) {
                 ShowPrefetch();
             }
             else { // Changed direction or jumped more than 1
                 DiscardPrefetch();
-                SelectFrame(new MemoryFrame(hWnd, cur->filename, cur->format));
+                SelectFrame(new MemoryFrame(hWnd, cur->path, cur->format));
             }
         }
         if (following) {
-            StartPrefetch(new MemoryFrame(hWnd, following->filename, following->format));
+            StartPrefetch(new MemoryFrame(hWnd, following->path, following->format));
         }
         else {
             frame2 = nullptr;
@@ -97,18 +97,18 @@ void WindowManager::NextImage() {
         if (cur) {
             bool prefetchHit = false;
             if (frame2)
-                if (frame2->filename == wide_to_utf8(cur->filename))
+                if (frame2->filename == wide_to_utf8(cur->path))
                     prefetchHit = true;
             if (prefetchHit) {
                 ShowPrefetch();
             }
             else { // Changed direction or jumped more than 1
                 DiscardPrefetch();
-                SelectFrame(new MemoryFrame(hWnd, cur->filename, cur->format));
+                SelectFrame(new MemoryFrame(hWnd, cur->path, cur->format));
             }
         }
         if (following) {
-            StartPrefetch(new MemoryFrame(hWnd, following->filename, following->format));
+            StartPrefetch(new MemoryFrame(hWnd, following->path, following->format));
         }
         else {
             frame2 = nullptr;
@@ -661,7 +661,7 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             if (filepath != L"") {
                 auto pl = new Playlist(filepath);
                 SelectPlaylist(pl);
-                SelectFrame(new MemoryFrame(hWnd, pl->Current()->filename, pl->Current()->format));
+                SelectFrame(new MemoryFrame(hWnd, pl->Current()->path, pl->Current()->format));
                 //std::cout << filepath.c_str() << std::endl;
             }
             break;

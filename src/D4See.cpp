@@ -254,7 +254,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     //HDC hdc = GetWindowDC(hWnd);
     
-    gWinMgr.SelectFrame(new MemoryFrame(hWnd, playlist->Current()->filename, playlist->Current()->format));
+    gWinMgr.SelectFrame(new MemoryFrame(hWnd, playlist->Current()->path, playlist->Current()->format));
 
     auto prevTime(std::chrono::steady_clock::now());
 
@@ -307,7 +307,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     gWinMgr.SelectPlaylist(playlist);
 
                     auto cur = playlist->Current();
-                    gWinMgr.SelectFrame(new MemoryFrame(hWnd, cur->filename, cur->format));
+                    gWinMgr.SelectFrame(new MemoryFrame(hWnd, cur->path, cur->format));
 
                     break;
                 }
