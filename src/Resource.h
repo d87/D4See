@@ -29,6 +29,9 @@
 #define ID_ZOOMOUT                      32782
 #define ID_ZOOMIN                       32783
 #define ID_ACTUALSIZE                   32784
+#define ID_ROOT_SORTBY                  32794
+#define ID_SORTBY_NAME                  32795
+#define ID_SORTBY_DATEMODIFIED          32796
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -37,7 +40,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        130
-#define _APS_NEXT_COMMAND_VALUE         32794
+#define _APS_NEXT_COMMAND_VALUE         32797
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

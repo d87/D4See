@@ -258,9 +258,21 @@ void WindowManager::UpdateOrigin() {
 }
 
 void WindowManager::ManualZoom(float mod) {
+    float old_scale = scale_effective;
     scale_manual = scale_effective + mod;
-    ResizeForImage(true);
+    if (scale_manual < 0.10f) {
+        scale_manual = 0.10;
+    }
+    if (scale_manual > 10.0f) {
+        scale_manual = 10.0;
+    }
+    if (scale_manual == old_scale) {
+        return;
+    }
+
+    ResizeForImage();
     Redraw(RDW_ERASE);
+    ScheduleRedraw(50);
 }
 
 void WindowManager::ResizeForImage( bool HQRedraw) {
