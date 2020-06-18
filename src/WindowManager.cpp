@@ -317,8 +317,9 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
 
     long style = GetWindowLong(hWnd, GWL_STYLE);
 
-    int w_border = GetSystemMetrics(SM_CXBORDER);
-    int h_border = GetSystemMetrics(SM_CYBORDER);
+
+    int w_border = GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+    int h_border = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
     int h_caption = GetSystemMetrics(SM_CYCAPTION);
     int h_menu = 0;
     if (GetMenu(hWnd)) {
@@ -402,14 +403,14 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     new_client_area.top = origin.y - cut_height / 2;
     new_client_area.bottom = (origin.y + cut_height) - cut_height / 2;
 
-    //AdjustWindowRect(&new_client_area, style, false);
-    if (hasBorder) {
-        // Doing AdjustWindowRect manually, because it wasn't working out for some reason
-        new_client_area.left -= w_border;
-        new_client_area.right += w_border;
-        new_client_area.top -= h_border + h_caption + h_menu;
-        new_client_area.bottom += h_border;
-    }
+    AdjustWindowRect(&new_client_area, style, false);
+    //if (hasBorder) {
+    //     //Doing AdjustWindowRect manually, because it wasn't working out for some reason
+    //    new_client_area.left -= w_border;
+    //    new_client_area.right += w_border;
+    //    new_client_area.top -= (h_border + h_caption + h_menu);
+    //    new_client_area.bottom += h_border;
+    //}
 
     //-------------
     // 3) Clamp new rect to that monitor rect
