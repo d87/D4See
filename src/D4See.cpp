@@ -380,8 +380,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     }
     gWinMgr.DumpConfigValues(configData);
     gWinMgr.WriteConfig(configData);
-    delete playlist;
     GdiplusShutdown(gdiplusToken);
+
+
     return msg.wParam;
 }  // WinMain
 

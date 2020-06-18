@@ -13,6 +13,11 @@ void WindowManager::StopTimer() {
     KillTimer(hWnd, 1001);
 }
 
+WindowManager::~WindowManager() {
+    if (playlist) delete playlist;
+    if (frame) delete frame;
+    if (frame2) delete frame2;
+}
 
 //void ClearWindowForFrame(HWND hWnd, MemoryFrame* f) {
 //
@@ -161,25 +166,25 @@ void WindowManager::GetCenteredImageRect(RECT* rc) {
     rc->bottom = y + h_scaled;
 }
 
-bool WindowManager::SaveWindowParams() {
+bool WindowManager::SaveWindowParams(WINDOW_SAVED_DATA*cont) {
     long style = GetWindowLong(hWnd, GWL_STYLE);
-    stash.isMaximized = style & WS_MAXIMIZE;
+    cont->isMaximized = style & WS_MAXIMIZE;
 
-    if (stash.isMaximized) {
+    if (cont->isMaximized) {
         //SendMessage(hWnd, WM_SYSCOMMAND, SC_RESTORE, 0);
-        return stash.isMaximized;
+        return cont->isMaximized;
     }
 
-    stash.style = GetWindowLong(hWnd, GWL_STYLE);
-    stash.exstyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-    GetWindowRect(hWnd, &stash.rc);
-    return stash.isMaximized;
+    cont->style = GetWindowLong(hWnd, GWL_STYLE);
+    cont->exstyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+    GetWindowRect(hWnd, &cont->rc);
+    return cont->isMaximized;
 }
 
 
 void WindowManager::ToggleFullscreen() {
     if (!isFullscreen) {
-        bool isCurrentlyFullscreen = SaveWindowParams();
+        bool isCurrentlyFullscreen = SaveWindowParams(&this->stash);
         
     }
 
@@ -208,10 +213,11 @@ void WindowManager::ToggleFullscreen() {
         SetWindowLong(hWnd, GWL_EXSTYLE, stash.exstyle);
 
         // On restore, resize to the previous saved rect size.
-        RECT* rc = &stash.rc;
-        int w = rc->right - rc->left;
-        int h = rc->bottom - rc->top;
-        SetWindowPos(hWnd, NULL, rc->left, rc->top, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+        //RECT* rc = &stash.rc;
+        //int w = rc->right - rc->left;
+        //int h = rc->bottom - rc->top;
+        //SetWindowPos(hWnd, NULL, rc->left, rc->top, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+        ResizeForImage();
 
         if (stash.isMaximized)
             ::SendMessage(hWnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
@@ -221,6 +227,10 @@ void WindowManager::ToggleFullscreen() {
 void WindowManager::ToggleBorderless() {
     if (isFullscreen) return;
 
+    if (!isBorderless) {
+        SaveWindowParams(&this->borderlessStash);
+    }
+
     isBorderless = !isBorderless;
 
     int style = GetWindowLong(hWnd, GWL_STYLE);
@@ -229,11 +239,13 @@ void WindowManager::ToggleBorderless() {
         SetWindowLong(hWnd, GWL_STYLE, style & ~(WS_CAPTION | WS_THICKFRAME));
         SetWindowLong(hWnd, GWL_EXSTYLE, exstyle & ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
     } else {
-        SetWindowLong(hWnd, GWL_STYLE, style | (WS_CAPTION | WS_THICKFRAME));
-        SetWindowLong(hWnd, GWL_EXSTYLE, exstyle | (WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
+        SetWindowLong(hWnd, GWL_STYLE, borderlessStash.style);
+        SetWindowLong(hWnd, GWL_EXSTYLE, borderlessStash.exstyle);
     }
-    ResizeForImage(true);
+    //SetWindowPos(hWnd, NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOREPOSITION | SWP_NOREDRAW);
+    ResizeForImage();
     Redraw();
+    ScheduleRedraw(50);
 }
 
 void WindowManager::SelectFrame(MemoryFrame* f) {
@@ -434,6 +446,8 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
         h_screenwa -= (h_border * 2 + h_caption + h_menu);
     }
 
+    //printf("Metrics:\nBorder Horizontal: %i\nBorder Vertical: %i\nCaption: %i\nScreenWA W: %i\nScreen WA H: %i\n", w_border, h_border, h_caption, w_screenwa, h_screenwa);
+
     //-----------
     // 2a) Stretching, shrinking and scaling
 
@@ -507,7 +521,7 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
 
     AdjustWindowRect(&new_client_area, style, false);
     //if (hasBorder) {
-    //     //Doing AdjustWindowRect manually, because it wasn't working out for some reason
+    //    //Doing AdjustWindowRect manually, because it wasn't working out for some reason
     //    new_client_area.left -= w_border;
     //    new_client_area.right += w_border;
     //    new_client_area.top -= (h_border + h_caption + h_menu);
@@ -547,6 +561,7 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     int w = new_window_area.right - new_window_area.left;
     int h = new_window_area.bottom - new_window_area.top;
 
+
     //--------------
     
     _TouchSizeEventTimestamp();
@@ -557,13 +572,7 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     if (dynamicPos) {
 
         SetWindowPos(hWnd, HWND_TOP, x, y, w, h, SWP_DEFERERASE | SWP_NOCOPYBITS); // These flags are pretty good to reduce flickering and discarding old bits
-        std::cout << "RESIZE" << std::endl;
-    }
-    else if (isFullscreen) {
-        stash.rc.left = x;
-        stash.rc.top = y;
-        stash.rc.right = x + w;
-        stash.rc.bottom = y + h;
+        //std::cout << "RESIZE" << " C: " << w_client << "x" << h_client << " W: " << w << "x" << h<< " N: " << w_native << "x" << h_native << std::endl;
     }
 
     fastDrawDone = HQRedraw; // Normally false, Fill paint LQ version fast on the next redraw
@@ -575,6 +584,7 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     //rc.bottom = sch;
     //AdjustWindowRect(&rc, WS_CAPTION, false);
     //MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, false);
+    //UpdateWindowSizeInfo();
 }
 
 void WindowManager::ShowPopupMenu(POINT& p) {

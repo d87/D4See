@@ -27,7 +27,7 @@ public:
     HWND hWnd;
     MemoryFrame* frame = nullptr;
     MemoryFrame* frame2 = nullptr;
-    Playlist* playlist;
+    Playlist* playlist = nullptr;
     //bool newImagePending = false;
 
     bool fastDrawDone = false;
@@ -68,6 +68,7 @@ public:
 private:
     std::chrono::system_clock::time_point lastGeneratedSizingEvent;
     WINDOW_SAVED_DATA stash;
+    WINDOW_SAVED_DATA borderlessStash;
 
 public:
     void Redraw(unsigned int addFlags = 0);
@@ -93,12 +94,12 @@ public:
     bool WasGeneratingEvents();
     void LimitPanOffset();
     void Pan(int x, int y);
-    bool SaveWindowParams();
+    bool SaveWindowParams(WINDOW_SAVED_DATA* cont);
     void GetCenteredImageRect(RECT* rc);
     void ShowPopupMenu(POINT &p);
     void HandleMenuCommand(unsigned int uIDItem);
     void UpdateWindowSizeInfo();
     void _TouchSizeEventTimestamp();
-
+    ~WindowManager();
     
 };
