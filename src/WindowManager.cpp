@@ -36,17 +36,11 @@ void WindowManager::Pan(int x, int y) {
 }
 
 void WindowManager::UpdateWindowSizeInfo() {
-
+    // Used only to update client area dimensions after WM_SIZE to limit panning offset
     RECT crc;
     GetClientRect(hWnd, &crc);
     h_client = crc.bottom - crc.top;
     w_client = crc.right - crc.left;
-    // Used for panning
-
-    //RECT wrc;
-    //GetWindowRect(hWnd, &wrc);
-    //h_window = wrc.bottom - wrc.top;
-    //w_window = wrc.right - wrc.left;
 }
 
 void WindowManager::GetCenteredImageRect(RECT* rc) {
@@ -144,7 +138,7 @@ void WindowManager::ToggleBorderless() {
         SetWindowLong(hWnd, GWL_STYLE, style | (WS_CAPTION | WS_THICKFRAME));
         SetWindowLong(hWnd, GWL_EXSTYLE, exstyle | (WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
     }
-    ResizeForImage();
+    ResizeForImage(true);
     Redraw();
 }
 
@@ -383,8 +377,6 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     w_scaled = w_native * endscale;
     h_scaled = h_native * endscale;
 
-    LimitPanOffset();
-
     scale_effective = endscale;
 
     // if zoom lock is on it should override all autoscaling
@@ -402,6 +394,11 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     new_client_area.right = (origin.x + cut_width) - cut_width / 2;
     new_client_area.top = origin.y - cut_height / 2;
     new_client_area.bottom = (origin.y + cut_height) - cut_height / 2;
+
+    h_client = new_client_area.bottom - new_client_area.top;
+    w_client = new_client_area.right - new_client_area.left;
+
+    LimitPanOffset();
 
     AdjustWindowRect(&new_client_area, style, false);
     //if (hasBorder) {
@@ -452,21 +449,6 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     bool dynamicPos = !isMaximized && !isFullscreen;
 
 
-        //int w_wa2 = w_working_area - w_border * 2; // max client area size. WA minus window borders
-        //int h_wa2 = h_working_area - (h_border * 2 + h_caption);
-
-        //if (w_scaled < w_wa2) {
-        //    x = (w_wa2 - w_scaled) / 2;
-        //    w = w_scaled + w_border * 2;
-        //}
-        //else w = w_working_area;
-
-        //if (h_scaled < h_wa2) {
-        //    y = (h_wa2 - h_scaled) / 2;
-        //    h = h_scaled + (h_border * 2 + h_caption);
-        //}
-        //else h = h_working_area;
-
     if (dynamicPos) {
 
         SetWindowPos(hWnd, HWND_TOP, x, y, w, h, SWP_DEFERERASE | SWP_NOCOPYBITS); // These flags are pretty good to reduce flickering and discarding old bits
@@ -488,8 +470,6 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     //rc.bottom = sch;
     //AdjustWindowRect(&rc, WS_CAPTION, false);
     //MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, false);
-
-    UpdateWindowSizeInfo();
 }
 
 void WindowManager::ShowPopupMenu(POINT& p) {

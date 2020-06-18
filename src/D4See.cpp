@@ -522,17 +522,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         }
         break;
     }
-    //case WM_NCHITTEST: {
-    //    if (!GetAsyncKeyState(VK_MENU)) {
-    //        LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);
-    //        if (hit == HTCLIENT) hit = HTCAPTION;
-    //        return hit;
-    //    }
-    //    else {
-    //        return DefWindowProc(hWnd, message, wParam, lParam);
-    //    }
-    //    break;
-    //}
+    case WM_NCHITTEST: {
+        if (GetAsyncKeyState(VK_MENU)) {
+            LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);
+            if (hit == HTCLIENT) hit = HTCAPTION;
+            return hit;
+        }
+        else {
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+        break;
+    }
     case WM_MOUSEMOVE: {
         int LMBDown = (wParam) & MK_LBUTTON;
         if (LMBDown) {
@@ -560,7 +560,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
             gWinMgr.isMaximized = true;
         }
         else if (eventType == SIZE_RESTORED) {
-            gWinMgr.isMaximized = false;
+            // Initially first WM_SIZE is handled before the first frame is loaded
+            if (gWinMgr.isMaximized) {
+                gWinMgr.isMaximized = false;
+                gWinMgr.ResizeForImage();
+            }
         }
         gWinMgr.isMovingOrSizing = false;
         gWinMgr.UpdateWindowSizeInfo();
