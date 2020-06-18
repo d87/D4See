@@ -592,7 +592,7 @@ void WindowManager::ShowPopupMenu(POINT& p) {
     DestroyMenu(popupMenu);
 }
 
-void OpenFileDialog() {
+std::wstring OpenFileDialog() {
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
         COINIT_DISABLE_OLE1DDE);
     if (SUCCEEDED(hr))
@@ -621,8 +621,10 @@ void OpenFileDialog() {
                     // Display the file name to the user.
                     if (SUCCEEDED(hr))
                     {
-                        MessageBoxW(NULL, pszFilePath, L"File Path", MB_OK);
+                        std::wstring filepath(pszFilePath);
+                        //MessageBoxW(NULL, pszFilePath, L"File Path", MB_OK);
                         CoTaskMemFree(pszFilePath);
+                        return filepath;
                     }
                     pItem->Release();
                 }
@@ -631,13 +633,19 @@ void OpenFileDialog() {
         }
         CoUninitialize();
     }
-    return;
+    return L"";
 }
 
 void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
     switch (uIDItem) {
         case ID_OPENFILE: {
-            OpenFileDialog();
+            std::wstring filepath = OpenFileDialog();
+            if (filepath != L"") {
+                auto pl = new Playlist(filepath);
+                SelectPlaylist(pl);
+                SelectFrame(new MemoryFrame(hWnd, pl->Current()->filename, pl->Current()->format));
+                //std::cout << filepath.c_str() << std::endl;
+            }
             break;
         }
         case ID_ZOOMLOCK: {
@@ -654,7 +662,7 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             break;
         }
         case ID_ZOOMOUT: {
-            ManualZoom(+0.10f);
+            ManualZoom(-0.10f);
             break;
         }
         case ID_SHRINKTOWIDTH: {
