@@ -48,7 +48,7 @@ VOID OnPaint(HDC hdc)
             bool imageComplete = frame->image->IsSubimageLoaded(frame->curFrame);
           
             if (!gWinMgr.fastDrawDone || gWinMgr.isPanning || gWinMgr.isMovingOrSizing || !imageComplete || frame->isAnimated) {
-            //if (true) {
+            //if (false) {
                 
             
                 HGDIOBJ oldbmp = SelectObject(pImage->hdc, pImage->hBitmap);
@@ -69,7 +69,13 @@ VOID OnPaint(HDC hdc)
                 gWinMgr.fastDrawDone = true;
             } else {
 
-                Gdiplus::Graphics graphics(hdc);
+                
+
+                HBITMAP memHBitmap = CreateCompatibleBitmap(hdc, gWinMgr.w_scaled, gWinMgr.h_scaled);
+                //HGDIOBJ oldBitmap = SelectObject(memDC, memBitmap);
+                Gdiplus::Bitmap memBitmap = Gdiplus::Bitmap(memHBitmap, NULL);
+
+                Gdiplus::Graphics graphics(&memBitmap);
                 Gdiplus::Bitmap* bitmap = Gdiplus::Bitmap::FromHBITMAP(pImage->hBitmap, NULL);
 
                 graphics.SetInterpolationMode(Gdiplus::InterpolationModeBicubic);
@@ -84,6 +90,11 @@ VOID OnPaint(HDC hdc)
                 graphics.DrawImage(bitmap, rc.left-gWinMgr.x_poffset, rc.top-gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled);
 
                 delete bitmap;
+
+
+                Gdiplus::Graphics graphics2(hdc);
+
+                graphics2.DrawImage(&memBitmap, 0, 0, gWinMgr.w_scaled, gWinMgr.h_scaled);
 
                 std::cout << "REDRAW SMOOTH" << std::endl;
             }
