@@ -53,25 +53,16 @@ VOID OnPaint(HDC hdc)
             
                 HGDIOBJ oldbmp = SelectObject(pImage->hdc, pImage->hBitmap);
                 SetStretchBltMode(hdc, COLORONCOLOR);
-                if (gWinMgr.isMaximized || gWinMgr.isFullscreen) {
-                    RECT rc;
-                    gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
 
-                    HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                    SelectClipRgn(hdc, hRgn);
+                RECT rc;
+                // GetClientRect(gWinMgr.hWnd, &rc);
+                gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
 
-                    StretchBlt(hdc, rc.left - gWinMgr.x_poffset, rc.top - gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, 0, 0, width, height, SRCCOPY);
-                } else {
+                HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+                SelectClipRgn(hdc, hRgn);
 
-                    RECT rc;
-                    GetClientRect(gWinMgr.hWnd, &rc);
+                StretchBlt(hdc, rc.left - gWinMgr.x_poffset, rc.top - gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, 0, 0, width, height, SRCCOPY);
 
-                    HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                    SelectClipRgn(hdc, hRgn);
-
-                    //StretchBlt(hdc, 0, 0, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, gWinMgr.x_poffset, gWinMgr.y_poffset, width, height, SRCCOPY);
-                    StretchBlt(hdc, -gWinMgr.x_poffset, -gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, 0, 0, width, height, SRCCOPY);
-                }
                 SelectObject(pImage->hdc, oldbmp);
 
                 std::cout << "REDRAW FAST " << gWinMgr.isMovingOrSizing  << " " << !frame->image->IsSubimageLoaded(frame->curFrame) <<std::endl;
@@ -83,24 +74,14 @@ VOID OnPaint(HDC hdc)
 
                 graphics.SetInterpolationMode(Gdiplus::InterpolationModeBicubic);
 
-                if (gWinMgr.isMaximized || gWinMgr.isFullscreen) {
-                    RECT rc;
-                    gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
+                RECT rc;
+                // GetClientRect(gWinMgr.hWnd, &rc);
+                gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
 
-                    HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                    graphics.SetClip(hRgn);
+                HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
+                graphics.SetClip(hRgn);
 
-                    graphics.DrawImage(bitmap, rc.left-gWinMgr.x_poffset, rc.top-gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled);
-                }
-                else {
-                    RECT rc;
-                    GetClientRect(gWinMgr.hWnd, &rc);
-
-                    HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                    graphics.SetClip(hRgn);
-                    
-                    graphics.DrawImage(bitmap, -gWinMgr.x_poffset, -gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled);
-                }
+                graphics.DrawImage(bitmap, rc.left-gWinMgr.x_poffset, rc.top-gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled);
 
                 delete bitmap;
 

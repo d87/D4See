@@ -364,6 +364,7 @@ void WindowManager::ReadOrigin() {
         y_origin = origin->y;
     }
     catch (const std::runtime_error& e) {
+        // Center of the primary screen
         int mw = GetSystemMetrics(SM_CXSCREEN);
         int mh = GetSystemMetrics(SM_CYSCREEN);
         x_origin = mw/2;
@@ -587,14 +588,7 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     }
 
     fastDrawDone = HQRedraw; // Normally false, Fill paint LQ version fast on the next redraw
-    //frame->drawId--; // Will cause the redraw again after the first, and it'll be HQ
-    //RECT rc;
-    //rc.top = 0;
-    //rc.left = 0;
-    //rc.right = scw;
-    //rc.bottom = sch;
-    //AdjustWindowRect(&rc, WS_CAPTION, false);
-    //MoveWindow(hWnd, rc.left, rc.top, rc.right, rc.bottom, false);
+
     //UpdateWindowSizeInfo();
 }
 
