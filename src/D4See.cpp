@@ -34,11 +34,11 @@ using namespace Gdiplus;
 WindowManager gWinMgr;
 
 ID2D1Factory* pD2DFactory;
-ID2D1DCRenderTarget* pRenderTarget;
-//ID2D1HwndRenderTarget* pRenderTarget;
+//ID2D1DCRenderTarget* pRenderTarget;
+ID2D1HwndRenderTarget* pRenderTarget;
 
 
-VOID OnPaint(HDC hdc)
+VOID OnPaint() //HDC hdc)
 {
     using namespace std::chrono_literals;
 
@@ -59,14 +59,25 @@ VOID OnPaint(HDC hdc)
             RECT rc;
             GetClientRect(gWinMgr.hWnd, &rc);
 
+            D2D1_SIZE_U size = D2D1::SizeU(
+                rc.right - rc.left,
+                rc.bottom - rc.top
+            );
+            pRenderTarget->Resize(size);
+
+            //RECT rc;
+            // GetClientRect(gWinMgr.hWnd, &rc);
+            gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
+
             // Border
             //rc.left += 2;
             //rc.right -= 2;
             //rc.top += 2;
             //rc.bottom -= 2;
 
+            
                 
-            pRenderTarget->BindDC(hdc, &rc);
+            //pRenderTarget->BindDC(hdc, &rc);
 
             pRenderTarget->BeginDraw();
             //pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
@@ -99,10 +110,10 @@ VOID OnPaint(HDC hdc)
             pRenderTarget->DrawBitmap(
                 pImage->pBitmap,
                 D2D1::RectF(
-                    upperLeftCorner.x,
-                    upperLeftCorner.y,
-                    upperLeftCorner.x + gWinMgr.w_scaled,
-                    upperLeftCorner.y + gWinMgr.h_scaled
+                    (float)rc.left,
+                    (float)rc.top,
+                    (float)rc.right,
+                    (float)rc.bottom
                 )
             );
                 
@@ -225,7 +236,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     //props.type = D2D1_RENDER_TARGET_TYPE_SOFTWARE;
 
     // Create a Direct2D render target					
-    hr = pD2DFactory->CreateDCRenderTarget(&props, &pRenderTarget);
+    //hr = pD2DFactory->CreateDCRenderTarget(&props, &pRenderTarget);
+    D2D1_SIZE_U size = D2D1::SizeU(
+        600,
+        480
+    );
+    hr = pD2DFactory->CreateHwndRenderTarget(props, D2D1::HwndRenderTargetProperties(hWnd, size), &pRenderTarget);
 
     //auto image = gWinMgr.frame->GetActiveSubimage();
     //D2D1_SIZE_U bitmapSize;
@@ -521,11 +537,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     case WM_DISPLAYCHANGE:        
     case WM_PAINT: {
         std::cout << "WM_PAINT" << std::endl;
-        //ValidateRect(hWnd, NULL);
-        //OnPaint()
-        hdc = BeginPaint(hWnd, &ps);
-        OnPaint(hdc);
-        EndPaint(hWnd, &ps);
+        ValidateRect(hWnd, NULL);
+        OnPaint();
+        //hdc = BeginPaint(hWnd, &ps);
+        //OnPaint(hdc);
+        //EndPaint(hWnd, &ps);
         return 0;
     }
     case WM_DESTROY:

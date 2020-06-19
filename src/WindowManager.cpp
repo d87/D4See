@@ -580,10 +580,8 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     _TouchSizeEventTimestamp();
 
     bool dynamicPos = !isMaximized && !isFullscreen;
-
-
     if (dynamicPos) {
-
+        
         SetWindowPos(hWnd, HWND_TOP, x, y, w, h, SWP_DEFERERASE | SWP_NOCOPYBITS); // These flags are pretty good to reduce flickering and discarding old bits
         //std::cout << "RESIZE" << " C: " << w_client << "x" << h_client << " W: " << w << "x" << h<< " N: " << w_native << "x" << h_native << std::endl;
     }

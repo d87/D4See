@@ -9,6 +9,7 @@
 #include "resource.h"
 #include "util.h"
 #include "Playlist.h"
+#include "D4See.h"
 
 #include "libs/toml11/toml.hpp"
 

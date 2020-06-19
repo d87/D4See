@@ -7,4 +7,5 @@
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 extern ID2D1Factory* pD2DFactory;
-extern ID2D1DCRenderTarget* pRenderTarget;
+//extern ID2D1DCRenderTarget* pRenderTarget;
+extern ID2D1HwndRenderTarget* pRenderTarget;
