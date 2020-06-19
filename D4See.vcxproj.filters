@@ -18,12 +18,6 @@
     <ClInclude Include="src\playlist.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MemoryFrame.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ImageBuffer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\ImageFormats.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -45,15 +39,15 @@
     <ClInclude Include="src\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\DecodeBuffer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImageContainer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\playlist.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImageBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MemoryFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\util.cpp">
@@ -63,6 +57,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\D4See.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DecodeBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ImageContainer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

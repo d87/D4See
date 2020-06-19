@@ -5,7 +5,7 @@
 #include <iostream>
 #include <filesystem>
 #include <chrono>
-#include "MemoryFrame.h"
+#include "ImageContainer.h"
 #include "resource.h"
 #include "util.h"
 #include "Playlist.h"
@@ -29,8 +29,8 @@ struct WINDOW_SAVED_DATA {
 class WindowManager {
 public:
     HWND hWnd;
-    MemoryFrame* frame = nullptr;
-    MemoryFrame* frame2 = nullptr;
+    ImageContainer* frame = nullptr;
+    ImageContainer* frame2 = nullptr; // prefecth container
     Playlist* playlist = nullptr;
     PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
     //bool newImagePending = false;
@@ -42,15 +42,15 @@ public:
     bool isBorderless = false;
     bool alwaysOnTop = false;
 
-    int w_client;
+    int w_client; // client area, everything inside the window frame
     int h_client;
 
-    int x_origin;
+    int x_origin; // point on the screen around which the windows is constucted
     int y_origin;
 
-    int w_border;
-    int h_border;
-    int h_caption;
+    //int w_border; // Window metrics
+    //int h_border;
+    //int h_caption;
 
     bool zoomLock = false;
     bool stretchToScreenWidth = true;
@@ -59,21 +59,21 @@ public:
     bool shrinkToScreenHeight = false;
 
 
-    float scale_manual = 1.0f;
-    float scale_effective = 1.0f;
+    float scale_manual = 1.0f; // 
+    float scale_effective = 1.0f; // Actual current scale
     
-    int x_poffset = 0;
+    int x_poffset = 0; // Panning offset
     int y_poffset = 0;
-    int w_scaled;
+
+    int w_scaled; // Dimensions after applying scale
     int h_scaled;
 
-    int mouseX = 0;
+    int mouseX = 0;  // Used to store previous mouse position when panning
     int mouseY = 0;
 
 private:
-    std::chrono::system_clock::time_point lastGeneratedSizingEvent;
+    std::chrono::system_clock::time_point lastGeneratedSizingEvent; // (generated not by user)
     WINDOW_SAVED_DATA stash;
-    WINDOW_SAVED_DATA borderlessStash;
 
 public:
     void Redraw(unsigned int addFlags = 0);
@@ -81,11 +81,11 @@ public:
     void StopTimer(UINT_PTR id);
     void NextImage();
     void PreviousImage();
-    void LoadImage(int prefetchDir);
-    void StartPrefetch(MemoryFrame* f);
+    void LoadImageFromPlaylist(int prefetchDir);
+    void StartPrefetch(ImageContainer* f);
     void ShowPrefetch();
     void DiscardPrefetch();
-    void SelectFrame(MemoryFrame* f);
+    void SelectImage(ImageContainer* f);
     void SelectPlaylist(Playlist* playlist);
     void ResizeForImage(bool HQRedraw = false);
     void ManualZoom(float mod, float absolute = 0.0);

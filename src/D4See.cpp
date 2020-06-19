@@ -22,46 +22,25 @@ using namespace Gdiplus;
 #include "util.h"
 #include "playlist.h"
 #include "D4See.h"
-#include "ImageBuffer.h"
-#include "MemoryFrame.h"
+#include "DecodeBuffer.h"
+#include "ImageContainer.h"
 #include "WindowManager.h"
 
 
 WindowManager gWinMgr;
-
-//void ClearWindow(HDC hdc) {
-//    HBRUSH newBrush = CreateSolidBrush(RGB(100, 100, 100));
-//    HGDIOBJ oldBrush = SelectObject(hdc, newBrush);
-//
-//    Rectangle(hdc, 0, 0, frame->image->xres, frame->image->yres);
-//
-//    SelectObject(hdc, oldBrush);
-//    DeleteObject(newBrush);
-//}
-
-
-
 
 
 VOID OnPaint(HDC hdc)
 {
     using namespace std::chrono_literals;
 
-    MemoryFrame* frame = gWinMgr.frame;
+    ImageContainer* frame = gWinMgr.frame;
 
     if (frame) {
-        //if (gWinMgr.newImagePending) {
-        //    gWinMgr.newImagePending = false;
-        //    if (frame->threadState == 0) {
-        //        std::cout << "Clearing before bitmap is ready" << std::endl;
-        //    }
-        //    ClearWindow(hdc);
-        //    gWinMgr.ResizeForImage(frame);
-        //}
 
         if (frame->threadState > 0) {
             
-            DIBImage* pImage = frame->GetActiveSubimage();
+            ImageFrame* pImage = frame->GetActiveSubimage();
 
             int width = pImage->width;
             int height = pImage->height;
@@ -73,7 +52,6 @@ VOID OnPaint(HDC hdc)
                 
             
                 HGDIOBJ oldbmp = SelectObject(pImage->hdc, pImage->hBitmap);
-                //BitBlt(hdc, 0, 0, width, height, pImage->hdc, 0, 0, SRCCOPY);
                 SetStretchBltMode(hdc, COLORONCOLOR);
                 if (gWinMgr.isMaximized || gWinMgr.isFullscreen) {
                     RECT rc;
@@ -100,43 +78,9 @@ VOID OnPaint(HDC hdc)
                 gWinMgr.fastDrawDone = true;
             } else {
 
-                /*HDC memDC = CreateCompatibleDC(hdc);
-
-                RECT rc;
-                GetClientRect(gWinMgr.hWnd, &rc);
-                HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                SelectClipRgn(memDC, hRgn);
-
-                HBITMAP hbitmap = CreateCompatibleBitmap(hdc, width, height);
-                HGDIOBJ oldbmp = SelectObject(memDC, hbitmap);
-
-                Gdiplus::Graphics graphics(memDC);
-                // It's possible to draw directly into hdc at this point without using memDC and compatible bitmap.
-                // But using it helps with flickering and there's no noticable slowdown
-
-                //graphics.SetInterpolationMode(Gdiplus::InterpolationModeLowQuality); // Should use LQ while deconding and HQ when finished
-                graphics.SetInterpolationMode(Gdiplus::InterpolationModeBicubic);
-                Gdiplus::Bitmap* bitmap = Gdiplus::Bitmap::FromHBITMAP(pImage->hBitmap, NULL);
-                graphics.DrawImage(bitmap, 0, 0, gWinMgr.w_scaled, gWinMgr.h_scaled);
-
-                delete bitmap;
-
-                BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
-
-                std::cout << "REDRAW SMOOTH" << std::endl;
-
-                SelectObject(memDC, oldbmp);
-                DeleteObject(memDC);
-                */
-
-                //RECT rc;
-                //GetClientRect(gWinMgr.hWnd, &rc);
-                //HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                //SelectClipRgn(hdc, hRgn);
-
                 Gdiplus::Graphics graphics(hdc);
                 Gdiplus::Bitmap* bitmap = Gdiplus::Bitmap::FromHBITMAP(pImage->hBitmap, NULL);
-                //graphics.SetInterpolationMode(Gdiplus::InterpolationModeLowQuality); // Should use LQ while deconding and HQ when finished
+
                 graphics.SetInterpolationMode(Gdiplus::InterpolationModeBicubic);
 
                 if (gWinMgr.isMaximized || gWinMgr.isFullscreen) {
@@ -241,7 +185,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     gWinMgr.ReadOrigin();
     gWinMgr.SelectPlaylist(playlist);
-    gWinMgr.SelectFrame(new MemoryFrame(hWnd, playlist->Current()->path, playlist->Current()->format));
+    gWinMgr.SelectImage(new ImageContainer(hWnd, playlist->Current()->path, playlist->Current()->format));
     
     //HMENU submenu = CreatePopupMenu();
     //AppendMenuW(submenu, MF_STRING, 1001, L"submenu 1001");
@@ -287,7 +231,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     break;
                 }
                 case WM_FRAMEREADY: {
-                    MemoryFrame* f = (MemoryFrame*)msg.wParam;
+                    ImageContainer* f = (ImageContainer*)msg.wParam;
                     if (f == gWinMgr.frame) {
                         //gWinMgr.newImagePending = true;
                         //RedrawWindow(hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
@@ -312,7 +256,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     gWinMgr.SelectPlaylist(playlist);
 
                     auto cur = playlist->Current();
-                    gWinMgr.SelectFrame(new MemoryFrame(hWnd, cur->path, cur->format));
+                    gWinMgr.SelectImage(new ImageContainer(hWnd, cur->path, cur->format));
 
                     break;
                 }
@@ -357,12 +301,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                         }
                         case VK_END: {
                             gWinMgr.playlist->Move(PlaylistPos::End, 0);
-                            gWinMgr.LoadImage(0);
+                            gWinMgr.LoadImageFromPlaylist(0);
                             break;
                         }
                         case VK_HOME: {
                             gWinMgr.playlist->Move(PlaylistPos::Start, 0);
-                            gWinMgr.LoadImage(0);
+                            gWinMgr.LoadImageFromPlaylist(0);
                             break;
                         }
                     }
@@ -378,7 +322,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         using namespace std::literals;
         auto now(std::chrono::steady_clock::now());
         if (gWinMgr.frame) {
-            MemoryFrame* frame = gWinMgr.frame;
+            ImageContainer* frame = gWinMgr.frame;
             if (!frame->isAnimated) {
                 if (frame->decoderBatchId != frame->drawId) {
                     std::cout << "batchIDs " << frame->drawId << " " << frame->decoderBatchId << std::endl;

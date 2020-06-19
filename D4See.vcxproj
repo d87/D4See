@@ -174,9 +174,9 @@
   <ItemGroup>
     <ClInclude Include="src\D4See.h" />
     <ClInclude Include="src\framework.h" />
-    <ClInclude Include="src\ImageBuffer.h" />
+    <ClInclude Include="src\DecodeBuffer.h" />
     <ClInclude Include="src\ImageFormats.h" />
-    <ClInclude Include="src\MemoryFrame.h" />
+    <ClInclude Include="src\ImageContainer.h" />
     <ClInclude Include="src\playlist.h" />
     <ClInclude Include="src\resource.h" />
     <ClInclude Include="src\targetver.h" />
@@ -184,9 +184,9 @@
     <ClInclude Include="src\WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ImageBuffer.cpp" />
+    <ClCompile Include="src\DecodeBuffer.cpp" />
     <ClCompile Include="src\D4See.cpp" />
-    <ClCompile Include="src\MemoryFrame.cpp" />
+    <ClCompile Include="src\ImageContainer.cpp" />
     <ClCompile Include="src\playlist.cpp" />
     <ClCompile Include="src\util.cpp" />
     <ClCompile Include="src\WindowManager.cpp" />

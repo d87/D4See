@@ -1,14 +1,14 @@
-#include "ImageBuffer.h"
+#include "DecodeBuffer.h"
 #include <algorithm>
 
-ImageBuffer::ImageBuffer() {
+DecodeBuffer::DecodeBuffer() {
 }
 
-ImageBuffer::ImageBuffer(std::string filename, ImageFormat format) {
+DecodeBuffer::DecodeBuffer(std::string filename, ImageFormat format) {
 	Open(filename, format);
 }
 
-int ImageBuffer::Open(std::string filename, ImageFormat format) {
+int DecodeBuffer::Open(std::string filename, ImageFormat format) {
 	this->format = format;
 	
 	in = OIIO::ImageInput::open(filename);
@@ -65,17 +65,17 @@ int ImageBuffer::Open(std::string filename, ImageFormat format) {
 }
 
 
-bool ImageBuffer::IsSubimageLoaded(int subimage) {
+bool DecodeBuffer::IsSubimageLoaded(int subimage) {
 	return curSubimage > subimage;
 }
 
-bool ImageBuffer::IsFullyLoaded() {
+bool DecodeBuffer::IsFullyLoaded() {
 	return decodingComplete;
 }
 
 
 
-DecoderBatchReturns ImageBuffer::PartialLoad(unsigned int numBytes, bool fullLoadFirstMipLevel) {
+DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLoadFirstMipLevel) {
 	if (IsFullyLoaded())
 		return { 0, 0, 0, 0, 0 };
 
@@ -160,7 +160,7 @@ DecoderBatchReturns ImageBuffer::PartialLoad(unsigned int numBytes, bool fullLoa
 	}
 }
 
-void ImageBuffer::FullLoad() {
+void DecodeBuffer::FullLoad() {
 	//in->read_image(OIIO::TypeDesc::UINT8, &pixels[0]);
 	////curSubimage == numSubimages
 	////decodingComplete = true;

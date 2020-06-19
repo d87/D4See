@@ -1,34 +1,34 @@
-#include "MemoryFrame.h"
+#include "ImageContainer.h"
 #include "D4See.h"
 #include "util.h"
 
-MemoryFrame::MemoryFrame(HWND hWnd) {
+ImageContainer::ImageContainer(HWND hWnd) {
     _Init(hWnd);
 }
 
-MemoryFrame::MemoryFrame(HWND hWnd, std::wstring filename, ImageFormat format) {
+ImageContainer::ImageContainer(HWND hWnd, std::wstring filename, ImageFormat format) {
     _Init(hWnd);
 	OpenFile(filename, format);
 }
 
-void MemoryFrame::_Init(HWND hWnd) {
+void ImageContainer::_Init(HWND hWnd) {
     this->hWnd = hWnd;
     threadStarted = false;
     frameTimeElapsed = std::chrono::duration<float>(-999.0); // Animation won't start playing until we're ready for it
 }
 
-void MemoryFrame::OpenFile(std::wstring filename, ImageFormat format) {
+void ImageContainer::OpenFile(std::wstring filename, ImageFormat format) {
 	this->filename = wide_to_utf8(filename);
     this->format = format;
 	StartThread();
 }
 
-MemoryFrame::~MemoryFrame() {
+ImageContainer::~ImageContainer() {
     //SelectObject(memDC, oldbmp);
     //DeleteObject(hbitmap);
     threadState = 4;
     decoderThread.join();
-    for (auto it = DIBitmap.begin(); it < DIBitmap.end(); it++) {
+    for (auto it = frame.begin(); it < frame.end(); it++) {
         DeleteObject(it->hBitmap);
     }
 
@@ -37,10 +37,10 @@ MemoryFrame::~MemoryFrame() {
     DeleteDC(memDC);
 }
 
-void DecodingWork(MemoryFrame *self) {
+void DecodingWork(ImageContainer *self) {
 
-	self->image = new ImageBuffer();
-	ImageBuffer* image = self->image;
+	self->image = new DecodeBuffer();
+	DecodeBuffer* image = self->image;
 
     //HDC hWndDC = GetWindowDC(NULL);
     //self->memDC = CreateCompatibleDC(hWndDC);
@@ -49,7 +49,7 @@ void DecodingWork(MemoryFrame *self) {
     
 	image->Open(self->filename, self->format);
 
-    self->DIBitmap.resize(image->numSubimages);
+    self->frame.resize(image->numSubimages);
 
     if (image->isAnimated)
         self->isAnimated = true;
@@ -68,7 +68,7 @@ void DecodingWork(MemoryFrame *self) {
 
         int subimage = self->subimagesReady;
 
-        DIBImage* pImage = &self->DIBitmap[subimage];
+        ImageFrame* pImage = &self->frame[subimage];
         //if (!pImage)
             //return false;
 
@@ -199,7 +199,7 @@ void DecodingWork(MemoryFrame *self) {
         if (image->IsFullyLoaded())
             self->threadState = 3;
         else {
-            self->DIBitmap.resize(image->numSubimages);
+            self->frame.resize(image->numSubimages);
         }
 
        
@@ -210,18 +210,18 @@ void DecodingWork(MemoryFrame *self) {
 	self->threadPromise.set_value(true);
 }
 
-void MemoryFrame::StartThread() {
+void ImageContainer::StartThread() {
     decoderThread = std::thread(DecodingWork, this);
     threadStarted = true;
     threadFinished = threadPromise.get_future();
     threadInitFinished = threadInitPromise.get_future();
 }
 
-void MemoryFrame::TerminateThread() {
+void ImageContainer::TerminateThread() {
     delete& decoderThread;
 }
 
-bool MemoryFrame::IsFinished() {
+bool ImageContainer::IsFinished() {
     using namespace std::chrono_literals;
 
     if (!threadStarted)
@@ -232,11 +232,11 @@ bool MemoryFrame::IsFinished() {
         return true;
 }
 
-DIBImage* MemoryFrame::GetActiveSubimage() {
-    return &DIBitmap[curFrame];
+ImageFrame* ImageContainer::GetActiveSubimage() {
+    return &frame[curFrame];
 }
 
-bool MemoryFrame::PrevSubimage() {
+bool ImageContainer::PrevSubimage() {
     curFrame--;
 
     if (curFrame < 0)
@@ -245,7 +245,7 @@ bool MemoryFrame::PrevSubimage() {
     return true;
 }
 
-bool MemoryFrame::NextSubimage() {
+bool ImageContainer::NextSubimage() {
     curFrame++;
 
     if (curFrame >= image->numSubimages)
@@ -260,7 +260,7 @@ bool MemoryFrame::NextSubimage() {
     return true;
 }
 
-bool MemoryFrame::AdvanceAnimation(std::chrono::duration<float> elapsed) {
+bool ImageContainer::AdvanceAnimation(std::chrono::duration<float> elapsed) {
     using namespace std::chrono_literals;
     frameTimeElapsed += elapsed;
     //std::cout << frameTimeElapsed.count() << "   " << GetActiveSubimage()->frameDelay.count() << std::endl;

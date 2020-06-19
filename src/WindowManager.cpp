@@ -19,7 +19,7 @@ WindowManager::~WindowManager() {
     if (frame2) delete frame2;
 }
 
-//void ClearWindowForFrame(HWND hWnd, MemoryFrame* f) {
+//void ClearWindowForFrame(HWND hWnd, ImageContainer* f) {
 //
 //    //HBRUSH newBrush = CreateSolidBrush(RGB(80, 80, 80));
 //    //FillRect(hdc, &rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
@@ -37,7 +37,7 @@ WindowManager::~WindowManager() {
 //}
 
 void WindowManager::ShowPrefetch() {
-    SelectFrame(frame2);
+    SelectImage(frame2);
     frame2 = nullptr;
     //frame->drawId = frame->decoderBatchId;
     //gWinMgr.newImagePending = true;
@@ -58,7 +58,7 @@ void WindowManager::DiscardPrefetch() {
     frame2 = nullptr;
 }
 
-void WindowManager::StartPrefetch(MemoryFrame* f) {
+void WindowManager::StartPrefetch(ImageContainer* f) {
     frame2 = f;
     // Start 2 minute timer
     SetTimer(hWnd, D4S_PREFETCH_TIMEOUT, 120000, NULL);
@@ -66,17 +66,17 @@ void WindowManager::StartPrefetch(MemoryFrame* f) {
 
 void WindowManager::PreviousImage() {
     if (playlist->Move(PlaylistPos::Current, -1)) {
-        LoadImage(-1);
+        LoadImageFromPlaylist(-1);
     }
 }
 
 void WindowManager::NextImage() {
     if (playlist->Move(PlaylistPos::Current, +1)) {
-        LoadImage(+1);
+        LoadImageFromPlaylist(+1);
     }
 }
 
-void WindowManager::LoadImage(int prefetchDir) {
+void WindowManager::LoadImageFromPlaylist(int prefetchDir) {
     PlaylistEntry* cur = playlist->Current();
     PlaylistEntry* following = nullptr;
     if (prefetchDir > 0)
@@ -94,11 +94,11 @@ void WindowManager::LoadImage(int prefetchDir) {
         }
         else { // Changed direction or jumped more than 1
             DiscardPrefetch();
-            SelectFrame(new MemoryFrame(hWnd, cur->path, cur->format));
+            SelectImage(new ImageContainer(hWnd, cur->path, cur->format));
         }
     }
     if (following) {
-        StartPrefetch(new MemoryFrame(hWnd, following->path, following->format));
+        StartPrefetch(new ImageContainer(hWnd, following->path, following->format));
     }
     else {
         frame2 = nullptr;
@@ -220,10 +220,6 @@ void WindowManager::ToggleFullscreen() {
 void WindowManager::ToggleBorderless(int doRedraw) {
     if (isFullscreen) return;
 
-    if (!isBorderless) {
-        SaveWindowParams(&this->borderlessStash);
-    }
-
     isBorderless = !isBorderless;
 
     int style = GetWindowLong(hWnd, GWL_STYLE);
@@ -238,14 +234,13 @@ void WindowManager::ToggleBorderless(int doRedraw) {
     }
     //SetWindowPos(hWnd, NULL, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOREPOSITION | SWP_NOREDRAW);
     if (doRedraw) {
-        
         ResizeForImage();
         Redraw();
         ScheduleRedraw(50);
     }
 }
 
-void WindowManager::SelectFrame(MemoryFrame* f) {
+void WindowManager::SelectImage(ImageContainer* f) {
     if (frame != nullptr) {
         delete frame;
     }
@@ -677,7 +672,7 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             if (filepath != L"") {
                 auto pl = new Playlist(filepath);
                 SelectPlaylist(pl);
-                SelectFrame(new MemoryFrame(hWnd, pl->Current()->path, pl->Current()->format));
+                SelectImage(new ImageContainer(hWnd, pl->Current()->path, pl->Current()->format));
                 //std::cout << filepath.c_str() << std::endl;
             }
             break;
