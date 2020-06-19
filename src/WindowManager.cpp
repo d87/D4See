@@ -122,9 +122,7 @@ void WindowManager::Pan(int x, int y) {
     LimitPanOffset();
 
     fastDrawDone = false;
-    this->Redraw(); // 
-    this->ScheduleRedraw(50); // HQ redraw later
-    //RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+    Redraw();
 }
 
 void WindowManager::UpdateWindowSizeInfo() {

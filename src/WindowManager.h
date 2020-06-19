@@ -37,6 +37,7 @@ public:
 
     bool fastDrawDone = false;
     bool isMovingOrSizing = false;
+    bool isPanning = false;
     bool isMaximized = false;
     bool isFullscreen = false;
     bool isBorderless = false;

@@ -47,7 +47,7 @@ VOID OnPaint(HDC hdc)
 
             bool imageComplete = frame->image->IsSubimageLoaded(frame->curFrame);
           
-            if (!gWinMgr.fastDrawDone || gWinMgr.isMovingOrSizing || !imageComplete || frame->isAnimated) {
+            if (!gWinMgr.fastDrawDone || gWinMgr.isPanning || gWinMgr.isMovingOrSizing || !imageComplete || frame->isAnimated) {
             //if (true) {
                 
             
@@ -390,9 +390,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         }
         break;
     }
+    case WM_LBUTTONUP: {
+        if (gWinMgr.isPanning) {
+            gWinMgr.isPanning = false;
+            gWinMgr.ScheduleRedraw(50);
+        }
+        return 0;
+    }
     case WM_MOUSEMOVE: {
         int LMBDown = (wParam) & MK_LBUTTON;
         if (LMBDown) {
+            if (!gWinMgr.isPanning) {
+                gWinMgr.isPanning = true;
+                gWinMgr.StopTimer(D4S_TIMER_HQREDRAW);
+            }
+
             int& sxPos = gWinMgr.mouseX;
             int& syPos = gWinMgr.mouseY;
 
