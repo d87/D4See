@@ -260,6 +260,8 @@ void WindowManager::SelectFrame(MemoryFrame* f) {
     if (!zoomLock) {
         scale_manual = 1.0f;
     }
+    std::wstring title = playlist->Current()->filename + L" - D4See";
+    SetWindowTextW(hWnd, title.c_str());
 }
 
 void WindowManager::SelectPlaylist(Playlist* playlist) {
