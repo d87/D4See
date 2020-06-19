@@ -215,6 +215,9 @@ void WindowManager::ToggleFullscreen() {
         if (stash.isMaximized)
             ::SendMessage(hWnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
     }
+
+    Redraw();
+    ScheduleRedraw(50);
 }
 
 void WindowManager::ToggleBorderless(int doRedraw) {
@@ -689,25 +692,29 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
         }
         case ID_SHRINKTOWIDTH: {
             shrinkToScreenWidth = !shrinkToScreenWidth;
-            ResizeForImage(true);
+            ResizeForImage();
             Redraw(RDW_ERASE);
+            ScheduleRedraw(50);
             break;
         }
         case ID_SHRINKTOHEIGHT: {
             shrinkToScreenHeight = !shrinkToScreenHeight;
-            ResizeForImage(true);
+            ResizeForImage();
             Redraw(RDW_ERASE);
+            ScheduleRedraw(50);
             break;
         }
         case ID_STRETCHTOWIDTH: {
             stretchToScreenWidth = !stretchToScreenWidth;
-            ResizeForImage(true);
+            ResizeForImage();
             Redraw(RDW_ERASE);
+            ScheduleRedraw(50);
             break;
         }
         case ID_STRETCHTOHEIGHT: {
             stretchToScreenHeight = !stretchToScreenHeight;
-            ResizeForImage(true);
+            ResizeForImage();
+            ScheduleRedraw(50);
             Redraw(RDW_ERASE);
             break;
         }
