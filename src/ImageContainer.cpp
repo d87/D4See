@@ -28,19 +28,29 @@ ImageContainer::~ImageContainer() {
     //DeleteObject(hbitmap);
     threadState = 4;
     decoderThread.join();
+
+    //bitmap_mutex.lock();
+
+    std::cout << "Deleting " << filename << std::endl;
     for (auto it = frame.begin(); it < frame.end(); it++) {
         DeleteObject(it->hBitmap);
+        if (it->pBitmap)
+            it->pBitmap->Release();
     }
+    //bitmap_mutex.unlock();
 
     //delete DIBitmap;
-    delete image;
-    DeleteDC(memDC);
+    if (image)
+        delete image;
 }
 
 void DecodingWork(ImageContainer *self) {
 
 	self->image = new DecodeBuffer();
 	DecodeBuffer* image = self->image;
+
+
+    bool threadInitDone = false;
 
     //HDC hWndDC = GetWindowDC(NULL);
     //self->memDC = CreateCompatibleDC(hWndDC);
@@ -49,7 +59,10 @@ void DecodingWork(ImageContainer *self) {
     
 	image->Open(self->filename, self->format);
 
-    self->frame.resize(image->numSubimages);
+    self->width = image->xres;
+    self->height = image->yres;
+
+    //self->frame.resize(image->numSubimages);
 
     if (image->isAnimated)
         self->isAnimated = true;
@@ -60,15 +73,20 @@ void DecodingWork(ImageContainer *self) {
     //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[�s]" << std::endl;
     //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 
-    self->threadInitPromise.set_value(true);
-    PostMessage(self->hWnd, WM_FRAMEREADY, (WPARAM)self, NULL);
 
     //while ( (self->threadState < 3) && (self->subimagesReady < image->numSubimages) ) {
     while (self->threadState < 3) {
 
         int subimage = self->subimagesReady;
 
+        self->bitmap_mutex.lock();
+
+        ImageFrame  img;
+        memset(&img, 0, sizeof(ImageFrame));
+
+        self->frame.push_back(img);
         ImageFrame* pImage = &self->frame[subimage];
+        pImage->pBitmap = nullptr;
         //if (!pImage)
             //return false;
 
@@ -84,40 +102,54 @@ void DecodingWork(ImageContainer *self) {
         // 10101111
         // 10101111 & 00011111
         pImage->pPixels = NULL;
-        pImage->hdc = CreateCompatibleDC(NULL);
+  
 
-        //if (!pImage->hdc)
-            //return false;
+        D2D1_SIZE_U bitmapSize;
+        bitmapSize.height = pImage->height;
+        bitmapSize.width = pImage->width;
 
-        memset(&pImage->info, 0, sizeof(pImage->info));
+        D2D1_BITMAP_PROPERTIES bitmapProperties;
+        bitmapProperties.dpiX = 96;
+        bitmapProperties.dpiY = 96;
+        bitmapProperties.pixelFormat = D2D1::PixelFormat(
+            DXGI_FORMAT_B8G8R8A8_UNORM,
+            D2D1_ALPHA_MODE_IGNORE
+        );
 
-        pImage->info.bmiHeader.biSize = sizeof(pImage->info.bmiHeader);
-        pImage->info.bmiHeader.biBitCount = 32;
-        pImage->info.bmiHeader.biWidth = pImage->width;
-        pImage->info.bmiHeader.biHeight = -pImage->height;
-        pImage->info.bmiHeader.biCompression = BI_RGB;
-        pImage->info.bmiHeader.biPlanes = 1;
+        
 
-        pImage->hBitmap = CreateDIBSection(pImage->hdc, &pImage->info,
-            DIB_RGB_COLORS, (void**)&pImage->pPixels, NULL, 0);
+        HRESULT hr = pRenderTarget->CreateBitmap(
+            bitmapSize,
+            pImage->pPixels,
+            pImage->pitch,
+            &bitmapProperties,
+            &pImage->pBitmap
+        );
 
-        if (!pImage->hBitmap)
-        {
-            //ImageDestroy(pImage);
-            //return false;
-        }
+        self->bitmap_mutex.unlock();
+
+        long long numBytes = pImage->height * pImage->pitch;
+        std::vector<BYTE> pixels(numBytes);
+        memset(&pixels[0], 0, numBytes);
+
+        pImage->pPixels = &pixels[0];
 
         //GdiFlush(); // idk what it supposed to do, but it's causing a slowdown
 
-        self->threadState = 1;
+        if (!threadInitDone) {
+            threadInitDone = true;
+            self->threadState = 1;
+            self->threadInitPromise.set_value(true);
+            PostMessage(self->hWnd, WM_FRAMEREADY, (WPARAM)self, NULL);
+        }
     
 
         while (self->threadState < 3 && !image->IsSubimageLoaded(subimage)) {
 
-            DecoderBatchReturns decodeInfo = image->PartialLoad(100000, false);
+            DecoderBatchReturns decodeInfo = image->PartialLoad(200000, true);
 
 
-            //self->memDCmutex.lock();
+            
 
             //Gdiplus::BitmapData bitmapData;
             unsigned int yStart = decodeInfo.startLine;
@@ -128,6 +160,7 @@ void DecodingWork(ImageContainer *self) {
 
 
             unsigned char* pRawBitmapOrig = &pImage->pPixels[yStart * pImage->pitch];
+            unsigned char* pBatchStart = pRawBitmapOrig;
 
             unsigned char* oiioBufferPointer = &image->pixels[yStart * image->xstride];
 
@@ -179,9 +212,17 @@ void DecodingWork(ImageContainer *self) {
             }
 
             self->decoderBatchId++;
-        }
 
-        self->subimagesReady++;
+            D2D1_RECT_U rect;
+            rect.left = 0;
+            rect.top = yStart;
+            rect.right = pImage->width;
+            rect.bottom = yEnd;
+
+            
+            pImage->pBitmap->CopyFromMemory(&rect, pBatchStart, pImage->pitch);
+            //self->bitmap_mutex.unlock();
+        }
 
         if (self->isAnimated) {
             using namespace std::chrono_literals;
@@ -196,16 +237,22 @@ void DecodingWork(ImageContainer *self) {
             }
         }
 
-        if (image->IsFullyLoaded())
+        self->subimagesReady++;
+        self->numSubimages = self->subimagesReady;
+
+        if (image->IsFullyLoaded()) {
+            
             self->threadState = 3;
-        else {
-            self->frame.resize(image->numSubimages);
         }
+        //else {
+        //    self->frame.resize(image->numSubimages);
+        //}
 
        
     }
 
-
+    delete self->image;
+    self->image= nullptr;
 
 	self->threadPromise.set_value(true);
 }
@@ -236,25 +283,27 @@ ImageFrame* ImageContainer::GetActiveSubimage() {
     return &frame[curFrame];
 }
 
-bool ImageContainer::PrevSubimage() {
-    curFrame--;
-
-    if (curFrame < 0)
-        curFrame = subimagesReady -1;
-
-    return true;
-}
+//bool ImageContainer::PrevSubimage() {
+//    curFrame--;
+//
+//    if (curFrame < 0)
+//        curFrame = subimagesReady -1;
+//
+//    return true;
+//}
 
 bool ImageContainer::NextSubimage() {
-    curFrame++;
-
-    if (curFrame >= image->numSubimages)
-        curFrame = 0;
-
-    if (curFrame >= subimagesReady) {
-        curFrame--;
-        std::cout << "Waiting on frame " << curFrame << std::endl;
-        return false; // Next frame isn't ready yet
+    int newFrame = curFrame + 1;
+    if (newFrame >= subimagesReady) {
+        if (image != nullptr) {
+            std::cout << "Waiting on frame " << curFrame << std::endl;
+            return false; // Next frame isn't ready yet
+        }
+        else
+            curFrame = 0;
+    }
+    else {
+        curFrame++;
     }
 
     return true;
@@ -266,7 +315,7 @@ bool ImageContainer::AdvanceAnimation(std::chrono::duration<float> elapsed) {
     //std::cout << frameTimeElapsed.count() << "   " << GetActiveSubimage()->frameDelay.count() << std::endl;
     if (frameTimeElapsed >= GetActiveSubimage()->frameDelay) {
         if (NextSubimage()) {
-            //std::cout << "Next Frame GO" << std::endl;
+            std::cout << "Next Frame GO" << std::endl;
             frameTimeElapsed -= GetActiveSubimage()->frameDelay;
             return true;
         }

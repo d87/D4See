@@ -464,8 +464,8 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
     //-----------
     // 2a) Stretching, shrinking and scaling
 
-    int w_native = frame->image->xres;
-    int h_native = frame->image->yres;
+    int w_native = frame->width;
+    int h_native = frame->height;
 
     float w_scale_candidate = 0.0;
     if (w_native < w_screenwa && stretchToScreenWidth) {

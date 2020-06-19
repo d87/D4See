@@ -17,6 +17,10 @@ using namespace Gdiplus;
 #pragma comment (lib,"OpenImageIO.lib")
 #pragma comment (lib,"OpenImageIO_Util.lib")
 
+#include <d2d1.h>
+#pragma comment (lib,"d2d1.lib")
+
+
 #include <chrono>
 
 #include "util.h"
@@ -29,6 +33,10 @@ using namespace Gdiplus;
 
 WindowManager gWinMgr;
 
+ID2D1Factory* pD2DFactory;
+ID2D1DCRenderTarget* pRenderTarget;
+//ID2D1HwndRenderTarget* pRenderTarget;
+
 
 VOID OnPaint(HDC hdc)
 {
@@ -39,65 +47,71 @@ VOID OnPaint(HDC hdc)
     if (frame) {
 
         if (frame->threadState > 0) {
-            
+
+            frame->bitmap_mutex.lock();
+
             ImageFrame* pImage = frame->GetActiveSubimage();
 
             int width = pImage->width;
             int height = pImage->height;
-
-            bool imageComplete = frame->image->IsSubimageLoaded(frame->curFrame);
           
-            if (!gWinMgr.fastDrawDone || gWinMgr.isPanning || gWinMgr.isMovingOrSizing || !imageComplete || frame->isAnimated) {
-            //if (false) {
-                
             
-                HGDIOBJ oldbmp = SelectObject(pImage->hdc, pImage->hBitmap);
-                SetStretchBltMode(hdc, COLORONCOLOR);
+            RECT rc;
+            GetClientRect(gWinMgr.hWnd, &rc);
 
-                RECT rc;
-                // GetClientRect(gWinMgr.hWnd, &rc);
-                gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
+            // Border
+            //rc.left += 2;
+            //rc.right -= 2;
+            //rc.top += 2;
+            //rc.bottom -= 2;
 
-                HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                SelectClipRgn(hdc, hRgn);
+                
+            pRenderTarget->BindDC(hdc, &rc);
 
-                StretchBlt(hdc, rc.left - gWinMgr.x_poffset, rc.top - gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled, pImage->hdc, 0, 0, width, height, SRCCOPY);
+            pRenderTarget->BeginDraw();
+            //pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+            pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
 
-                SelectObject(pImage->hdc, oldbmp);
+            // Paint a grid background.
+            /*pRenderTarget->FillRectangle(
+                D2D1::RectF(0.0f, 0.0f, renderTargetSize.width, renderTargetSize.height),
+                m_pGridPatternBitmapBrush
+                );*/
 
-                std::cout << "REDRAW FAST " << gWinMgr.isMovingOrSizing  << " " << !frame->image->IsSubimageLoaded(frame->curFrame) <<std::endl;
-                gWinMgr.fastDrawDone = true;
-            } else {
+                // Retrieve the size of the bitmap.
+                //D2D1_SIZE_F size = m_pBitmap->GetSize();
+
+            D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(0.0f, 0.0f); // bitmap pos
+            //D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(g_fsX, g_fsY); // bitmap pos
+
+            // Draw a bitmap.
+
+            D2D1_MATRIX_3X2_F scaling = D2D1::Matrix3x2F::Scale(
+                D2D1::Size(gWinMgr.scale_effective, gWinMgr.scale_effective),
+                D2D1::Point2F(0.0f, 0.0f)
+            );
+            D2D1_MATRIX_3X2_F translation = D2D1::Matrix3x2F::Translation(-gWinMgr.x_poffset, -gWinMgr.y_poffset);
+
+            pRenderTarget->SetTransform(translation);
 
                 
 
-                HBITMAP memHBitmap = CreateCompatibleBitmap(hdc, gWinMgr.w_scaled, gWinMgr.h_scaled);
-                //HGDIOBJ oldBitmap = SelectObject(memDC, memBitmap);
-                Gdiplus::Bitmap memBitmap = Gdiplus::Bitmap(memHBitmap, NULL);
+            pRenderTarget->DrawBitmap(
+                pImage->pBitmap,
+                D2D1::RectF(
+                    upperLeftCorner.x,
+                    upperLeftCorner.y,
+                    upperLeftCorner.x + gWinMgr.w_scaled,
+                    upperLeftCorner.y + gWinMgr.h_scaled
+                )
+            );
+                
 
-                Gdiplus::Graphics graphics(&memBitmap);
-                Gdiplus::Bitmap* bitmap = Gdiplus::Bitmap::FromHBITMAP(pImage->hBitmap, NULL);
+            HRESULT hr = pRenderTarget->EndDraw();
 
-                graphics.SetInterpolationMode(Gdiplus::InterpolationModeBicubic);
+            frame->bitmap_mutex.unlock();
 
-                RECT rc;
-                // GetClientRect(gWinMgr.hWnd, &rc);
-                gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
-
-                HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                graphics.SetClip(hRgn);
-
-                graphics.DrawImage(bitmap, rc.left-gWinMgr.x_poffset, rc.top-gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled);
-
-                delete bitmap;
-
-
-                Gdiplus::Graphics graphics2(hdc);
-
-                graphics2.DrawImage(&memBitmap, 0, 0, gWinMgr.w_scaled, gWinMgr.h_scaled);
-
-                std::cout << "REDRAW SMOOTH" << std::endl;
-            }
+            
         }
     }
 }
@@ -177,7 +191,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     gWinMgr.ReadOrigin();
     gWinMgr.SelectPlaylist(playlist);
-    gWinMgr.SelectImage(new ImageContainer(hWnd, playlist->Current()->path, playlist->Current()->format));
+    
     
     //HMENU submenu = CreatePopupMenu();
     //AppendMenuW(submenu, MF_STRING, 1001, L"submenu 1001");
@@ -192,8 +206,49 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     //gWinMgr.GetWindowSize();
 
     //HDC hdc = GetWindowDC(hWnd);
+
+    //gWinMgr.frame->threadFinished.wait();
+
+    //HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
+    HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2DFactory);
+
+    // Create a pixel format and initial its format
+    // and alphaMode fields.
+    D2D1_PIXEL_FORMAT pixelFormat = D2D1::PixelFormat(
+        DXGI_FORMAT_B8G8R8A8_UNORM,
+        D2D1_ALPHA_MODE_IGNORE
+    );
+
+    D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
+    props.pixelFormat = pixelFormat;
+    props.type = D2D1_RENDER_TARGET_TYPE_HARDWARE;
+    //props.type = D2D1_RENDER_TARGET_TYPE_SOFTWARE;
+
+    // Create a Direct2D render target					
+    hr = pD2DFactory->CreateDCRenderTarget(&props, &pRenderTarget);
+
+    //auto image = gWinMgr.frame->GetActiveSubimage();
+    //D2D1_SIZE_U bitmapSize;
+    //bitmapSize.height = image->height;
+    //bitmapSize.width = image->width;
+
+    //D2D1_BITMAP_PROPERTIES bitmapProperties;
+    //bitmapProperties.dpiX = 96;
+    //bitmapProperties.dpiY = 96;
+    //bitmapProperties.pixelFormat = D2D1::PixelFormat(
+    //    DXGI_FORMAT_B8G8R8A8_UNORM,
+    //    D2D1_ALPHA_MODE_IGNORE
+    //);
+
+    //hr = pRenderTarget->CreateBitmap(
+    //    bitmapSize,
+    //    image->pPixels,
+    //    image->pitch,
+    //    &bitmapProperties,
+    //    &pBitmap
+    //);
     
-    
+    gWinMgr.SelectImage(new ImageContainer(hWnd, playlist->Current()->path, playlist->Current()->format));
 
     ShowWindow(hWnd, iCmdShow);
 
@@ -463,8 +518,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         }
         return 0;
     }
+    case WM_DISPLAYCHANGE:        
     case WM_PAINT: {
         std::cout << "WM_PAINT" << std::endl;
+        //ValidateRect(hWnd, NULL);
+        //OnPaint()
         hdc = BeginPaint(hWnd, &ps);
         OnPaint(hdc);
         EndPaint(hWnd, &ps);
