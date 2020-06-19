@@ -144,7 +144,7 @@ VOID OnPaint(HDC hdc)
                     gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
 
                     HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                    SelectClipRgn(hdc, hRgn);
+                    graphics.SetClip(hRgn);
 
                     graphics.DrawImage(bitmap, rc.left-gWinMgr.x_poffset, rc.top-gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled);
                 }
@@ -153,7 +153,7 @@ VOID OnPaint(HDC hdc)
                     GetClientRect(gWinMgr.hWnd, &rc);
 
                     HRGN hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
-                    SelectClipRgn(hdc, hRgn);
+                    graphics.SetClip(hRgn);
                     
                     graphics.DrawImage(bitmap, -gWinMgr.x_poffset, -gWinMgr.y_poffset, gWinMgr.w_scaled, gWinMgr.h_scaled);
                 }
