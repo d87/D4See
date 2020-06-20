@@ -303,7 +303,7 @@ void WindowManager::RestoreConfigValues(toml::value& data) {
         ToggleBorderless(0);
     }
 
-    borderlessBorder = data["general"]["BorderlessBorder"].as_integer();
+    //borderlessBorder = data["general"]["BorderlessBorder"].as_integer();
 
     std::string sortStr = data["general"]["SortMethod"].as_string();
     if (sortStr == "ByName") {
@@ -509,6 +509,9 @@ void WindowManager::ResizeForImage() {
     
     // ---------
     // 2b) Calculate new window coords around that origin
+
+    // Separate borderless border stuff
+    //int bb = (!hasBorder && !isFullscreen) ? borderlessBorder : 0;
 
     int cut_width = std::min(w_scaled, w_screenwa);
     int cut_height = std::min(h_scaled, h_screenwa);

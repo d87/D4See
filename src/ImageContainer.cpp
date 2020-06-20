@@ -24,7 +24,7 @@ void ImageContainer::OpenFile(std::wstring filename, ImageFormat format) {
 }
 
 ImageContainer::~ImageContainer() {
-    threadState = 4;
+    threadState = ThreadState::Abort;
     decoderThread.join();
 
     std::cout << "Deleting " << filename << std::endl;
@@ -40,12 +40,21 @@ ImageContainer::~ImageContainer() {
 
 void DecodingWork(ImageContainer *self) {
 
-	self->image = new DecodeBuffer();
-	DecodeBuffer* image = self->image;
+    
+    self->image = new DecodeBuffer();
+    
+
+    DecodeBuffer* image = self->image;
 
     bool threadInitDone = false;
 
-	image->Open(self->filename, self->format);
+    try {
+	    image->Open(self->filename, self->format);
+    }
+    catch (const std::runtime_error& e) {
+        self->threadState = ThreadState::Error;
+        self->thread_error = e.what();
+    }
 
     self->width = image->xres;
     self->height = image->yres;
@@ -59,7 +68,7 @@ void DecodingWork(ImageContainer *self) {
 
 
     //while ( (self->threadState < 3) && (self->subimagesReady < image->numSubimages) ) {
-    while (self->threadState < 3) {
+    while (self->threadState < ThreadState::Done) {
 
         int subimage = self->subimagesReady;
 
@@ -68,22 +77,19 @@ void DecodingWork(ImageContainer *self) {
         ImageFrame  img;
         memset(&img, 0, sizeof(ImageFrame));
 
-        self->frame.push_back(img);
-        ImageFrame* pImage = &self->frame[subimage];
-
         // All Windows DIBs are aligned to 4-byte (DWORD) memory boundaries. This
         // means that each scan line is padded with extra bytes to ensure that the
         // next scan line starts on a 4-byte memory boundary. The 'pitch' member
         // of the Image structure contains width of each scan line (in bytes).
 
-        pImage->width = image->xres;
-        pImage->height = image->yres;
-        pImage->pitch = ((image->xres * 32 + 31) & ~31) >> 3;
-        pImage->pPixels = NULL;
+        img.width = image->xres;
+        img.height = image->yres;
+        img.pitch = ((image->xres * 32 + 31) & ~31) >> 3;
+        img.pPixels = NULL;
 
         D2D1_SIZE_U bitmapSize;
-        bitmapSize.height = pImage->height;
-        bitmapSize.width = pImage->width;
+        bitmapSize.height = img.height;
+        bitmapSize.width = img.width;
 
         D2D1_BITMAP_PROPERTIES bitmapProperties;
         bitmapProperties.dpiX = 96;
@@ -97,11 +103,14 @@ void DecodingWork(ImageContainer *self) {
 
         HRESULT hr = pRenderTarget->CreateBitmap(
             bitmapSize,
-            pImage->pPixels,
-            pImage->pitch,
+            img.pPixels,
+            img.pitch,
             &bitmapProperties,
-            &pImage->pBitmap
+            &img.pBitmap
         );
+
+        self->frame.push_back(img);
+        ImageFrame* pImage = &self->frame[subimage];
 
         self->bitmap_mutex.unlock();
 
@@ -115,13 +124,13 @@ void DecodingWork(ImageContainer *self) {
 
         if (!threadInitDone) {
             threadInitDone = true;
-            self->threadState = 1;
+            self->threadState = ThreadState::Initialized;
             self->threadInitPromise.set_value(true);
             PostMessage(self->hWnd, WM_FRAMEREADY, (WPARAM)self, NULL);
         }
     
 
-        while (self->threadState < 3 && !image->IsSubimageLoaded(subimage)) {
+        while (self->threadState < ThreadState::Done && !image->IsSubimageLoaded(subimage)) {
 
             DecoderBatchReturns decodeInfo = image->PartialLoad(200000, true);
 
@@ -201,6 +210,8 @@ void DecodingWork(ImageContainer *self) {
             //self->bitmap_mutex.unlock();
         }
 
+        //self->threadState = ThreadState::BatchReady;
+
         if (self->isAnimated) {
             using namespace std::chrono_literals;
             pImage->frameDelay = std::chrono::duration<float>(image->frameDelay);
@@ -210,7 +221,6 @@ void DecodingWork(ImageContainer *self) {
 
                 //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
                 //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-                
             }
         }
 
@@ -219,7 +229,7 @@ void DecodingWork(ImageContainer *self) {
 
         if (image->IsFullyLoaded()) {
             
-            self->threadState = 3;
+            self->threadState = ThreadState::Done;
         }
         //else {
         //    self->frame.resize(image->numSubimages);
@@ -257,6 +267,7 @@ bool ImageContainer::IsFinished() {
 }
 
 ImageFrame* ImageContainer::GetActiveSubimage() {
+    if (frame.size() == 0) return nullptr;
     return &frame[curFrame];
 }
 

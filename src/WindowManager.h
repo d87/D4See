@@ -53,7 +53,7 @@ public:
     //int h_border;
     //int h_caption;
 
-    int borderlessBorder = 0;
+    //int borderlessBorder = 0;
     bool zoomLock = false;
     bool stretchToScreenWidth = true;
     bool stretchToScreenHeight = false;

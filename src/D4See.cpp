@@ -41,73 +41,82 @@ VOID OnPaint() //HDC hdc)
 
     if (frame) {
 
-        if (frame->threadState > 0) {
+        ThreadState thread_state = frame->thread_state;
+        if (thread_state > ThreadState::Uninitialized ) {
 
             frame->bitmap_mutex.lock();
+ 
+            if (thread_state != ThreadState::Error) {
+                ImageFrame* pImage = frame->GetActiveSubimage();
+                if (pImage) {
 
-            ImageFrame* pImage = frame->GetActiveSubimage();
 
-            int width = pImage->width;
-            int height = pImage->height;
-          
-            
-            RECT rc;
-            GetClientRect(gWinMgr.hWnd, &rc);
+                    RECT crc;
+                    GetClientRect(gWinMgr.hWnd, &crc);
 
-            D2D1_SIZE_U size = D2D1::SizeU(
-                rc.right - rc.left,
-                rc.bottom - rc.top
-            );
-            pRenderTarget->Resize(size);
+                    D2D1_SIZE_U size = D2D1::SizeU(
+                        crc.right - crc.left,
+                        crc.bottom - crc.top
+                    );
+                    pRenderTarget->Resize(size);
 
-            //RECT rc;
-            // GetClientRect(gWinMgr.hWnd, &rc);
-            gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
+                    RECT rc;
+                    // GetClientRect(gWinMgr.hWnd, &rc);
+                    gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
 
-            // Border
-            //rc.left += 2;
-            //rc.right -= 2;
-            //rc.top += 2;
-            //rc.bottom -= 2;
+                    //pRenderTarget->BindDC(hdc, &rc);
 
-            
-                
-            //pRenderTarget->BindDC(hdc, &rc);
+                    pRenderTarget->BeginDraw();
+                    //pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+                    pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
 
-            pRenderTarget->BeginDraw();
-            //pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-            pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
+                    D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(0.0f, 0.0f); // bitmap pos
+                    //D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(g_fsX, g_fsY); // bitmap pos
 
-            D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(0.0f, 0.0f); // bitmap pos
-            //D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(g_fsX, g_fsY); // bitmap pos
+                    // Draw a bitmap.
+                    D2D1_MATRIX_3X2_F scaling = D2D1::Matrix3x2F::Scale(
+                        D2D1::Size(gWinMgr.scale_effective, gWinMgr.scale_effective),
+                        D2D1::Point2F(0.0f, 0.0f)
+                    );
+                    D2D1_MATRIX_3X2_F translation = D2D1::Matrix3x2F::Translation(-gWinMgr.x_poffset, -gWinMgr.y_poffset);
 
-            // Draw a bitmap.
+                    pRenderTarget->SetTransform(translation);
 
-            D2D1_MATRIX_3X2_F scaling = D2D1::Matrix3x2F::Scale(
-                D2D1::Size(gWinMgr.scale_effective, gWinMgr.scale_effective),
-                D2D1::Point2F(0.0f, 0.0f)
-            );
-            D2D1_MATRIX_3X2_F translation = D2D1::Matrix3x2F::Translation(-gWinMgr.x_poffset, -gWinMgr.y_poffset);
+                    //int bb = (gWinMgr.isBorderless) ? gWinMgr.borderlessBorder : 0;
+                    //pRenderTarget->PushAxisAlignedClip(
+                    //    D2D1::RectF(
+                    //        (float)crc.left + 2,
+                    //        (float)crc.top + 2,
+                    //        (float)crc.right - 2,
+                    //        (float)crc.bottom - 2
+                    //    ), D2D1_ANTIALIAS_MODE_ALIASED
+                    //);
 
-            pRenderTarget->SetTransform(translation);
+                    //pRenderTarget->PopAxisAlignedClip();
 
-                
+                    //int width = pImage->width;
+                    //int height = pImage->height;
 
-            pRenderTarget->DrawBitmap(
-                pImage->pBitmap,
-                D2D1::RectF(
-                    (float)rc.left,
-                    (float)rc.top,
-                    (float)rc.right,
-                    (float)rc.bottom
-                )
-            );
-                
+                    pRenderTarget->DrawBitmap(
+                        pImage->pBitmap,
+                        D2D1::RectF(
+                            (float)rc.left,
+                            (float)rc.top,
+                            (float)rc.right,
+                            (float)rc.bottom
+                        )
+                    );
+                }
 
-            HRESULT hr = pRenderTarget->EndDraw();
+                HRESULT hr = pRenderTarget->EndDraw();
+            }
+            else {
+                std::cout << "Error " << frame->thread_error << std::endl;
+            }
+
 
             frame->bitmap_mutex.unlock();
-
+              
             
         }
     }
@@ -207,6 +216,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     D2D1_RENDER_TARGET_PROPERTIES props = D2D1::RenderTargetProperties();
     props.pixelFormat = pixelFormat;
     props.type = D2D1_RENDER_TARGET_TYPE_HARDWARE;
+    props.dpiX = 0; props.dpiY = 0;
     //props.type = D2D1_RENDER_TARGET_TYPE_SOFTWARE;
 
     // Create a Direct2D render target					

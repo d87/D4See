@@ -9,6 +9,15 @@
 #include "ImageFormats.h"
 
 
+enum class ThreadState {
+	Uninitialized,
+	Initialized,
+	BatchReady,
+	Done,
+	Abort,
+	Error
+};
+
 typedef struct
 {
 	int width;
@@ -44,7 +53,8 @@ class ImageContainer {
 		DecodeBuffer *image; // Abstraction of OIIO file decoding
 		bool isAnimated = false;
 
-		std::atomic<int> threadState{0};
+		std::atomic<ThreadState> threadState { ThreadState::Uninitialized };
+		std::string thread_error;
 
 		int drawId = 0;
 		std::atomic<int> decoderBatchId{0};
