@@ -4,6 +4,7 @@ namespace fs = std::filesystem;
 
 void WindowManager::Redraw(unsigned int addFlags) {
     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | addFlags);
+    LOG_TRACE("--x Invalidated");
 }
 
 void WindowManager::StopTimer(UINT_PTR id) {
@@ -34,6 +35,7 @@ WindowManager::~WindowManager() {
 //}
 
 void WindowManager::ShowPrefetch() {
+    LOG_DEBUG("Switching to prefetched image");
     SelectImage(frame2);
     frame2 = nullptr;
     //frame->drawId = frame->decoderBatchId;
@@ -44,7 +46,7 @@ void WindowManager::ShowPrefetch() {
     using namespace std::chrono_literals;
     auto status = frame->threadInitFinished.wait_for(2ms);
     if (status == std::future_status::ready) {
-
+        LOG_TRACE("Decoder thread initialized");
         ResizeForImage();
     }
     Redraw(RDW_ERASE);
@@ -241,7 +243,8 @@ void WindowManager::SelectImage(ImageContainer* f) {
         delete frame;
     }
 
-    LOG("<<<<<<< FRAME SWITCH >>>>>>>");
+    LOG_DEBUG("<<<<<<< FRAME SWITCH >>>>>>>");
+    LOG_DEBUG(" -- {0} --", f->filename);
     frame = f;
     StopTimer(D4S_TIMER_HQREDRAW);
     x_poffset = 0;

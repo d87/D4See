@@ -14,7 +14,7 @@
 
 
 
-
+#include <codecvt>
 #include <chrono>
 
 #include "util.h"
@@ -118,12 +118,12 @@ VOID OnPaint() //HDC hdc)
                 IDWriteTextFormat* pTextFormat;
 
                 hr = pDWriteFactory->CreateTextFormat(
-                    L"Gabriola",                // Font family name.
+                    L"Calibri",                // Font family name.
                     NULL,                       // Font collection (NULL sets it to use the system font collection).
                     DWRITE_FONT_WEIGHT_REGULAR,
                     DWRITE_FONT_STYLE_NORMAL,
                     DWRITE_FONT_STRETCH_NORMAL,
-                    72.0f,
+                    24.0f,
                     L"en-us",
                     &pTextFormat
                 );
@@ -142,7 +142,9 @@ VOID OnPaint() //HDC hdc)
                     static_cast<FLOAT>(rc.bottom - rc.top)
                 );
 
-                std::wstring wtext =  L"JOPA";
+
+                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+                std::wstring wtext = converter.from_bytes(frame->thread_error);
 
                 // Use the DrawText method of the D2D render target interface to draw.
                 pRenderTarget->DrawText(
@@ -155,7 +157,6 @@ VOID OnPaint() //HDC hdc)
 
                 hr = pRenderTarget->EndDraw();
 
-                LOG_ERROR(frame->thread_error);
                 pTextFormat->Release();
                 pBlackBrush->Release();
             }
@@ -323,14 +324,18 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     }
                     break;
                 }
+                case WM_FRAMEERROR:
                 case WM_FRAMEREADY: {
                     ImageContainer* f = (ImageContainer*)msg.wParam;
                     if (f == gWinMgr.frame) {
                         //gWinMgr.newImagePending = true;
                         //RedrawWindow(hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
-                        LOG("WM_FRAMEREADY");
+                        LOG("Accepted WM_FRAMEREADY for {0}", f->filename);
                         gWinMgr.ResizeForImage();
                         gWinMgr.Redraw(RDW_ERASE);
+                    }
+                    else {
+                        LOG("Discarded WM_FRAMEREADY for {0}", f->filename);
                     }
                     break;
                 }
@@ -440,6 +445,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     gWinMgr.DumpConfigValues(configData);
     gWinMgr.WriteConfig(configData);
 
+    pDWriteFactory->Release();
     pRenderTarget->Release();
     pD2DFactory->Release();
 
@@ -565,7 +571,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     }
     case WM_DISPLAYCHANGE:        
     case WM_PAINT: {
-        LOG("WM_PAINT");
+        LOG_TRACE("WM_PAINT");
         ValidateRect(hWnd, NULL);
         OnPaint();
         //hdc = BeginPaint(hWnd, &ps);

@@ -50,15 +50,22 @@ void DecodingWork(ImageContainer *self) {
 
     try {
 	    image->Open(self->filename, self->format);
+
+        self->width = image->xres;
+        self->height = image->yres;
+        self->isAnimated = image->isAnimated;
     }
     catch (const std::runtime_error& e) {
-        self->thread_state = ThreadState::Error;
+
+        self->width = 800;
+        self->height = 600;
         self->thread_error = e.what();
+        self->thread_state = ThreadState::Error;
+        self->threadInitPromise.set_value(true);
+        PostMessage(self->hWnd, WM_FRAMEERROR, (WPARAM)self, NULL);
+        LOG_ERROR(e.what());
     }
 
-    self->width = image->xres;
-    self->height = image->yres;
-    self->isAnimated = image->isAnimated;
 
     //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
