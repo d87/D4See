@@ -24,10 +24,10 @@ void ImageContainer::OpenFile(std::wstring filename, ImageFormat format) {
 }
 
 ImageContainer::~ImageContainer() {
-    threadState = ThreadState::Abort;
+    thread_state = ThreadState::Abort;
     decoderThread.join();
 
-    std::cout << "Deleting " << filename << std::endl;
+    LOG("Deleting {0}", filename);
     for (auto it = frame.begin(); it < frame.end(); it++) {
         //DeleteObject(it->hBitmap);
         if (it->pBitmap)
@@ -52,7 +52,7 @@ void DecodingWork(ImageContainer *self) {
 	    image->Open(self->filename, self->format);
     }
     catch (const std::runtime_error& e) {
-        self->threadState = ThreadState::Error;
+        self->thread_state = ThreadState::Error;
         self->thread_error = e.what();
     }
 
@@ -67,8 +67,8 @@ void DecodingWork(ImageContainer *self) {
     //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
 
 
-    //while ( (self->threadState < 3) && (self->subimagesReady < image->numSubimages) ) {
-    while (self->threadState < ThreadState::Done) {
+    //while ( (self->thread_state < 3) && (self->subimagesReady < image->numSubimages) ) {
+    while (self->thread_state < ThreadState::Done) {
 
         int subimage = self->subimagesReady;
 
@@ -124,13 +124,13 @@ void DecodingWork(ImageContainer *self) {
 
         if (!threadInitDone) {
             threadInitDone = true;
-            self->threadState = ThreadState::Initialized;
+            self->thread_state = ThreadState::Initialized;
             self->threadInitPromise.set_value(true);
             PostMessage(self->hWnd, WM_FRAMEREADY, (WPARAM)self, NULL);
         }
     
 
-        while (self->threadState < ThreadState::Done && !image->IsSubimageLoaded(subimage)) {
+        while (self->thread_state < ThreadState::Done && !image->IsSubimageLoaded(subimage)) {
 
             DecoderBatchReturns decodeInfo = image->PartialLoad(200000, true);
 
@@ -210,7 +210,7 @@ void DecodingWork(ImageContainer *self) {
             //self->bitmap_mutex.unlock();
         }
 
-        //self->threadState = ThreadState::BatchReady;
+        //self->thread_state = ThreadState::BatchReady;
 
         if (self->isAnimated) {
             using namespace std::chrono_literals;
@@ -229,7 +229,7 @@ void DecodingWork(ImageContainer *self) {
 
         if (image->IsFullyLoaded()) {
             
-            self->threadState = ThreadState::Done;
+            self->thread_state = ThreadState::Done;
         }
         //else {
         //    self->frame.resize(image->numSubimages);

@@ -12,8 +12,7 @@
 #pragma comment (lib,"OpenImageIO.lib")
 #pragma comment (lib,"OpenImageIO_Util.lib")
 
-#include <d2d1.h>
-#pragma comment (lib,"d2d1.lib")
+
 
 
 #include <chrono>
@@ -31,6 +30,7 @@ WindowManager gWinMgr;
 ID2D1Factory* pD2DFactory;
 //ID2D1DCRenderTarget* pRenderTarget;
 ID2D1HwndRenderTarget* pRenderTarget;
+IDWriteFactory* pDWriteFactory;
 
 
 VOID OnPaint() //HDC hdc)
@@ -44,6 +44,18 @@ VOID OnPaint() //HDC hdc)
         ThreadState thread_state = frame->thread_state;
         if (thread_state > ThreadState::Uninitialized ) {
 
+            RECT crc;
+            GetClientRect(gWinMgr.hWnd, &crc);
+
+            D2D1_SIZE_U size = D2D1::SizeU(
+                crc.right - crc.left,
+                crc.bottom - crc.top
+            );
+            pRenderTarget->Resize(size);
+
+            RECT rc;
+            gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
+
             frame->bitmap_mutex.lock();
  
             if (thread_state != ThreadState::Error) {
@@ -51,27 +63,13 @@ VOID OnPaint() //HDC hdc)
                 if (pImage) {
 
 
-                    RECT crc;
-                    GetClientRect(gWinMgr.hWnd, &crc);
-
-                    D2D1_SIZE_U size = D2D1::SizeU(
-                        crc.right - crc.left,
-                        crc.bottom - crc.top
-                    );
-                    pRenderTarget->Resize(size);
-
-                    RECT rc;
-                    // GetClientRect(gWinMgr.hWnd, &rc);
-                    gWinMgr.GetCenteredImageRect(&rc); // this rc should fully correspond to clip region
+                    
 
                     //pRenderTarget->BindDC(hdc, &rc);
 
                     pRenderTarget->BeginDraw();
                     //pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
                     pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
-
-                    D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(0.0f, 0.0f); // bitmap pos
-                    //D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(g_fsX, g_fsY); // bitmap pos
 
                     // Draw a bitmap.
                     D2D1_MATRIX_3X2_F scaling = D2D1::Matrix3x2F::Scale(
@@ -100,10 +98,10 @@ VOID OnPaint() //HDC hdc)
                     pRenderTarget->DrawBitmap(
                         pImage->pBitmap,
                         D2D1::RectF(
-                            (float)rc.left,
-                            (float)rc.top,
-                            (float)rc.right,
-                            (float)rc.bottom
+                            static_cast<FLOAT>(rc.left),
+                            static_cast<FLOAT>(rc.top),
+                            static_cast<FLOAT>(rc.right),
+                            static_cast<FLOAT>(rc.bottom)
                         )
                     );
                 }
@@ -111,7 +109,55 @@ VOID OnPaint() //HDC hdc)
                 HRESULT hr = pRenderTarget->EndDraw();
             }
             else {
-                std::cout << "Error " << frame->thread_error << std::endl;
+                ID2D1SolidColorBrush* pBlackBrush;
+                HRESULT hr = pRenderTarget->CreateSolidColorBrush(
+                    D2D1::ColorF(D2D1::ColorF::White),
+                    &pBlackBrush
+                );
+
+                IDWriteTextFormat* pTextFormat;
+
+                hr = pDWriteFactory->CreateTextFormat(
+                    L"Gabriola",                // Font family name.
+                    NULL,                       // Font collection (NULL sets it to use the system font collection).
+                    DWRITE_FONT_WEIGHT_REGULAR,
+                    DWRITE_FONT_STYLE_NORMAL,
+                    DWRITE_FONT_STRETCH_NORMAL,
+                    72.0f,
+                    L"en-us",
+                    &pTextFormat
+                );
+                hr = pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+                hr = pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+
+                pRenderTarget->BeginDraw();
+                //pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+                pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
+
+                // Create a D2D rect that is the same size as the window.
+                D2D1_RECT_F layoutRect = D2D1::RectF(
+                    static_cast<FLOAT>(rc.top),
+                    static_cast<FLOAT>(rc.left),
+                    static_cast<FLOAT>(rc.right - rc.left),
+                    static_cast<FLOAT>(rc.bottom - rc.top)
+                );
+
+                std::wstring wtext =  L"JOPA";
+
+                // Use the DrawText method of the D2D render target interface to draw.
+                pRenderTarget->DrawText(
+                    wtext.c_str(),        // The string to render.
+                    wtext.length(),    // The string's length.
+                    pTextFormat,    // The text format.
+                    layoutRect,      // The region of the window where the text will be rendered.
+                    pBlackBrush      // The brush used to draw the text.
+                );
+
+                hr = pRenderTarget->EndDraw();
+
+                LOG_ERROR(frame->thread_error);
+                pTextFormat->Release();
+                pBlackBrush->Release();
             }
 
 
@@ -130,6 +176,17 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     HWND                hWnd;
     MSG                 msg;
     WNDCLASS            wndClass;
+
+
+    
+#ifdef SPDLOG_DEBUG
+    // create color multi threaded logger
+    auto console = spdlog::stdout_color_mt("console");
+    auto err_logger = spdlog::stderr_color_mt("stderr");
+    spdlog::set_pattern("[%M:%S:%f][thread %t] %L: %v");
+    spdlog::set_level(spdlog::level::debug); // Set global log level to debug
+    spdlog::set_default_logger(console);
+#endif // SPDLOG_INFO
 
 
     wndClass.style = CS_HREDRAW | CS_VREDRAW;
@@ -206,6 +263,16 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     //HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
     HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2DFactory);
 
+    // Create a shared DirectWrite factory.
+    if (SUCCEEDED(hr))
+    {
+        hr = DWriteCreateFactory(
+            DWRITE_FACTORY_TYPE_SHARED,
+            __uuidof(IDWriteFactory),
+            reinterpret_cast<IUnknown**>(&pDWriteFactory)
+        );
+    }
+
     // Create a pixel format and initial its format
     // and alphaMode fields.
     D2D1_PIXEL_FORMAT pixelFormat = D2D1::PixelFormat(
@@ -252,7 +319,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     else if (id == D4S_PREFETCH_TIMEOUT) {
                         gWinMgr.DiscardPrefetch();
                         gWinMgr.StopTimer(id);
-                        std::cout << "Prefetch dropped from memory" << std::endl;
+                        LOG("Prefetch dropped from memory");
                     }
                     break;
                 }
@@ -261,7 +328,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     if (f == gWinMgr.frame) {
                         //gWinMgr.newImagePending = true;
                         //RedrawWindow(hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
-                        std::cout << "- WM_FRAMEREADY " << std::endl;
+                        LOG("WM_FRAMEREADY");
                         gWinMgr.ResizeForImage();
                         gWinMgr.Redraw(RDW_ERASE);
                     }
@@ -351,7 +418,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
             ImageContainer* frame = gWinMgr.frame;
             if (!frame->isAnimated) {
                 if (frame->decoderBatchId != frame->drawId) {
-                    std::cout << "batchIDs " << frame->drawId << " " << frame->decoderBatchId << std::endl;
+                    LOG("Batch Ids: {0} - {1}", frame->drawId, frame->decoderBatchId);
                     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
                     frame->drawId = frame->decoderBatchId;
                 }
@@ -362,7 +429,6 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                 
 
                 if (frame->AdvanceAnimation(delta)) {
-                    //std::cout << "Redrawing" << std::endl;
                     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
                 }
             }
@@ -499,7 +565,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     }
     case WM_DISPLAYCHANGE:        
     case WM_PAINT: {
-        std::cout << "WM_PAINT" << std::endl;
+        LOG("WM_PAINT");
         ValidateRect(hWnd, NULL);
         OnPaint();
         //hdc = BeginPaint(hWnd, &ps);

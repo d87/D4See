@@ -44,9 +44,10 @@ void WindowManager::ShowPrefetch() {
     using namespace std::chrono_literals;
     auto status = frame->threadInitFinished.wait_for(2ms);
     if (status == std::future_status::ready) {
+
         ResizeForImage();
-        Redraw(RDW_ERASE);
     }
+    Redraw(RDW_ERASE);
 }
 
 void WindowManager::DiscardPrefetch() {
@@ -240,7 +241,7 @@ void WindowManager::SelectImage(ImageContainer* f) {
         delete frame;
     }
 
-    std::cout << "<<<<<<< FRAME SWITCH >>>>>>>" << std::endl;
+    LOG("<<<<<<< FRAME SWITCH >>>>>>>");
     frame = f;
     StopTimer(D4S_TIMER_HQREDRAW);
     x_poffset = 0;
@@ -287,10 +288,10 @@ toml::value WindowManager::ReadConfig() {
     try {
         data = toml::parse(path.string());
         //auto enabled = data["scaling"]["StretchToScreenWidth"].as_boolean();
-        std::cout << data << std::endl;
+        LOG(data);
     }
     catch (const std::runtime_error& e) {
-        std::cout << "No config file" << std::endl;
+        LOG_ERROR("No config file");
         const toml::value data{
             {"scaling", {{"StretchToScreenWidth", true}, {"StretchToScreenHeight", true}, {"ShrinkToScreenWidth", true}, {"ShrinkToScreenHeight", true}, }}
         };
@@ -338,7 +339,7 @@ void WindowManager::WriteConfig(toml::value& data) {
 
     const auto serial = toml::format(data, /*width = */ 0, /*prec = */ 17);
 
-    std::cout << serial << std::endl;
+    LOG(serial);
 
     write_file(path.string(), serial.c_str(), serial.size());
 
@@ -375,8 +376,6 @@ void WindowManager::WriteOrigin() {
     fs::path root = GetExecutableDir();
     fs::path file("origin.data");
     fs::path path = root / file;
-
-    std::cout << "Writing origin " << x_origin << "," << y_origin << std::endl;
     
     write_file(path.string(), (const char*)&origin, sizeof(POINT));
 }
@@ -463,23 +462,19 @@ void WindowManager::ResizeForImage() {
     float w_scale_candidate = 0.0;
     if (w_native < w_screenwa && stretchToScreenWidth) {
         w_scale_candidate = float(w_screenwa) / w_native;
-        std::cout << "Upscale horizonal candidate " << w_scale_candidate << std::endl;
     }
 
     if (w_native >= w_screenwa && shrinkToScreenWidth) {
         w_scale_candidate = float(w_screenwa) / w_native;
-        std::cout << "Downscale horizonal candidate " << w_scale_candidate << std::endl;
     }
 
     float h_scale_candidate = 0.0;
     if (h_native < h_screenwa && stretchToScreenHeight) {
         h_scale_candidate = float(h_screenwa) / h_native;
-        std::cout << "Upscale horizonal candidate " << h_scale_candidate << std::endl;
     }
 
     if (h_native >= h_screenwa && shrinkToScreenHeight) {
         h_scale_candidate = float(h_screenwa) / h_native;
-        std::cout << "Downscale horizonal candidate " << h_scale_candidate << std::endl;
     }
 
     float scale_candidate2;
@@ -489,7 +484,6 @@ void WindowManager::ResizeForImage() {
     else {
         scale_candidate2 = std::max(w_scale_candidate, h_scale_candidate);
     }
-    std::cout << "Comparing candidates " << w_scale_candidate << " " << h_scale_candidate << "=" << scale_candidate2 << std::endl;
 
     float endscale;
     if (scale_manual == 1.0 && scale_candidate2 != 0.0) {
@@ -579,7 +573,7 @@ void WindowManager::ResizeForImage() {
     if (dynamicPos) {
         
         SetWindowPos(hWnd, HWND_TOP, x, y, w, h, SWP_DEFERERASE | SWP_NOCOPYBITS); // These flags are pretty good to reduce flickering and discarding old bits
-        //std::cout << "RESIZE" << " C: " << w_client << "x" << h_client << " W: " << w << "x" << h<< " N: " << w_native << "x" << h_native << std::endl;
+        LOG("<RESIZE> C: {0}x{1}    W: {2}x{3}    N: {4}x{5}", w_client, h_client, w, h, w_native, h_native);
     }
 
     //UpdateWindowSizeInfo();

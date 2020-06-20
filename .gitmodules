@@ -1,3 +1,6 @@
 [submodule "src/libs/toml11"]
 	path = src/libs/toml11
 	url = https://github.com/ToruNiina/toml11
+[submodule "src/libs/spdlog"]
+	path = src/libs/spdlog
+	url = https://github.com/gabime/spdlog

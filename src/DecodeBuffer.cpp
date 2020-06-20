@@ -1,4 +1,5 @@
 #include "DecodeBuffer.h"
+#include "D4See.h"
 #include <algorithm>
 
 DecodeBuffer::DecodeBuffer() {
@@ -11,6 +12,8 @@ DecodeBuffer::DecodeBuffer(std::string filename, ImageFormat format) {
 int DecodeBuffer::Open(std::string filename, ImageFormat format) {
 	this->format = format;
 	
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
 	in = OIIO::ImageInput::open(filename);
 	if (!in) {
 		std::string error = OIIO::geterror();
@@ -40,7 +43,7 @@ int DecodeBuffer::Open(std::string filename, ImageFormat format) {
 		frameDelay = float(fps[1]) / fps[0];
 	}
 	
-	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+	
 
 	int mip = 0;
 	while (in->seek_subimage(0, mip)) {
@@ -59,7 +62,7 @@ int DecodeBuffer::Open(std::string filename, ImageFormat format) {
 	curMipLevel = mip - 1;
 
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+	LOG("Opened {0} in {1}ms", filename, std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 
 	return 1;
 }

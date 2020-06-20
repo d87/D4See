@@ -53,7 +53,7 @@ class ImageContainer {
 		DecodeBuffer *image; // Abstraction of OIIO file decoding
 		bool isAnimated = false;
 
-		std::atomic<ThreadState> threadState { ThreadState::Uninitialized };
+		std::atomic<ThreadState> thread_state { ThreadState::Uninitialized };
 		std::string thread_error;
 
 		int drawId = 0;
