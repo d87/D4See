@@ -41,7 +41,7 @@ public:
     bool isMaximized = false;
     bool isFullscreen = false;
     bool isBorderless = false;
-    bool alwaysOnTop = false;
+    bool isAlwaysOnTop = false;
 
     int w_client; // client area, everything inside the window frame
     int h_client;
@@ -90,6 +90,7 @@ public:
     void SelectPlaylist(Playlist* playlist);
     void ResizeForImage();
     void ManualZoom(float mod, float absolute = 0.0);
+    void ToggleAlwaysOnTop();
     void ToggleFullscreen();
     void ToggleBorderless(int doRedraw = 1);
     void WriteOrigin();

@@ -171,6 +171,13 @@ bool WindowManager::SaveWindowParams(WINDOW_SAVED_DATA*cont) {
     return cont->isMaximized;
 }
 
+void WindowManager::ToggleAlwaysOnTop() {
+    DWORD dwExStyle = (DWORD)GetWindowLong(hWnd, GWL_EXSTYLE);
+    //bool isAOT = ((dwExStyle & WS_EX_TOPMOST) != 0);
+    isAlwaysOnTop = !isAlwaysOnTop;
+
+    SetWindowPos(hWnd, isAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+}
 
 void WindowManager::ToggleFullscreen() {
     if (!isFullscreen) {
@@ -589,7 +596,7 @@ void WindowManager::ShowPopupMenu(POINT& p) {
     DestroyMenu(popupRootMenu);
 
 
-    CheckMenuItem(popupMenu, ID_ALWAYSONTOP, MF_BYCOMMAND | BOOLCOMMANDCHECK(alwaysOnTop));
+    CheckMenuItem(popupMenu, ID_ALWAYSONTOP, MF_BYCOMMAND | BOOLCOMMANDCHECK(isAlwaysOnTop));
     CheckMenuItem(popupMenu, ID_ZOOMLOCK, MF_BYCOMMAND | BOOLCOMMANDCHECK(zoomLock));
     CheckMenuItem(popupMenu, ID_SHRINKTOWIDTH, MF_BYCOMMAND | BOOLCOMMANDCHECK(shrinkToScreenWidth));
     CheckMenuItem(popupMenu, ID_SHRINKTOHEIGHT, MF_BYCOMMAND | BOOLCOMMANDCHECK(shrinkToScreenHeight));
@@ -699,6 +706,10 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             stretchToScreenHeight = !stretchToScreenHeight;
             ResizeForImage();
             Redraw(RDW_ERASE);
+            break;
+        }    
+        case ID_ALWAYSONTOP: {
+            ToggleAlwaysOnTop();
             break;
         }
         case ID_TOGGLEFULLSCREEN: {
