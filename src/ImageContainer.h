@@ -1,7 +1,6 @@
 #pragma once
 
 #include <windows.h>
-#include <gdiplus.h>
 #include <thread>
 #include <list>
 #include <chrono>
@@ -16,9 +15,9 @@ typedef struct
 	int height;
 	int pitch; // stride
 	std::chrono::duration<float> frameDelay; // If animated, delay before switching to the next subimage.
-	HDC hdc; // Memory DC
-	HBITMAP hBitmap; // HBITMAP to DIBSection that is selected into DC
-	BITMAPINFO info;
+	//HDC hdc; // Memory DC
+	//HBITMAP hBitmap; // HBITMAP to DIBSection that is selected into DC
+	//BITMAPINFO info;
 	ID2D1Bitmap* pBitmap;
 	BYTE* pPixels; // Pixel Data for DIBSection
 } ImageFrame;

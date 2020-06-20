@@ -24,22 +24,16 @@ void ImageContainer::OpenFile(std::wstring filename, ImageFormat format) {
 }
 
 ImageContainer::~ImageContainer() {
-    //SelectObject(memDC, oldbmp);
-    //DeleteObject(hbitmap);
     threadState = 4;
     decoderThread.join();
 
-    //bitmap_mutex.lock();
-
     std::cout << "Deleting " << filename << std::endl;
     for (auto it = frame.begin(); it < frame.end(); it++) {
-        DeleteObject(it->hBitmap);
+        //DeleteObject(it->hBitmap);
         if (it->pBitmap)
             it->pBitmap->Release();
     }
-    //bitmap_mutex.unlock();
 
-    //delete DIBitmap;
     if (image)
         delete image;
 }
@@ -49,23 +43,13 @@ void DecodingWork(ImageContainer *self) {
 	self->image = new DecodeBuffer();
 	DecodeBuffer* image = self->image;
 
-
     bool threadInitDone = false;
 
-    //HDC hWndDC = GetWindowDC(NULL);
-    //self->memDC = CreateCompatibleDC(hWndDC);
-    //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    
-    
 	image->Open(self->filename, self->format);
 
     self->width = image->xres;
     self->height = image->yres;
-
-    //self->frame.resize(image->numSubimages);
-
-    if (image->isAnimated)
-        self->isAnimated = true;
+    self->isAnimated = image->isAnimated;
 
     //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
@@ -86,9 +70,6 @@ void DecodingWork(ImageContainer *self) {
 
         self->frame.push_back(img);
         ImageFrame* pImage = &self->frame[subimage];
-        pImage->pBitmap = nullptr;
-        //if (!pImage)
-            //return false;
 
         // All Windows DIBs are aligned to 4-byte (DWORD) memory boundaries. This
         // means that each scan line is padded with extra bytes to ensure that the
@@ -98,11 +79,7 @@ void DecodingWork(ImageContainer *self) {
         pImage->width = image->xres;
         pImage->height = image->yres;
         pImage->pitch = ((image->xres * 32 + 31) & ~31) >> 3;
-        // 00110000
-        // 10101111
-        // 10101111 & 00011111
         pImage->pPixels = NULL;
-  
 
         D2D1_SIZE_U bitmapSize;
         bitmapSize.height = pImage->height;
@@ -128,7 +105,7 @@ void DecodingWork(ImageContainer *self) {
 
         self->bitmap_mutex.unlock();
 
-        long long numBytes = pImage->height * pImage->pitch;
+        long long numBytes = (long long)pImage->height * pImage->pitch;
         std::vector<BYTE> pixels(numBytes);
         memset(&pixels[0], 0, numBytes);
 
@@ -159,10 +136,10 @@ void DecodingWork(ImageContainer *self) {
             //dib->LockBits(&rc, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bitmapData);
 
 
-            unsigned char* pRawBitmapOrig = &pImage->pPixels[yStart * pImage->pitch];
+            unsigned char* pRawBitmapOrig = &pImage->pPixels[(long long)yStart * pImage->pitch];
             unsigned char* pBatchStart = pRawBitmapOrig;
 
-            unsigned char* oiioBufferPointer = &image->pixels[yStart * image->xstride];
+            unsigned char* oiioBufferPointer = &image->pixels[(long long)yStart * image->xstride];
 
             switch (image->channels) {
 

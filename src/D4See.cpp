@@ -6,11 +6,6 @@
 #include <objidl.h>
 #include <shellapi.h>
 
-#include <gdiplus.h>
-using namespace Gdiplus;
-#pragma comment (lib,"Gdiplus.lib")
-
-
 #undef min // oiio got macro conflicts with gdi
 #undef max
 #include <OpenImageIO/imageio.h>
@@ -83,15 +78,6 @@ VOID OnPaint() //HDC hdc)
             //pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
             pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
 
-            // Paint a grid background.
-            /*pRenderTarget->FillRectangle(
-                D2D1::RectF(0.0f, 0.0f, renderTargetSize.width, renderTargetSize.height),
-                m_pGridPatternBitmapBrush
-                );*/
-
-                // Retrieve the size of the bitmap.
-                //D2D1_SIZE_F size = m_pBitmap->GetSize();
-
             D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(0.0f, 0.0f); // bitmap pos
             //D2D1_POINT_2F upperLeftCorner = D2D1::Point2F(g_fsX, g_fsY); // bitmap pos
 
@@ -135,12 +121,6 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     HWND                hWnd;
     MSG                 msg;
     WNDCLASS            wndClass;
-    GdiplusStartupInput gdiplusStartupInput;
-    ULONG_PTR           gdiplusToken;
-
-       
-    // Initialize GDI+.
-    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
 
     wndClass.style = CS_HREDRAW | CS_VREDRAW;
@@ -214,12 +194,6 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     //AppendMenuW(mainmenu, MF_POPUP, (UINT)submenu, L"&submenu");
 
-    //gWinMgr.GetWindowSize();
-
-    //HDC hdc = GetWindowDC(hWnd);
-
-    //gWinMgr.frame->threadFinished.wait();
-
     //HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
     HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2DFactory);
 
@@ -242,27 +216,6 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         480
     );
     hr = pD2DFactory->CreateHwndRenderTarget(props, D2D1::HwndRenderTargetProperties(hWnd, size), &pRenderTarget);
-
-    //auto image = gWinMgr.frame->GetActiveSubimage();
-    //D2D1_SIZE_U bitmapSize;
-    //bitmapSize.height = image->height;
-    //bitmapSize.width = image->width;
-
-    //D2D1_BITMAP_PROPERTIES bitmapProperties;
-    //bitmapProperties.dpiX = 96;
-    //bitmapProperties.dpiY = 96;
-    //bitmapProperties.pixelFormat = D2D1::PixelFormat(
-    //    DXGI_FORMAT_B8G8R8A8_UNORM,
-    //    D2D1_ALPHA_MODE_IGNORE
-    //);
-
-    //hr = pRenderTarget->CreateBitmap(
-    //    bitmapSize,
-    //    image->pPixels,
-    //    image->pitch,
-    //    &bitmapProperties,
-    //    &pBitmap
-    //);
     
     gWinMgr.SelectImage(new ImageContainer(hWnd, playlist->Current()->path, playlist->Current()->format));
 
@@ -410,8 +363,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     }
     gWinMgr.DumpConfigValues(configData);
     gWinMgr.WriteConfig(configData);
-    GdiplusShutdown(gdiplusToken);
 
+    pRenderTarget->Release();
+    pD2DFactory->Release();
 
     return msg.wParam;
 }  // WinMain
