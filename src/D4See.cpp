@@ -429,7 +429,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     case WM_LBUTTONUP: {
         if (gWinMgr.isPanning) {
             gWinMgr.isPanning = false;
-            gWinMgr.ScheduleRedraw(50);
         }
         return 0;
     }

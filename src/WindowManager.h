@@ -36,7 +36,6 @@ public:
     PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
     //bool newImagePending = false;
 
-    bool fastDrawDone = false;
     bool isMovingOrSizing = false;
     bool isPanning = false;
     bool isMaximized = false;
@@ -54,6 +53,7 @@ public:
     //int h_border;
     //int h_caption;
 
+    int borderlessBorder = 0;
     bool zoomLock = false;
     bool stretchToScreenWidth = true;
     bool stretchToScreenHeight = false;
@@ -79,7 +79,6 @@ private:
 
 public:
     void Redraw(unsigned int addFlags = 0);
-    void ScheduleRedraw(unsigned int ms);
     void StopTimer(UINT_PTR id);
     void NextImage();
     void PreviousImage();
@@ -89,7 +88,7 @@ public:
     void DiscardPrefetch();
     void SelectImage(ImageContainer* f);
     void SelectPlaylist(Playlist* playlist);
-    void ResizeForImage(bool HQRedraw = false);
+    void ResizeForImage();
     void ManualZoom(float mod, float absolute = 0.0);
     void ToggleFullscreen();
     void ToggleBorderless(int doRedraw = 1);

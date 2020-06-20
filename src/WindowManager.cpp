@@ -6,9 +6,6 @@ void WindowManager::Redraw(unsigned int addFlags) {
     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | addFlags);
 }
 
-void WindowManager::ScheduleRedraw(unsigned int ms) {
-    SetTimer(hWnd, D4S_TIMER_HQREDRAW, ms, NULL);
-}
 void WindowManager::StopTimer(UINT_PTR id) {
     KillTimer(hWnd, id);
 }
@@ -121,7 +118,6 @@ void WindowManager::Pan(int x, int y) {
     y_poffset += y;
     LimitPanOffset();
 
-    fastDrawDone = false;
     Redraw();
 }
 
@@ -215,7 +211,6 @@ void WindowManager::ToggleFullscreen() {
     }
 
     Redraw();
-    ScheduleRedraw(50);
 }
 
 void WindowManager::ToggleBorderless(int doRedraw) {
@@ -237,7 +232,6 @@ void WindowManager::ToggleBorderless(int doRedraw) {
     if (doRedraw) {
         ResizeForImage();
         Redraw();
-        ScheduleRedraw(50);
     }
 }
 
@@ -248,8 +242,6 @@ void WindowManager::SelectImage(ImageContainer* f) {
 
     std::cout << "<<<<<<< FRAME SWITCH >>>>>>>" << std::endl;
     frame = f;
-    fastDrawDone = false;
-    //ScheduleRedraw(50);
     StopTimer(D4S_TIMER_HQREDRAW);
     x_poffset = 0;
     y_poffset = 0;
@@ -310,6 +302,8 @@ void WindowManager::RestoreConfigValues(toml::value& data) {
     if (data["general"]["StartBorderless"].as_boolean()) {
         ToggleBorderless(0);
     }
+
+    borderlessBorder = data["general"]["BorderlessBorder"].as_integer();
 
     std::string sortStr = data["general"]["SortMethod"].as_string();
     if (sortStr == "ByName") {
@@ -415,10 +409,9 @@ void WindowManager::ManualZoom(float mod, float absolute) {
 
     ResizeForImage();
     Redraw(RDW_ERASE);
-    ScheduleRedraw(50);
 }
 
-void WindowManager::ResizeForImage( bool HQRedraw) {
+void WindowManager::ResizeForImage() {
 
     //----------
     // 1) Find appropriate monitor for origin point
@@ -586,8 +579,6 @@ void WindowManager::ResizeForImage( bool HQRedraw) {
         //std::cout << "RESIZE" << " C: " << w_client << "x" << h_client << " W: " << w << "x" << h<< " N: " << w_native << "x" << h_native << std::endl;
     }
 
-    fastDrawDone = HQRedraw; // Normally false, Fill paint LQ version fast on the next redraw
-
     //UpdateWindowSizeInfo();
 }
 
@@ -690,27 +681,23 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             shrinkToScreenWidth = !shrinkToScreenWidth;
             ResizeForImage();
             Redraw(RDW_ERASE);
-            ScheduleRedraw(50);
             break;
         }
         case ID_SHRINKTOHEIGHT: {
             shrinkToScreenHeight = !shrinkToScreenHeight;
             ResizeForImage();
             Redraw(RDW_ERASE);
-            ScheduleRedraw(50);
             break;
         }
         case ID_STRETCHTOWIDTH: {
             stretchToScreenWidth = !stretchToScreenWidth;
             ResizeForImage();
             Redraw(RDW_ERASE);
-            ScheduleRedraw(50);
             break;
         }
         case ID_STRETCHTOHEIGHT: {
             stretchToScreenHeight = !stretchToScreenHeight;
             ResizeForImage();
-            ScheduleRedraw(50);
             Redraw(RDW_ERASE);
             break;
         }
