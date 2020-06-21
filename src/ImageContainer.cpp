@@ -27,7 +27,7 @@ ImageContainer::~ImageContainer() {
     thread_state = ThreadState::Abort;
     decoderThread.join();
 
-    LOG("Deleting {0}", filename);
+    //LOG("Deleting {0}", filename);
     for (auto it = frame.begin(); it < frame.end(); it++) {
         //DeleteObject(it->hBitmap);
         if (it->pBitmap)

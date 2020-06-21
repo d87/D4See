@@ -14,7 +14,7 @@ void WindowManager::StopTimer(UINT_PTR id) {
 WindowManager::~WindowManager() {
     if (playlist) delete playlist;
     if (frame) delete frame;
-    if (frame2) delete frame2;
+    if (frame_prefetch) delete frame_prefetch;
 }
 
 //void ClearWindowForFrame(HWND hWnd, ImageContainer* f) {
@@ -36,8 +36,8 @@ WindowManager::~WindowManager() {
 
 void WindowManager::ShowPrefetch() {
     LOG_DEBUG("Switching to prefetched image");
-    SelectImage(frame2);
-    frame2 = nullptr;
+    SelectImage(frame_prefetch);
+    frame_prefetch = nullptr;
     //frame->drawId = frame->decoderBatchId;
     //gWinMgr.newImagePending = true;
 
@@ -53,13 +53,13 @@ void WindowManager::ShowPrefetch() {
 }
 
 void WindowManager::DiscardPrefetch() {
-    if (frame2)
-        delete frame2;
-    frame2 = nullptr;
+    if (frame_prefetch)
+        delete frame_prefetch;
+    frame_prefetch = nullptr;
 }
 
 void WindowManager::StartPrefetch(ImageContainer* f) {
-    frame2 = f;
+    frame_prefetch = f;
     // Start 2 minute timer
     SetTimer(hWnd, D4S_PREFETCH_TIMEOUT, 120000, NULL);
 }
@@ -86,8 +86,8 @@ void WindowManager::LoadImageFromPlaylist(int prefetchDir) {
 
     if (cur) {
         bool prefetchHit = false;
-        if (frame2)
-            if (frame2->filename == wide_to_utf8(cur->path))
+        if (frame_prefetch)
+            if (frame_prefetch->filename == wide_to_utf8(cur->path))
                 prefetchHit = true;
         if (prefetchHit) {
             ShowPrefetch();
@@ -101,18 +101,18 @@ void WindowManager::LoadImageFromPlaylist(int prefetchDir) {
         StartPrefetch(new ImageContainer(hWnd, following->path, following->format));
     }
     else {
-        frame2 = nullptr;
+        frame_prefetch = nullptr;
     }
 }
 
 void WindowManager::LimitPanOffset() {
-    int x_limit = w_scaled - w_client;
+    float x_limit = static_cast<float>(w_scaled - w_client);
     x_poffset = std::min(x_poffset, x_limit);
-    x_poffset = std::max(x_poffset, 0);
+    x_poffset = std::max(x_poffset, 0.0f);
     
-    int y_limit = h_scaled - h_client;
+    float y_limit = static_cast<float>(h_scaled - h_client);
     y_poffset = std::min(y_poffset, y_limit);
-    y_poffset = std::max(y_poffset, 0);
+    y_poffset = std::max(y_poffset, 0.0f);
 }
 
 

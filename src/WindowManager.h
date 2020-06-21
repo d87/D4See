@@ -31,7 +31,7 @@ class WindowManager {
 public:
     HWND hWnd;
     ImageContainer* frame = nullptr;
-    ImageContainer* frame2 = nullptr; // prefecth container
+    ImageContainer* frame_prefetch = nullptr; // prefecth container
     Playlist* playlist = nullptr;
     PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
     //bool newImagePending = false;
@@ -64,8 +64,8 @@ public:
     float scale_manual = 1.0f; // 
     float scale_effective = 1.0f; // Actual current scale
     
-    int x_poffset = 0; // Panning offset
-    int y_poffset = 0;
+    float x_poffset = 0; // Panning offset
+    float y_poffset = 0;
 
     int w_scaled; // Dimensions after applying scale
     int h_scaled;

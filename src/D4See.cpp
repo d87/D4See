@@ -23,6 +23,7 @@
 #include "DecodeBuffer.h"
 #include "ImageContainer.h"
 #include "WindowManager.h"
+#include "Animation.h"
 
 
 WindowManager gWinMgr;
@@ -299,6 +300,11 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     ShowWindow(hWnd, iCmdShow);
 
+
+    Animation inertia;
+    using namespace std::chrono_literals;
+    std::chrono::duration<float> elapsed = 0ms;
+
     auto prevTime(std::chrono::steady_clock::now());
 
     bool shouldShutdown = false;
@@ -336,6 +342,52 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     }
                     else {
                         LOG("Discarded WM_FRAMEREADY for {0}", f->filename);
+                    }
+                    break;
+                }
+                case WM_LBUTTONDOWN: {
+                    int& sxPos = gWinMgr.mouseX;
+                    int& syPos = gWinMgr.mouseY;
+                    sxPos = GET_X_LPARAM(msg.lParam);
+                    syPos = GET_Y_LPARAM(msg.lParam);
+                    inertia.Start();
+                    break;
+                }
+                case WM_LBUTTONUP: {
+                    if (gWinMgr.isPanning) {
+                        gWinMgr.isPanning = false;
+                        inertia.AddVelocity(0, 0);
+                        inertia.CountAverage();
+                    }
+                    break;
+                }
+                case WM_MOUSEMOVE: {
+                    int LMBDown = (msg.wParam)&MK_LBUTTON;
+                    if (LMBDown) {
+                        if (!gWinMgr.isPanning) {
+                            gWinMgr.isPanning = true;
+                            gWinMgr.StopTimer(D4S_TIMER_HQREDRAW);
+                        }
+
+                        int& sxPos = gWinMgr.mouseX;
+                        int& syPos = gWinMgr.mouseY;
+
+                        int xPos = GET_X_LPARAM(msg.lParam);
+                        int yPos = GET_Y_LPARAM(msg.lParam);
+
+                        if (sxPos != -1) {
+                            int dx = xPos - sxPos;
+                            int dy = yPos - syPos;
+
+                            //LOG_DEBUG("MouseMove: {0},{1}", dx, dy);
+
+                            inertia.AddVelocity(dx, dy);
+
+                            gWinMgr.Pan(-dx, -dy);
+                        }
+
+                        sxPos = xPos;
+                        syPos = yPos;
                     }
                     break;
                 }
@@ -419,6 +471,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         }
         using namespace std::literals;
         auto now(std::chrono::steady_clock::now());
+        auto delta = now - prevTime;
+
         if (gWinMgr.frame) {
             ImageContainer* frame = gWinMgr.frame;
             if (!frame->isAnimated) {
@@ -429,12 +483,18 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                 }
             } else {
 
-                
-                auto delta = now - prevTime;
-                
 
                 if (frame->AdvanceAnimation(delta)) {
                     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
+                }
+            }
+
+            elapsed += delta;
+            if (elapsed > 16ms) {
+                elapsed -= 16ms;
+                if (inertia.Interpolate(gWinMgr.x_poffset, gWinMgr.y_poffset, 16ms)){
+                    gWinMgr.LimitPanOffset();
+                    gWinMgr.Redraw();
                 }
             }
         }
@@ -461,13 +521,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 
     switch (message)
     {
-    case WM_LBUTTONDOWN: {
-        int& sxPos = gWinMgr.mouseX;
-        int& syPos = gWinMgr.mouseY;
-        sxPos = GET_X_LPARAM(lParam);
-        syPos = GET_Y_LPARAM(lParam);
-        return 0;
-    }
+    
     case WM_RBUTTONDOWN: {
         POINT p;
         GetCursorPos(&p);
@@ -476,6 +530,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         gWinMgr.ShowPopupMenu(p);
         break;
     }
+    
     case WM_MOUSEWHEEL: {
         int fwKeys = GET_KEYSTATE_WPARAM(wParam);
         int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
@@ -508,38 +563,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         }
         break;
     }
-    case WM_LBUTTONUP: {
-        if (gWinMgr.isPanning) {
-            gWinMgr.isPanning = false;
-        }
-        return 0;
-    }
-    case WM_MOUSEMOVE: {
-        int LMBDown = (wParam) & MK_LBUTTON;
-        if (LMBDown) {
-            if (!gWinMgr.isPanning) {
-                gWinMgr.isPanning = true;
-                gWinMgr.StopTimer(D4S_TIMER_HQREDRAW);
-            }
-
-            int& sxPos = gWinMgr.mouseX;
-            int& syPos = gWinMgr.mouseY;
-
-            int xPos = GET_X_LPARAM(lParam);
-            int yPos = GET_Y_LPARAM(lParam);
-
-            if (sxPos != -1) {
-                int dx = xPos - sxPos;
-                int dy = yPos - syPos;
-
-                gWinMgr.Pan(-dx, -dy);
-            }
-
-            sxPos = xPos;
-            syPos = yPos;   
-        }
-        return 0;
-    }
+    
     case WM_SIZE: {
         int eventType = (int)wParam;
         if (eventType == SIZE_MAXIMIZED) {
