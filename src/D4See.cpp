@@ -536,11 +536,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
         bool isCtrlDown = fwKeys & MK_CONTROL;
         if (isCtrlDown) {
+            POINT p;
+            GetCursorPos(&p);
+            ScreenToClient(hWnd, &p);
             if (zDelta < 0) {
-                gWinMgr.ManualZoom(-0.10f);
+                gWinMgr.ManualZoomToPoint(-0.15f, p.x, p.y);
             }
             else if (zDelta > 0) {
-                gWinMgr.ManualZoom(+0.10f);
+                gWinMgr.ManualZoomToPoint(+0.15f, p.x, p.y);
             }
         } else {
             if (zDelta < 0) {

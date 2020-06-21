@@ -90,6 +90,7 @@ public:
     void SelectPlaylist(Playlist* playlist);
     void ResizeForImage();
     void ManualZoom(float mod, float absolute = 0.0);
+    void ManualZoomToPoint(float mod, int dstx, int dsty);
     void ToggleAlwaysOnTop();
     void ToggleFullscreen();
     void ToggleBorderless(int doRedraw = 1);

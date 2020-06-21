@@ -420,6 +420,61 @@ void WindowManager::ManualZoom(float mod, float absolute) {
     Redraw(RDW_ERASE);
 }
 
+void WindowManager::ManualZoomToPoint(float mod, int zoomPointX,  int zoomPointY) {
+    float old_scale = scale_effective;
+
+
+    // There's a bug here. zoom point is supposed to be in window space (counting from client area)
+    // But If maximized or fullscreen the whole screen is client area, but image is centered.
+    // It's fixed for now by normal clamping of panning offset.
+
+    //RECT crc;
+    //GetClientRect(hWnd, &crc);
+    //int ch = crc.bottom - crc.top;
+    //int cw = crc.right - crc.left;
+
+    //int cax = 0;
+    //int cay = 0;
+    //if (cw > w_scaled) {
+    //    cax = (cw - w_scaled) / 2;
+    //}
+
+    //if (ch > h_scaled) {
+    //    cay = (ch - h_scaled) / 2;
+    //}
+    //RECT rc;
+    //GetCenteredImageRect(&rc);
+
+
+    // Calculcating coordinates of the zoom point in native resolution
+    float x_click_offset_native = (x_poffset + zoomPointX) / old_scale;
+    float y_click_offset_native = (y_poffset + zoomPointY) / old_scale;
+
+    // floating point zoompoint to client 
+    float fzpx = static_cast<float>(zoomPointX) / w_client;
+    float fzpy = static_cast<float>(zoomPointY) / h_client;
+
+    //LOG_DEBUG("--------------");
+    //LOG_DEBUG("Pan: {0},{1}  ZP: {2},{3}", x_poffset, y_poffset, zoomPointX, zoomPointY);
+    //LOG_DEBUG("Native point: {0},{1}", x_click_offset_native, y_click_offset_native);
+
+
+    ManualZoom(mod);
+
+    // Converting it to new scale coords
+    float x_click_offset = x_click_offset_native * scale_effective;
+    float y_click_offset = y_click_offset_native * scale_effective;
+
+    // client area dimensions here are already updated to the new scale
+    x_poffset = x_click_offset - ((fzpx * w_client) );
+    y_poffset = y_click_offset - ((fzpy * h_client) );
+
+    Redraw();
+
+
+    LimitPanOffset();
+}
+
 void WindowManager::ResizeForImage() {
 
     //----------
