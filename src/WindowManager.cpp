@@ -106,19 +106,19 @@ void WindowManager::LoadImageFromPlaylist(int prefetchDir) {
 }
 
 void WindowManager::LimitPanOffset() {
-    float x_limit = static_cast<float>(w_scaled - w_client);
-    x_poffset = std::min(x_poffset, x_limit);
-    x_poffset = std::max(x_poffset, 0.0f);
+    float x_limit = static_cast<float>(canvas.w_scaled - w_client);
+    canvas.x_poffset = std::min(canvas.x_poffset, x_limit);
+    canvas.x_poffset = std::max(canvas.x_poffset, 0.0f);
     
-    float y_limit = static_cast<float>(h_scaled - h_client);
-    y_poffset = std::min(y_poffset, y_limit);
-    y_poffset = std::max(y_poffset, 0.0f);
+    float y_limit = static_cast<float>(canvas.h_scaled - h_client);
+    canvas.y_poffset = std::min(canvas.y_poffset, y_limit);
+    canvas.y_poffset = std::max(canvas.y_poffset, 0.0f);
 }
 
 
 void WindowManager::Pan(int x, int y) {
-    x_poffset += x;
-    y_poffset += y;
+    canvas.x_poffset += x;
+    canvas.y_poffset += y;
     LimitPanOffset();
 
     Redraw();
@@ -143,17 +143,17 @@ void WindowManager::GetCenteredImageRect(RECT* rc) {
 
     int x = 0;
     int y = 0;
-    if (cw > w_scaled) {
-        x = (cw - w_scaled) / 2;
+    if (cw > canvas.w_scaled) {
+        x = (cw - canvas.w_scaled) / 2;
     }
 
-    if (ch > h_scaled) {
-        y = (ch - h_scaled) / 2;
+    if (ch > canvas.h_scaled) {
+        y = (ch - canvas.h_scaled) / 2;
     }
     rc->left = x;
     rc->top = y;
-    rc->right = x + w_scaled;
-    rc->bottom = y + h_scaled;
+    rc->right = x + canvas.w_scaled;
+    rc->bottom = y + canvas.h_scaled;
 }
 
 bool WindowManager::SaveWindowParams(WINDOW_SAVED_DATA*cont) {
@@ -254,11 +254,11 @@ void WindowManager::SelectImage(ImageContainer* f) {
     LOG_DEBUG(" -- {0} --", f->filename);
     frame = f;
     StopTimer(D4S_TIMER_HQREDRAW);
-    x_poffset = 0;
-    y_poffset = 0;
+    canvas.x_poffset = 0;
+    canvas.y_poffset = 0;
     animations.clear();
     if (!zoomLock) {
-        scale_manual = 1.0f;
+        canvas.scale_manual = 1.0f;
     }
     std::wstring title = playlist->Current()->filename + L" - D4See";
     SetWindowTextW(hWnd, title.c_str());
@@ -401,19 +401,19 @@ void WindowManager::UpdateOrigin() {
 }
 
 void WindowManager::ManualZoom(float mod, float absolute) {
-    float old_scale = scale_effective;
+    float old_scale = canvas.scale_effective;
     if (absolute != 0.0) {
-        scale_manual = absolute;
+        canvas.scale_manual = absolute;
     } else {
-        scale_manual = scale_effective + mod;
-        if (scale_manual < 0.10f) {
-            scale_manual = 0.10;
+        canvas.scale_manual = canvas.scale_effective + mod;
+        if (canvas.scale_manual < 0.10f) {
+            canvas.scale_manual = 0.10;
         }
-        if (scale_manual > 10.0f) {
-            scale_manual = 10.0;
+        if (canvas.scale_manual > 10.0f) {
+            canvas.scale_manual = 10.0;
         }
     }
-    if (scale_manual == old_scale) {
+    if (canvas.scale_manual == old_scale) {
         return;
     }
 
@@ -422,7 +422,7 @@ void WindowManager::ManualZoom(float mod, float absolute) {
 }
 
 void WindowManager::ManualZoomToPoint(float mod, int zoomPointX,  int zoomPointY) {
-    float old_scale = scale_effective;
+    float old_scale = canvas.scale_effective;
 
 
     // There's a bug here. zoom point is supposed to be in window space (counting from client area)
@@ -436,39 +436,39 @@ void WindowManager::ManualZoomToPoint(float mod, int zoomPointX,  int zoomPointY
 
     //int cax = 0;
     //int cay = 0;
-    //if (cw > w_scaled) {
-    //    cax = (cw - w_scaled) / 2;
+    //if (cw > canvas.w_scaled) {
+    //    cax = (cw - canvas.w_scaled) / 2;
     //}
 
-    //if (ch > h_scaled) {
-    //    cay = (ch - h_scaled) / 2;
+    //if (ch > canvas.h_scaled) {
+    //    cay = (ch - canvas.h_scaled) / 2;
     //}
     //RECT rc;
     //GetCenteredImageRect(&rc);
 
 
     // Calculcating coordinates of the zoom point in native resolution
-    float x_click_offset_native = (x_poffset + zoomPointX) / old_scale;
-    float y_click_offset_native = (y_poffset + zoomPointY) / old_scale;
+    float x_click_offset_native = (canvas.x_poffset + zoomPointX) / old_scale;
+    float y_click_offset_native = (canvas.y_poffset + zoomPointY) / old_scale;
 
     // floating point zoompoint to client 
     float fzpx = static_cast<float>(zoomPointX) / w_client;
     float fzpy = static_cast<float>(zoomPointY) / h_client;
 
     //LOG_DEBUG("--------------");
-    //LOG_DEBUG("Pan: {0},{1}  ZP: {2},{3}", x_poffset, y_poffset, zoomPointX, zoomPointY);
+    //LOG_DEBUG("Pan: {0},{1}  ZP: {2},{3}", canvas.x_poffset, canvas.y_poffset, zoomPointX, zoomPointY);
     //LOG_DEBUG("Native point: {0},{1}", x_click_offset_native, y_click_offset_native);
 
 
     ManualZoom(mod);
 
     // Converting it to new scale coords
-    float x_click_offset = x_click_offset_native * scale_effective;
-    float y_click_offset = y_click_offset_native * scale_effective;
+    float x_click_offset = x_click_offset_native * canvas.scale_effective;
+    float y_click_offset = y_click_offset_native * canvas.scale_effective;
 
     // client area dimensions here are already updated to the new scale
-    x_poffset = x_click_offset - ((fzpx * w_client) );
-    y_poffset = y_click_offset - ((fzpy * h_client) );
+    canvas.x_poffset = x_click_offset - ((fzpx * w_client) );
+    canvas.y_poffset = y_click_offset - ((fzpy * h_client) );
 
     Redraw();
 
@@ -552,17 +552,17 @@ void WindowManager::ResizeForImage() {
     }
 
     float endscale;
-    if (scale_manual == 1.0 && scale_candidate2 != 0.0) {
+    if (canvas.scale_manual == 1.0 && scale_candidate2 != 0.0) {
         endscale = scale_candidate2;
     }
     else {
-        endscale = scale_manual;
+        endscale = canvas.scale_manual;
     }
 
-    w_scaled = w_native * endscale;
-    h_scaled = h_native * endscale;
+    canvas.w_scaled = w_native * endscale;
+    canvas.h_scaled = h_native * endscale;
 
-    scale_effective = endscale;
+    canvas.scale_effective = endscale;
 
     // if zoom lock is on it should override all autoscaling
     // manual scaling should start from current effective scale
@@ -573,8 +573,8 @@ void WindowManager::ResizeForImage() {
     // Separate borderless border stuff
     //int bb = (!hasBorder && !isFullscreen) ? borderlessBorder : 0;
 
-    int cut_width = std::min(w_scaled, w_screenwa);
-    int cut_height = std::min(h_scaled, h_screenwa);
+    int cut_width = std::min(canvas.w_scaled, w_screenwa);
+    int cut_height = std::min(canvas.h_scaled, h_screenwa);
 
     RECT new_client_area;
     
@@ -660,7 +660,7 @@ void WindowManager::ShowPopupMenu(POINT& p) {
     CheckMenuItem(popupMenu, ID_STRETCHTOHEIGHT, MF_BYCOMMAND | BOOLCOMMANDCHECK(stretchToScreenHeight));
     CheckMenuItem(popupMenu, ID_SORTBY_NAME, MF_BYCOMMAND | BOOLCOMMANDCHECK(sortMethod == PlaylistSortMethod::ByName));
     CheckMenuItem(popupMenu, ID_SORTBY_DATEMODIFIED, MF_BYCOMMAND | BOOLCOMMANDCHECK(sortMethod == PlaylistSortMethod::ByDateModified));
-    EnableMenuItem(popupMenu, ID_ACTUALSIZE, MF_BYCOMMAND | BOOLCOMMANDENABLE(scale_manual != 1.0f));
+    EnableMenuItem(popupMenu, ID_ACTUALSIZE, MF_BYCOMMAND | BOOLCOMMANDENABLE(canvas.scale_manual != 1.0f));
     
 
 

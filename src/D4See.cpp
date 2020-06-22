@@ -72,10 +72,10 @@ VOID OnPaint() //HDC hdc)
 
                     // Draw a bitmap.
                     D2D1_MATRIX_3X2_F scaling = D2D1::Matrix3x2F::Scale(
-                        D2D1::Size(gWinMgr.scale_effective, gWinMgr.scale_effective),
+                        D2D1::Size(gWinMgr.canvas.scale_effective, gWinMgr.canvas.scale_effective),
                         D2D1::Point2F(0.0f, 0.0f)
                     );
-                    D2D1_MATRIX_3X2_F translation = D2D1::Matrix3x2F::Translation(-gWinMgr.x_poffset, -gWinMgr.y_poffset);
+                    D2D1_MATRIX_3X2_F translation = D2D1::Matrix3x2F::Translation(-gWinMgr.canvas.x_poffset, -gWinMgr.canvas.y_poffset);
 
                     pRenderTarget->SetTransform(translation);
 
@@ -497,7 +497,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
                 const std::string* deletionKey = nullptr;
                 while (it != gWinMgr.animations.end()) {
-                    if (it->second->Animate(gWinMgr.x_poffset, gWinMgr.y_poffset, 16ms)) {
+                    if (it->second->Animate(gWinMgr.canvas, 16ms)) {
                         gWinMgr.LimitPanOffset();
                         gWinMgr.Redraw();
                     }

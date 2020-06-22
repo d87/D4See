@@ -47,14 +47,14 @@ void MomentumAnimation::AddVelocity(float dx, float dy) {
 }
 
 //int MomentumAnimation::Animate(std::function<void(int)>& lambda, std::chrono::duration<float> elapsed) {
-int MomentumAnimation::Animate(float& px, float& py, std::chrono::duration<float> elapsed) {
+int MomentumAnimation::Animate(D4See::Canvas& canvas, std::chrono::duration<float> elapsed) {
 	if (vx == 0.0f && vy == 0.0f) return 0;
 
 	float dx = vx * elapsed.count();
 	float dy = vy * elapsed.count();
 
-	px -= dx;
-	py -= dy;
+	canvas.x_poffset -= dx;
+	canvas.y_poffset -= dy;
 
 	float vx0 = vx;
 	float vy0 = vy;

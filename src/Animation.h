@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "WindowManager.h"
+#include "Canvas.h"
 
 #include <chrono>
 #include <queue>
@@ -9,7 +9,7 @@
 class Animation {
 
 public:
-	virtual int Animate(float& px, float& py, std::chrono::duration<float> elapsed) { return 0;  };
+	virtual int Animate(D4See::Canvas& canvas, std::chrono::duration<float> elapsed) { return 0;  };
 };
 
 struct VelocityFrame {
@@ -35,5 +35,5 @@ public:
 	void CountAverage();
 	//void AddVelocity(float dx, float dy, float dt);
 	void AddVelocity(float dx, float dy);
-	virtual int Animate(float& px, float& py, std::chrono::duration<float> elapsed) override;
+	virtual int Animate(D4See::Canvas& canvas, std::chrono::duration<float> elapsed) override;
 };
