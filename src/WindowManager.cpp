@@ -256,6 +256,7 @@ void WindowManager::SelectImage(ImageContainer* f) {
     StopTimer(D4S_TIMER_HQREDRAW);
     x_poffset = 0;
     y_poffset = 0;
+    animations.clear();
     if (!zoomLock) {
         scale_manual = 1.0f;
     }

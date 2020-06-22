@@ -1,7 +1,7 @@
 #include "Animation.h"
-#include "D4See.h"
 
-void Animation::Start() {
+
+void MomentumAnimation::Start() {
 	start_time = std::chrono::steady_clock::now();
 	last_batch_time = start_time;
 	vx = 0;
@@ -9,7 +9,7 @@ void Animation::Start() {
 	vque.empty();
 }
 
-void Animation::CountAverage() {
+void MomentumAnimation::CountAverage() {
 	float tdx = 0.0; // combined dx
 	float tdy = 0.0;
 	float tdt = 0.0;
@@ -23,12 +23,11 @@ void Animation::CountAverage() {
 	vx = tdx / tdt;
 	vy = tdy / tdt;
 
-	//vh = std::sqrt(vx * vx + vy * vy);
 	ax = -vx * 0.015;
 	ay = -vy * 0.015;
 }
 
-void Animation::AddVelocity(float dx, float dy) {
+void MomentumAnimation::AddVelocity(float dx, float dy) {
 	auto now = std::chrono::steady_clock::now();
 	auto dt_ = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_batch_time);
 	last_batch_time = now;
@@ -40,8 +39,6 @@ void Animation::AddVelocity(float dx, float dy) {
 	vf.dy = dy;
 	vf.dt = dt;
 
-	LOG_DEBUG("{0} {1} {2}", dx, dy, dt);
-
 	vque.push(vf);
 
 	if (vque.size() > 10) {
@@ -49,7 +46,8 @@ void Animation::AddVelocity(float dx, float dy) {
 	}
 }
 
-int Animation::Interpolate(float& px, float& py, std::chrono::duration<float> elapsed) {
+//int MomentumAnimation::Animate(std::function<void(int)>& lambda, std::chrono::duration<float> elapsed) {
+int MomentumAnimation::Animate(float& px, float& py, std::chrono::duration<float> elapsed) {
 	if (vx == 0.0f && vy == 0.0f) return 0;
 
 	float dx = vx * elapsed.count();

@@ -4,11 +4,13 @@
 #include <shlobj.h>
 #include <iostream>
 #include <filesystem>
+#include <unordered_map>
 #include <chrono>
 #include "ImageContainer.h"
 #include "resource.h"
 #include "util.h"
 #include "Playlist.h"
+#include "Animation.h"
 #include "D4See.h"
 
 #include "libs/toml11/toml.hpp"
@@ -72,6 +74,8 @@ public:
 
     int mouseX = 0;  // Used to store previous mouse position when panning
     int mouseY = 0;
+
+    std::unordered_map<std::string, Animation*> animations{};
 
 private:
     std::chrono::system_clock::time_point lastGeneratedSizingEvent; // (generated not by user)

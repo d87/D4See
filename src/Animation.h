@@ -1,7 +1,16 @@
 #pragma once
 
+//#include "WindowManager.h"
+
 #include <chrono>
 #include <queue>
+#include <functional>
+
+class Animation {
+
+public:
+	virtual int Animate(float& px, float& py, std::chrono::duration<float> elapsed) { return 0;  };
+};
 
 struct VelocityFrame {
 	float dx;
@@ -9,14 +18,11 @@ struct VelocityFrame {
 	float dt;
 };
 
-class Animation {
+class MomentumAnimation : public virtual Animation {
 protected:
 	float vx = 0;
 	float vy = 0;
 
-	float vh = 0;
-
-	float a = 0;
 	float ax = 0;
 	float ay = 0;
 	std::chrono::steady_clock::time_point start_time;
@@ -29,5 +35,5 @@ public:
 	void CountAverage();
 	//void AddVelocity(float dx, float dy, float dt);
 	void AddVelocity(float dx, float dy);
-	int Interpolate(float& px, float& py, std::chrono::duration<float> elapsed);
+	virtual int Animate(float& px, float& py, std::chrono::duration<float> elapsed) override;
 };

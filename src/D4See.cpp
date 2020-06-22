@@ -301,7 +301,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     ShowWindow(hWnd, iCmdShow);
 
 
-    Animation inertia;
+    MomentumAnimation inertia;
     using namespace std::chrono_literals;
     std::chrono::duration<float> elapsed = 0ms;
 
@@ -358,6 +358,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                         gWinMgr.isPanning = false;
                         inertia.AddVelocity(0, 0);
                         inertia.CountAverage();
+                        gWinMgr.animations["PanningMomentum"] = (Animation*)&inertia;
                     }
                     break;
                 }
@@ -441,6 +442,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                             gWinMgr.PreviousImage();
                             break;
                         }
+                        case VK_SPACE:
                         case VK_NEXT: {
                             gWinMgr.NextImage();
                             break;
@@ -483,19 +485,36 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                 }
             } else {
 
-
-                if (frame->AdvanceAnimation(delta)) {
+                frame->bitmap_mutex.lock();
+                bool advanced = frame->AdvanceAnimation(delta);
+                frame->bitmap_mutex.unlock();
+                if (advanced) {
                     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
                 }
+                
             }
 
             elapsed += delta;
             if (elapsed > 16ms) {
                 elapsed -= 16ms;
-                if (inertia.Interpolate(gWinMgr.x_poffset, gWinMgr.y_poffset, 16ms)){
-                    gWinMgr.LimitPanOffset();
-                    gWinMgr.Redraw();
+                auto it = gWinMgr.animations.begin();
+
+                const std::string* deletionKey = nullptr;
+                while (it != gWinMgr.animations.end()) {
+                    if (it->second->Animate(gWinMgr.x_poffset, gWinMgr.y_poffset, 16ms)) {
+                        gWinMgr.LimitPanOffset();
+                        gWinMgr.Redraw();
+                    }
+                    else {
+                        deletionKey = &it->first;
+                    }
+                    it++;
                 }
+
+                if (deletionKey) {
+                    gWinMgr.animations.erase(*deletionKey);
+                }
+
             }
         }
         prevTime = now;
@@ -521,7 +540,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
 
     switch (message)
     {
-    
+    case WM_MBUTTONDOWN: {
+        gWinMgr.ToggleFullscreen();
+        break;
+    }
     case WM_RBUTTONDOWN: {
         POINT p;
         GetCursorPos(&p);
