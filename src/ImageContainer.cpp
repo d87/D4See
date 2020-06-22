@@ -219,9 +219,18 @@ void DecodingWork(ImageContainer *self) {
 
         //self->thread_state = ThreadState::BatchReady;
 
+        using namespace std::chrono_literals;
+        pImage->frameDelay = std::chrono::duration<float>(image->frameDelay);
+
+        self->subimagesReady++;
+        self->numSubimages = self->subimagesReady;
+
+        if (self->format == ImageFormat::GIF && self->subimagesReady > 1) {
+            self->isAnimated = true;
+        }
+
         if (self->isAnimated) {
-            using namespace std::chrono_literals;
-            pImage->frameDelay = std::chrono::duration<float>(image->frameDelay);
+            ;
             if (self->frameTimeElapsed < 0s) {
                 //self->PrevSubimage(); // seeking to previous frame, which is the same first frame at this point anyway
                 self->frameTimeElapsed = pImage->frameDelay; // Will start advancing animation
@@ -230,9 +239,6 @@ void DecodingWork(ImageContainer *self) {
                 //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
             }
         }
-
-        self->subimagesReady++;
-        self->numSubimages = self->subimagesReady;
 
         if (image->IsFullyLoaded()) {
             
@@ -291,7 +297,7 @@ bool ImageContainer::NextSubimage() {
     int newFrame = curFrame + 1;
     if (newFrame >= subimagesReady) {
         if (image != nullptr) {
-            std::cout << "Waiting on frame " << curFrame << std::endl;
+            LOG_DEBUG("Waiting on frame {0}", curFrame);
             return false; // Next frame isn't ready yet
         }
         else
@@ -310,7 +316,6 @@ bool ImageContainer::AdvanceAnimation(std::chrono::duration<float> elapsed) {
     //std::cout << frameTimeElapsed.count() << "   " << GetActiveSubimage()->frameDelay.count() << std::endl;
     if (frameTimeElapsed >= GetActiveSubimage()->frameDelay) {
         if (NextSubimage()) {
-            std::cout << "Next Frame GO" << std::endl;
             frameTimeElapsed -= GetActiveSubimage()->frameDelay;
             return true;
         }

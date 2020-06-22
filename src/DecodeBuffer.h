@@ -30,7 +30,7 @@ class DecodeBuffer {
 		unsigned int currentScanline = 0; // Goes back to 0 on the next mip/subimage
 
 		bool shouldSeek = true;
-		float frameDelay = 0.2; // Applicable to animated GIFs. Stores frame delay for the currently decoded subimage
+		float frameDelay = 0.1; // Applicable to animated GIFs. Stores frame delay for the currently decoded subimage
 
 		bool isAnimated = false;
 		unsigned int numSubimages = 1;

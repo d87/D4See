@@ -29,18 +29,23 @@ int DecodeBuffer::Open(std::string filename, ImageFormat format) {
 	pixels.resize(size);
 
 
+	
 	if (format == ImageFormat::GIF) {
+		// Some animated gifs don't have either of these params.
+
 		OIIO::TypeDesc typedesc;
 		typedesc = spec.getattributetype("oiio:Movie");
 		int isMovie = 0;
 		spec.getattribute("oiio:Movie", typedesc, &isMovie);
 		isAnimated = isMovie == 1;
-	}
 
-	OIIO::TypeDesc typedesc = spec.getattributetype("FramesPerSecond");
-	int fps[2];
-	if (spec.getattribute("FramesPerSecond", typedesc, &fps)) {
-		frameDelay = float(fps[1]) / fps[0];
+
+		typedesc = spec.getattributetype("FramesPerSecond");
+		int fps[2];
+		if (spec.getattribute("FramesPerSecond", typedesc, &fps)) {
+			frameDelay = float(fps[1]) / fps[0];
+			isAnimated = true;
+		}
 	}
 	
 	

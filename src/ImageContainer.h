@@ -8,6 +8,7 @@
 #include "DecodeBuffer.h"
 #include "ImageFormats.h"
 
+using namespace std::chrono_literals;
 
 enum class ThreadState {
 	Uninitialized,
