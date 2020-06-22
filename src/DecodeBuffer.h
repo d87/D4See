@@ -41,7 +41,6 @@ class DecodeBuffer {
 		DecodeBuffer();
 		DecodeBuffer(std::string filename, ImageFormat format);
 		int Open(std::string filename, ImageFormat format);
-		void FullLoad();
 		bool IsFullyLoaded();
 		bool IsSubimageLoaded(int subimage);
 		DecoderBatchReturns PartialLoad(unsigned int numBytes, bool fullLoadFirstMipLevel);

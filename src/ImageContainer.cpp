@@ -13,7 +13,6 @@ ImageContainer::ImageContainer(HWND hWnd, std::wstring filename, ImageFormat for
 
 void ImageContainer::_Init(HWND hWnd) {
     this->hWnd = hWnd;
-    threadStarted = false;
     frameTimeElapsed = std::chrono::duration<float>(-999.0); // Animation won't start playing until we're ready for it
 }
 
@@ -66,15 +65,6 @@ void DecodingWork(ImageContainer *self) {
         LOG_ERROR(e.what());
     }
 
-
-    //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-
-    //std::cout << "============" << std::endl;
-    //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[�s]" << std::endl;
-    //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds> (end - begin).count() << "[ns]" << std::endl;
-
-
-    //while ( (self->thread_state < 3) && (self->subimagesReady < image->numSubimages) ) {
     while (self->thread_state < ThreadState::Done) {
 
         int subimage = self->subimagesReady;
@@ -119,6 +109,9 @@ void DecodingWork(ImageContainer *self) {
         self->frame.push_back(img);
         ImageFrame* pImage = &self->frame[subimage];
 
+        using namespace std::chrono_literals;
+        pImage->frameDelay = std::chrono::duration<float>(image->frameDelay);
+
         self->bitmap_mutex.unlock();
 
         long long numBytes = (long long)pImage->height * pImage->pitch;
@@ -131,6 +124,7 @@ void DecodingWork(ImageContainer *self) {
 
         if (!threadInitDone) {
             threadInitDone = true;
+            self->curFrame = 0; // Set to 0 from -1
             self->thread_state = ThreadState::Initialized;
             self->threadInitPromise.set_value(true);
             PostMessage(self->hWnd, WM_FRAMEREADY, (WPARAM)self, NULL);
@@ -213,21 +207,21 @@ void DecodingWork(ImageContainer *self) {
             rect.bottom = yEnd;
 
             
+            //self->bitmap_mutex.lock();
             pImage->pBitmap->CopyFromMemory(&rect, pBatchStart, pImage->pitch);
             //self->bitmap_mutex.unlock();
         }
 
         //self->thread_state = ThreadState::BatchReady;
 
-        using namespace std::chrono_literals;
-        pImage->frameDelay = std::chrono::duration<float>(image->frameDelay);
-
+        self->counter_mutex.lock();
         self->subimagesReady++;
         self->numSubimages = self->subimagesReady;
-
         if (self->format == ImageFormat::GIF && self->subimagesReady > 1) {
             self->isAnimated = true;
         }
+
+        self->counter_mutex.unlock();
 
         if (self->isAnimated) {
             ;
@@ -239,6 +233,7 @@ void DecodingWork(ImageContainer *self) {
                 //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
             }
         }
+        
 
         if (image->IsFullyLoaded()) {
             
@@ -254,13 +249,11 @@ void DecodingWork(ImageContainer *self) {
     delete self->image;
     self->image= nullptr;
 
-	self->threadPromise.set_value(true);
+	//self->threadPromise.set_value(true);
 }
 
 void ImageContainer::StartThread() {
-    decoderThread = std::thread(DecodingWork, this);
-    threadStarted = true;
-    threadFinished = threadPromise.get_future();
+    decoderThread = std::thread(DecodingWork, this);  
     threadInitFinished = threadInitPromise.get_future();
 }
 
@@ -269,18 +262,11 @@ void ImageContainer::TerminateThread() {
 }
 
 bool ImageContainer::IsFinished() {
-    using namespace std::chrono_literals;
-
-    if (!threadStarted)
-        return false;
-
-    auto status = threadFinished.wait_for(0ms);
-    if (status == std::future_status::ready)
-        return true;
+    return thread_state >= ThreadState::Done;
 }
 
 ImageFrame* ImageContainer::GetActiveSubimage() {
-    if (frame.size() == 0) return nullptr;
+    if (curFrame == -1) return nullptr;
     return &frame[curFrame];
 }
 
@@ -293,18 +279,24 @@ ImageFrame* ImageContainer::GetActiveSubimage() {
 //    return true;
 //}
 
-bool ImageContainer::NextSubimage() {
-    int newFrame = curFrame + 1;
-    if (newFrame >= subimagesReady) {
-        if (image != nullptr) {
-            LOG_DEBUG("Waiting on frame {0}", curFrame);
+bool ImageContainer::IsSubimageReady(int si) {
+    counter_mutex.lock();
+    int siReady = subimagesReady;
+    counter_mutex.unlock();
+    if (si >= siReady) {
+        if (image != nullptr) { // when all subimages are ready is's null
             return false; // Next frame isn't ready yet
         }
-        else
-            curFrame = 0;
     }
-    else {
-        curFrame++;
+    return true;
+}
+
+bool ImageContainer::NextSubimage() {
+    // All of the thread-safety stuff is supposed to be avoided
+    // by using IsSubimageReady() before attempting to switch subimage
+    curFrame++;
+    if (curFrame >= subimagesReady/* thread-unsafe?*/) {
+        curFrame = 0;
     }
 
     return true;
@@ -313,10 +305,14 @@ bool ImageContainer::NextSubimage() {
 bool ImageContainer::AdvanceAnimation(std::chrono::duration<float> elapsed) {
     using namespace std::chrono_literals;
     frameTimeElapsed += elapsed;
-    //std::cout << frameTimeElapsed.count() << "   " << GetActiveSubimage()->frameDelay.count() << std::endl;
-    if (frameTimeElapsed >= GetActiveSubimage()->frameDelay) {
+
+    if (!IsSubimageReady(curFrame + 1)) return false;
+
+    auto activeSubimage = GetActiveSubimage();
+
+    if (frameTimeElapsed >= activeSubimage->frameDelay) {
+        frameTimeElapsed -= activeSubimage->frameDelay;
         if (NextSubimage()) {
-            frameTimeElapsed -= GetActiveSubimage()->frameDelay;
             return true;
         }
     }

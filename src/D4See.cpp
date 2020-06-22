@@ -61,10 +61,8 @@ VOID OnPaint() //HDC hdc)
  
             if (thread_state != ThreadState::Error) {
                 ImageFrame* pImage = frame->GetActiveSubimage();
-                if (pImage) {
 
-
-                    
+                if (pImage) {                  
 
                     //pRenderTarget->BindDC(hdc, &rc);
 
@@ -485,9 +483,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                 }
             } else {
 
-                frame->bitmap_mutex.lock();
                 bool advanced = frame->AdvanceAnimation(delta);
-                frame->bitmap_mutex.unlock();
                 if (advanced) {
                     RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
                 }

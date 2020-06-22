@@ -167,11 +167,3 @@ DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLo
 		throw std::runtime_error("Not handling tiled files");;
 	}
 }
-
-void DecodeBuffer::FullLoad() {
-	//in->read_image(OIIO::TypeDesc::UINT8, &pixels[0]);
-	////curSubimage == numSubimages
-	////decodingComplete = true;
-	//currentScanline = yres;
-	//in->close();
-}

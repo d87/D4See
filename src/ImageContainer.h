@@ -37,17 +37,17 @@ class ImageContainer {
 		std::string filename;
 		ImageFormat format;
 		HWND hWnd; // HWND of the main window to send it messages
-		HDC memDC; // Place where we'll paint
 		std::mutex bitmap_mutex;
 
 		int width = 0;
 		int height = 0;
 
 		std::vector<ImageFrame> frame;
-		unsigned int curFrame = 0; // index of currently active frame
+		int curFrame = -1; // index of currently active frame, -1 = no frames are ready yet
 		unsigned int numSubimages = 1;
 		std::chrono::duration<float> frameTimeElapsed; // Animation : time elapsed showing activeframe
 
+		std::mutex counter_mutex;
 		int subimagesReady = 0; // Amount of frames fully decoded into DIBs.
 								// Should be the the upper limit for animation while decoding is still in progress
 
@@ -61,11 +61,7 @@ class ImageContainer {
 		std::atomic<int> decoderBatchId{0};
 		
 		std::promise<bool> threadInitPromise;
-		std::promise<bool> threadPromise;
-	
-		bool threadStarted;
 		std::future<bool> threadInitFinished;
-		std::future<bool> threadFinished;
 	private:
 		std::thread decoderThread;
 	
@@ -77,6 +73,7 @@ class ImageContainer {
 		void OpenFile(std::wstring filename, ImageFormat format);
 		bool AdvanceAnimation(std::chrono::duration<float> elapsed);
 		//bool PrevSubimage();
+		bool IsSubimageReady(int si);
 		bool NextSubimage();
 		ImageFrame* GetActiveSubimage();
 		void StartThread();

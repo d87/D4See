@@ -36,7 +36,6 @@ public:
     ImageContainer* frame_prefetch = nullptr; // prefecth container
     Playlist* playlist = nullptr;
     PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
-    //bool newImagePending = false;
 
     bool isMovingOrSizing = false;
     bool isPanning = false;
