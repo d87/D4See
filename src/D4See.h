@@ -5,6 +5,8 @@
 #include <dwrite.h>
 #pragma comment (lib,"Dwrite.lib")
 
+#include <stdint.h> // Standard types
+
 #ifdef _DEBUG
 
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE

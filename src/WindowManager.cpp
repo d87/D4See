@@ -105,12 +105,13 @@ void WindowManager::LoadImageFromPlaylist(int prefetchDir) {
     }
 }
 
+
 void WindowManager::LimitPanOffset() {
-    float x_limit = static_cast<float>(canvas.w_scaled - w_client);
+    float x_limit = static_cast<float>(canvas.w_scaled - canvas.w_client);
     canvas.x_poffset = std::min(canvas.x_poffset, x_limit);
     canvas.x_poffset = std::max(canvas.x_poffset, 0.0f);
-    
-    float y_limit = static_cast<float>(canvas.h_scaled - h_client);
+
+    float y_limit = static_cast<float>(canvas.h_scaled - canvas.h_client);
     canvas.y_poffset = std::min(canvas.y_poffset, y_limit);
     canvas.y_poffset = std::max(canvas.y_poffset, 0.0f);
 }
@@ -128,8 +129,8 @@ void WindowManager::UpdateWindowSizeInfo() {
     // Used only to update client area dimensions after WM_SIZE to limit panning offset
     RECT crc;
     GetClientRect(hWnd, &crc);
-    h_client = crc.bottom - crc.top;
-    w_client = crc.right - crc.left;
+    canvas.h_client = crc.bottom - crc.top;
+    canvas.w_client = crc.right - crc.left;
 }
 
 void WindowManager::GetCenteredImageRect(RECT* rc) {
@@ -253,7 +254,6 @@ void WindowManager::SelectImage(ImageContainer* f) {
     LOG_DEBUG("<<<<<<< FRAME SWITCH >>>>>>>");
     LOG_DEBUG(" -- {0} --", f->filename);
     frame = f;
-    StopTimer(D4S_TIMER_HQREDRAW);
     canvas.x_poffset = 0;
     canvas.y_poffset = 0;
     animations.clear();
@@ -452,8 +452,8 @@ void WindowManager::ManualZoomToPoint(float mod, int zoomPointX,  int zoomPointY
     float y_click_offset_native = (canvas.y_poffset + zoomPointY) / old_scale;
 
     // floating point zoompoint to client 
-    float fzpx = static_cast<float>(zoomPointX) / w_client;
-    float fzpy = static_cast<float>(zoomPointY) / h_client;
+    float fzpx = static_cast<float>(zoomPointX) / canvas.w_client;
+    float fzpy = static_cast<float>(zoomPointY) / canvas.h_client;
 
     //LOG_DEBUG("--------------");
     //LOG_DEBUG("Pan: {0},{1}  ZP: {2},{3}", canvas.x_poffset, canvas.y_poffset, zoomPointX, zoomPointY);
@@ -467,8 +467,8 @@ void WindowManager::ManualZoomToPoint(float mod, int zoomPointX,  int zoomPointY
     float y_click_offset = y_click_offset_native * canvas.scale_effective;
 
     // client area dimensions here are already updated to the new scale
-    canvas.x_poffset = x_click_offset - ((fzpx * w_client) );
-    canvas.y_poffset = y_click_offset - ((fzpy * h_client) );
+    canvas.x_poffset = x_click_offset - ((fzpx * canvas.w_client) );
+    canvas.y_poffset = y_click_offset - ((fzpy * canvas.h_client) );
 
     Redraw();
 
@@ -476,7 +476,7 @@ void WindowManager::ManualZoomToPoint(float mod, int zoomPointX,  int zoomPointY
     LimitPanOffset();
 }
 
-void WindowManager::ResizeForImage() {
+void WindowManager::GetWindowSizeForImage(RECT& rrc) {
 
     //----------
     // 1) Find appropriate monitor for origin point
@@ -583,8 +583,8 @@ void WindowManager::ResizeForImage() {
     new_client_area.top = origin.y - cut_height / 2;
     new_client_area.bottom = (origin.y + cut_height) - cut_height / 2;
 
-    h_client = new_client_area.bottom - new_client_area.top;
-    w_client = new_client_area.right - new_client_area.left;
+    canvas.h_client = new_client_area.bottom - new_client_area.top;
+    canvas.w_client = new_client_area.right - new_client_area.left;
 
     LimitPanOffset();
 
@@ -625,24 +625,36 @@ void WindowManager::ResizeForImage() {
         new_window_area.top -= diff;
     }
 
+    rrc.left = new_window_area.left;
+    rrc.top = new_window_area.top;
+    rrc.right = new_window_area.right;
+    rrc.bottom = new_window_area.bottom;
+
+    
+}
+
+void WindowManager::ResizeForImage() {
+    RECT new_window_area;
+    GetWindowSizeForImage(new_window_area);
+
     int x = new_window_area.left;
     int y = new_window_area.top;
     int w = new_window_area.right - new_window_area.left;
     int h = new_window_area.bottom - new_window_area.top;
 
-
     //--------------
-    
+
     _TouchSizeEventTimestamp();
 
     bool dynamicPos = !isMaximized && !isFullscreen;
     if (dynamicPos) {
-        
+
         SetWindowPos(hWnd, HWND_TOP, x, y, w, h, SWP_DEFERERASE | SWP_NOCOPYBITS); // These flags are pretty good to reduce flickering and discarding old bits
-        LOG("<RESIZE> C: {0}x{1}    W: {2}x{3}    N: {4}x{5}", w_client, h_client, w, h, w_native, h_native);
+        LOG("<RESIZE> C: {0}x{1}    W: {2}x{3}", canvas.w_client, canvas.h_client, w, h);
     }
 
     //UpdateWindowSizeInfo();
+
 }
 
 void WindowManager::ShowPopupMenu(POINT& p) {

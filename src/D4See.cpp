@@ -248,18 +248,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     gWinMgr.ReadOrigin();
     gWinMgr.SelectPlaylist(playlist);
-    
-    
-    //HMENU submenu = CreatePopupMenu();
-    //AppendMenuW(submenu, MF_STRING, 1001, L"submenu 1001");
-
-    //HMENU mainmenu = CreatePopupMenu();
-    //AppendMenuW(mainmenu, MF_STRING, 100, L"main 100");
-    //AppendMenuW(mainmenu, MF_SEPARATOR, 0, NULL);
-    //AppendMenuW(mainmenu, MF_STRING, 101, L"main 101");
-
-    //AppendMenuW(mainmenu, MF_POPUP, (UINT)submenu, L"&submenu");
-
+        
     //HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
     HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2DFactory);
 
@@ -295,6 +284,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     hr = pD2DFactory->CreateHwndRenderTarget(props, D2D1::HwndRenderTargetProperties(hWnd, size), &pRenderTarget);
     
     gWinMgr.SelectImage(new ImageContainer(hWnd, playlist->Current()->path, playlist->Current()->format));
+    gWinMgr.frame->threadInitFinished.wait();
+    gWinMgr.ResizeForImage();
 
     ShowWindow(hWnd, iCmdShow);
 
@@ -317,11 +308,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                 }
                 case WM_TIMER: {
                     unsigned int id = msg.wParam;
-                    if (id == D4S_TIMER_HQREDRAW) {
-                        gWinMgr.Redraw();
-                        gWinMgr.StopTimer(id);
-                    }
-                    else if (id == D4S_PREFETCH_TIMEOUT) {
+                    if (id == D4S_PREFETCH_TIMEOUT) {
                         gWinMgr.DiscardPrefetch();
                         gWinMgr.StopTimer(id);
                         LOG("Prefetch dropped from memory");
@@ -365,7 +352,6 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     if (LMBDown) {
                         if (!gWinMgr.isPanning) {
                             gWinMgr.isPanning = true;
-                            gWinMgr.StopTimer(D4S_TIMER_HQREDRAW);
                         }
 
                         int& sxPos = gWinMgr.mouseX;

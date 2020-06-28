@@ -19,7 +19,6 @@
 #define BOOLCOMMANDCHECK(x) ( (x) ? MF_CHECKED : MF_UNCHECKED )
 #define BOOLCOMMANDENABLE(x) ( (x) ? MF_ENABLED: MF_GRAYED )
 
-#define D4S_TIMER_HQREDRAW 1001
 #define D4S_PREFETCH_TIMEOUT 1003
 
 
@@ -45,8 +44,6 @@ public:
     bool isBorderless = false;
     bool isAlwaysOnTop = false;
 
-    int w_client; // client area, everything inside the window frame
-    int h_client;
 
     int x_origin; // point on the screen around which the windows is constucted
     int y_origin;
@@ -77,9 +74,11 @@ public:
     void LoadImageFromPlaylist(int prefetchDir);
     void StartPrefetch(ImageContainer* f);
     void ShowPrefetch();
+    void LimitPanOffset();
     void DiscardPrefetch();
     void SelectImage(ImageContainer* f);
     void SelectPlaylist(Playlist* playlist);
+    void GetWindowSizeForImage(RECT& rrc);
     void ResizeForImage();
     void ManualZoom(float mod, float absolute = 0.0);
     void ManualZoomToPoint(float mod, int dstx, int dsty);
@@ -96,7 +95,6 @@ public:
 
     void UpdateOrigin();
     bool WasGeneratingEvents();
-    void LimitPanOffset();
     void Pan(int x, int y);
     bool SaveWindowParams(WINDOW_SAVED_DATA* cont);
     void GetCenteredImageRect(RECT* rc);
@@ -107,5 +105,3 @@ public:
     ~WindowManager();
     
 };
-
-int DeleteFileDialog(std::wstring path, bool recycle = true);

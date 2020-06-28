@@ -265,7 +265,7 @@ bool ImageContainer::IsFinished() {
     return thread_state >= ThreadState::Done;
 }
 
-ImageFrame* ImageContainer::GetActiveSubimage() {
+inline ImageFrame* ImageContainer::GetActiveSubimage() {
     if (curFrame == -1) return nullptr;
     return &frame[curFrame];
 }

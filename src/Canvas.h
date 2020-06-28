@@ -3,6 +3,9 @@
 namespace D4See {
 	class Canvas {
     public:
+        int w_client; // client area, everything inside the window frame
+        int h_client;
+
         float scale_manual = 1.0f; // 
         float scale_effective = 1.0f; // Actual current scale
 
