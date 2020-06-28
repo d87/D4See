@@ -43,7 +43,8 @@ class Playlist {
 		void ChangeSortingMethod(PlaylistSortMethod sortMethod);
 		int MoveCursor(std::wstring filename);
 		bool Move(PlaylistPos pos, int mod);
-		PlaylistEntry* Current();
+		inline PlaylistEntry* Current();
+		void EraseCurrent();
 		PlaylistEntry* Next();
 		PlaylistEntry* Prev();
 		int Add(std::wstring filename, ImageFormat format, long long unixLastWrite);

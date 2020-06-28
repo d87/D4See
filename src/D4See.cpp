@@ -420,6 +420,25 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                             DeleteFileDialog(wpath, recycle);
                             break;
                         }
+
+                        case 0x58: { // X key
+                            if (GetKeyState(VK_CONTROL)) {
+                                std::wstring path = playlist->Current()->path;
+                                if (CutCopyFile(path, DROPEFFECT_MOVE)) { // successful cut
+                                    // Remove from playlist
+                                    gWinMgr.playlist->EraseCurrent();
+                                    gWinMgr.PreviousImage();
+                                }
+                            }
+                            break;
+                        }
+                        case 0x43: { // C key
+                            if (GetKeyState(VK_CONTROL)) {
+                                std::wstring path = playlist->Current()->path;
+                                CutCopyFile(path, DROPEFFECT_COPY);
+                            }
+                            break;
+                        }
                         case VK_ESCAPE: {
                             PostQuitMessage(0);
                             break;

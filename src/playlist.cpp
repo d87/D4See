@@ -71,9 +71,15 @@ int Playlist::MoveCursor(std::wstring filename) {
 	return NULL;
 }
 
-PlaylistEntry* Playlist::Current() {
+inline PlaylistEntry* Playlist::Current() {
 	auto it = list.begin() + offset;
 	return &*it;
+}
+
+void Playlist::EraseCurrent() {
+	if (list.size() > 1) {
+		list.erase(list.begin() + offset);
+	}
 }
 
 bool Playlist::Move(PlaylistPos pos, int mod) {

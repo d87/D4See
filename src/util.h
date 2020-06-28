@@ -7,6 +7,10 @@
 #include <fstream>
 #include <vector>
 
+int CutCopyFile(std::wstring path, DWORD dropEffect = DROPEFFECT_COPY);
+int DeleteFileDialog(std::wstring path, bool recycle = true);
+std::wstring OpenFileDialog();
+
 std::string wide_to_utf8(std::wstring wstr);
 std::filesystem::path GetExecutableDir();
 std::filesystem::path GetAppDataRoaming();
