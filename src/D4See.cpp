@@ -412,6 +412,14 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                 case WM_KEYDOWN: {
                     TranslateMessage(&msg);
                     switch (msg.wParam) {
+                        case VK_DELETE: {
+                            auto wpath = gWinMgr.playlist->Current()->filename;
+
+                            bool recycle = !GetKeyState(VK_SHIFT);
+
+                            DeleteFileDialog(wpath, recycle);
+                            break;
+                        }
                         case VK_ESCAPE: {
                             PostQuitMessage(0);
                             break;

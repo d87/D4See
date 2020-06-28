@@ -22,6 +22,7 @@ long long WindowsTickToUnixSeconds(FILETIME ft)
 
 const std::unordered_map<std::wstring, ImageFormat> exts = {
 	{ L".jpg", ImageFormat::JPEG },
+	{ L".jpeg", ImageFormat::JPEG },
 	{ L".png", ImageFormat::PNG },
 	{ L".tga", ImageFormat::TGA },
 	{ L".bmp", ImageFormat::BMP },
@@ -51,6 +52,13 @@ int Playlist::Add(std::wstring full_path, ImageFormat format, long long unixLast
 	file.tmFileWrite = unixLastWrite;
 	list.push_back(file);
 	return 1;
+}
+
+void Playlist::Refresh() {
+	auto cur = Current();
+	std::wstring currentPath(cur->path);
+	list.clear();
+	GeneratePlaylist(currentPath);
 }
 
 int Playlist::MoveCursor(std::wstring filename) {

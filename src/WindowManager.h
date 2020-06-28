@@ -107,3 +107,5 @@ public:
     ~WindowManager();
     
 };
+
+int DeleteFileDialog(std::wstring path, bool recycle = true);

@@ -668,6 +668,42 @@ void WindowManager::ShowPopupMenu(POINT& p) {
     DestroyMenu(popupMenu);
 }
 
+HRESULT ShellDeleteFileOperation(IShellItem* siFile, DWORD flags)
+{
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if (SUCCEEDED(hr))
+    {
+        IFileOperation* pfo;
+        hr = CoCreateInstance(CLSID_FileOperation, NULL, CLSCTX_ALL, IID_PPV_ARGS(&pfo));
+        if (SUCCEEDED(hr))
+        {
+            pfo->SetOperationFlags(flags);
+            hr = pfo->DeleteItem(siFile, NULL);
+            if (SUCCEEDED(hr))
+            {
+                hr = pfo->PerformOperations();
+            }
+            pfo->Release();
+        }
+    }
+    return hr;
+}
+
+int DeleteFileDialog(std::wstring path, bool recycle) {
+    IShellItem * item = nullptr;
+    SHCreateItemFromParsingName(path.c_str(), NULL, IID_PPV_ARGS(&item));
+
+    DWORD flags = FOF_WANTNUKEWARNING;
+    if (recycle) {
+        flags |= FOFX_RECYCLEONDELETE;
+    }
+
+    if (SUCCEEDED(ShellDeleteFileOperation(item, flags))) {
+        return 1;
+    }
+    return 0;
+}
+
 std::wstring OpenFileDialog() {
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
         COINIT_DISABLE_OLE1DDE);
