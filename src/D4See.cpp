@@ -13,7 +13,6 @@
 #pragma comment (lib,"OpenImageIO_Util.lib")
 
 
-
 #include <codecvt>
 #include <chrono>
 
@@ -24,9 +23,10 @@
 #include "ImageContainer.h"
 #include "WindowManager.h"
 #include "Animation.h"
+#include "Bindings.h"
 
 
-WindowManager gWinMgr;
+WindowManager gWinMgr; // globaled in WindowManager.h
 
 ID2D1Factory* pD2DFactory;
 //ID2D1DCRenderTarget* pRenderTarget;
@@ -290,6 +290,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     ShowWindow(hWnd, iCmdShow);
 
 
+    gWinMgr.input.BindKey(L"RETURN", D4See::BindToggleFullscreen);
+
+
     MomentumAnimation inertia;
     using namespace std::chrono_literals;
     std::chrono::duration<float> elapsed = 0ms;
@@ -298,8 +301,10 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     bool shouldShutdown = false;
     while (!shouldShutdown) {
-
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+
+            gWinMgr.input.ProcessInput(hWnd, msg.message, msg.wParam, msg.lParam);
+
             switch (msg.message) {
                 case WM_COMMAND: {
                     unsigned int wmId = LOWORD(msg.wParam);
@@ -330,151 +335,152 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     }
                     break;
                 }
-                case WM_LBUTTONDOWN: {
-                    int& sxPos = gWinMgr.mouseX;
-                    int& syPos = gWinMgr.mouseY;
-                    sxPos = GET_X_LPARAM(msg.lParam);
-                    syPos = GET_Y_LPARAM(msg.lParam);
-                    inertia.Start();
-                    break;
-                }
-                case WM_LBUTTONUP: {
-                    if (gWinMgr.isPanning) {
-                        gWinMgr.isPanning = false;
-                        inertia.AddVelocity(0, 0);
-                        inertia.CountAverage();
-                        gWinMgr.animations["PanningMomentum"] = (Animation*)&inertia;
-                    }
-                    break;
-                }
-                case WM_MOUSEMOVE: {
-                    int LMBDown = (msg.wParam)&MK_LBUTTON;
-                    if (LMBDown) {
-                        if (!gWinMgr.isPanning) {
-                            gWinMgr.isPanning = true;
-                        }
+                //case WM_LBUTTONDOWN: {
+                //    int& sxPos = gWinMgr.mouseX;
+                //    int& syPos = gWinMgr.mouseY;
+                //    sxPos = GET_X_LPARAM(msg.lParam);
+                //    syPos = GET_Y_LPARAM(msg.lParam);
+                //    inertia.Start();
+                //    break;
+                //}
+                //case WM_LBUTTONUP: {
+                //    if (gWinMgr.isPanning) {
+                //        gWinMgr.isPanning = false;
+                //        inertia.AddVelocity(0, 0);
+                //        inertia.CountAverage();
+                //        gWinMgr.animations["PanningMomentum"] = (Animation*)&inertia;
+                //    }
+                //    break;
+                //}
+                //case WM_MOUSEMOVE: {
+                //    int LMBDown = (msg.wParam)&MK_LBUTTON;
+                //    if (LMBDown) {
+                //        if (!gWinMgr.isPanning) {
+                //            gWinMgr.isPanning = true;
+                //        }
 
-                        int& sxPos = gWinMgr.mouseX;
-                        int& syPos = gWinMgr.mouseY;
+                //        int& sxPos = gWinMgr.mouseX;
+                //        int& syPos = gWinMgr.mouseY;
 
-                        int xPos = GET_X_LPARAM(msg.lParam);
-                        int yPos = GET_Y_LPARAM(msg.lParam);
+                //        int xPos = GET_X_LPARAM(msg.lParam);
+                //        int yPos = GET_Y_LPARAM(msg.lParam);
 
-                        if (sxPos != -1) {
-                            int dx = xPos - sxPos;
-                            int dy = yPos - syPos;
+                //        if (sxPos != -1) {
+                //            int dx = xPos - sxPos;
+                //            int dy = yPos - syPos;
 
-                            //LOG_DEBUG("MouseMove: {0},{1}", dx, dy);
+                //            //LOG_DEBUG("MouseMove: {0},{1}", dx, dy);
 
-                            inertia.AddVelocity(dx, dy);
+                //            inertia.AddVelocity(dx, dy);
 
-                            gWinMgr.Pan(-dx, -dy);
-                        }
+                //            gWinMgr.Pan(-dx, -dy);
+                //        }
 
-                        sxPos = xPos;
-                        syPos = yPos;
-                    }
-                    break;
-                }
-                case WM_DROPFILES: {
-                    HDROP hDrop = (HDROP)msg.wParam;
-                    int fnSize = DragQueryFileW(hDrop, 0, NULL, 0);//Get Buffer Size
+                //        sxPos = xPos;
+                //        syPos = yPos;
+                //    }
+                //    break;
+                //}
+                //case WM_DROPFILES: {
+                //    HDROP hDrop = (HDROP)msg.wParam;
+                //    int fnSize = DragQueryFileW(hDrop, 0, NULL, 0);//Get Buffer Size
 
-                    std::wstring filename;
-                    filename.resize(fnSize);
+                //    std::wstring filename;
+                //    filename.resize(fnSize);
 
-                    DragQueryFileW(hDrop, 0, &filename[0], fnSize+1);
+                //    DragQueryFileW(hDrop, 0, &filename[0], fnSize+1);
 
-                    DragFinish(hDrop);
+                //    DragFinish(hDrop);
 
-                    auto playlist = new Playlist(filename, gWinMgr.sortMethod);
-                    gWinMgr.SelectPlaylist(playlist);
+                //    auto playlist = new Playlist(filename, gWinMgr.sortMethod);
+                //    gWinMgr.SelectPlaylist(playlist);
 
-                    auto cur = playlist->Current();
-                    gWinMgr.SelectImage(new ImageContainer(hWnd, cur->path, cur->format));
+                //    auto cur = playlist->Current();
+                //    gWinMgr.SelectImage(new ImageContainer(hWnd, cur->path, cur->format));
 
-                    break;
-                }
-                case WM_KEYDOWN: {
-                    TranslateMessage(&msg);
-                    switch (msg.wParam) {
-                        case VK_DELETE: {
-                            auto wpath = gWinMgr.playlist->Current()->filename;
+                //    break;
+                //}
+                //case WM_KEYDOWN: {
+                //    TranslateMessage(&msg);
+                //    switch (msg.wParam) {
+                //        case VK_DELETE: {
+                //            auto wpath = gWinMgr.playlist->Current()->filename;
 
-                            bool recycle = !GetKeyState(VK_SHIFT);
+                //            bool recycle = !GetKeyState(VK_SHIFT);
 
-                            DeleteFileDialog(wpath, recycle);
-                            break;
-                        }
+                //            DeleteFileDialog(wpath, recycle);
+                //            break;
+                //        }
 
-                        case 0x58: { // X key
-                            if (GetKeyState(VK_CONTROL)) {
-                                std::wstring path = playlist->Current()->path;
-                                if (CutCopyFile(path, DROPEFFECT_MOVE)) { // successful cut
-                                    // Remove from playlist
-                                    gWinMgr.playlist->EraseCurrent();
-                                    gWinMgr.PreviousImage();
-                                }
-                            }
-                            break;
-                        }
-                        case 0x43: { // C key
-                            if (GetKeyState(VK_CONTROL)) {
-                                std::wstring path = playlist->Current()->path;
-                                CutCopyFile(path, DROPEFFECT_COPY);
-                            }
-                            break;
-                        }
-                        case VK_ESCAPE: {
-                            PostQuitMessage(0);
-                            break;
-                        }
-                        case VK_RETURN: {
-                            gWinMgr.ToggleFullscreen();
-                            break;
-                        }
-                        case VK_LEFT: {
-                            gWinMgr.Pan(-60, 0);
-                            break;
-                        }
-                        case VK_RIGHT: {
-                            gWinMgr.Pan(60, 0);
-                            break;
-                        }
-                        case VK_UP: {
-                            gWinMgr.Pan(0, -60);
-                            break;
-                        }
-                        case VK_DOWN: {
-                            gWinMgr.Pan(0, 60);
-                            break;
-                        }                                    
-                        case VK_PRIOR: {
-                            gWinMgr.PreviousImage();
-                            break;
-                        }
-                        case VK_SPACE:
-                        case VK_NEXT: {
-                            gWinMgr.NextImage();
-                            break;
-                        }
-                        case VK_TAB: {
-                            gWinMgr.ToggleBorderless();
-                            break;
-                        }
-                        case VK_END: {
-                            gWinMgr.playlist->Move(PlaylistPos::End, 0);
-                            gWinMgr.LoadImageFromPlaylist(0);
-                            break;
-                        }
-                        case VK_HOME: {
-                            gWinMgr.playlist->Move(PlaylistPos::Start, 0);
-                            gWinMgr.LoadImageFromPlaylist(0);
-                            break;
-                        }
-                    }
-                    break;
-                }
+                //        case 0x58: { // X key
+                //            if (GetKeyState(VK_CONTROL)) {
+                //                std::wstring path = playlist->Current()->path;
+                //                if (CutCopyFile(path, DROPEFFECT_MOVE)) { // successful cut
+                //                    // Remove from playlist
+                //                    gWinMgr.playlist->EraseCurrent();
+                //                    gWinMgr.PreviousImage();
+                //                }
+                //            }
+                //            break;
+                //        }
+                //        case 0x43: { // C key
+                //            if (GetKeyState(VK_CONTROL)) {
+                //                std::wstring path = playlist->Current()->path;
+                //                CutCopyFile(path, DROPEFFECT_COPY);
+                //            }
+                //            break;
+                //        }
+                //        case VK_ESCAPE: {
+                //            PostQuitMessage(0);
+                //            break;
+                //        }
+                //        case VK_RETURN: {
+                //            gWinMgr.ToggleFullscreen();
+                //            break;
+                //        }
+                //        case VK_LEFT: {
+                //            gWinMgr.Pan(-60, 0);
+                //            break;
+                //        }
+                //        case VK_RIGHT: {
+                //            gWinMgr.Pan(60, 0);
+                //            //gWinMgr.animations["HScroll"] = new TranslateAnimation(500, 0);
+                //            break;
+                //        }
+                //        case VK_UP: {
+                //            gWinMgr.Pan(0, -60);
+                //            break;
+                //        }
+                //        case VK_DOWN: {
+                //            gWinMgr.Pan(0, 60);
+                //            break;
+                //        }                                    
+                //        case VK_PRIOR: {
+                //            gWinMgr.PreviousImage();
+                //            break;
+                //        }
+                //        case VK_SPACE:
+                //        case VK_NEXT: {
+                //            gWinMgr.NextImage();
+                //            break;
+                //        }
+                //        case VK_TAB: {
+                //            gWinMgr.ToggleBorderless();
+                //            break;
+                //        }
+                //        case VK_END: {
+                //            gWinMgr.playlist->Move(PlaylistPos::End, 0);
+                //            gWinMgr.LoadImageFromPlaylist(0);
+                //            break;
+                //        }
+                //        case VK_HOME: {
+                //            gWinMgr.playlist->Move(PlaylistPos::Start, 0);
+                //            gWinMgr.LoadImageFromPlaylist(0);
+                //            break;
+                //        }
+                //    }
+                //    break;
+                //}
 
                 case WM_QUIT:
                     shouldShutdown = true;

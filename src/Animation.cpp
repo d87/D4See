@@ -69,3 +69,22 @@ int MomentumAnimation::Animate(D4See::Canvas& canvas, std::chrono::duration<floa
 	if ((vy*vy0) < 0) vy = 0.0;
 	return 1;
 }
+
+
+
+
+
+
+TranslateAnimation::TranslateAnimation(float vx, float vy) {
+	this->vx = vx;
+	this->vy = vy;
+}
+
+int TranslateAnimation::Animate(D4See::Canvas& canvas, std::chrono::duration<float> elapsed) {
+	float dx = vx * elapsed.count();
+	float dy = vy * elapsed.count();
+
+	canvas.x_poffset += dx;
+	canvas.y_poffset += dy;
+	return 1;
+}

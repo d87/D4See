@@ -13,6 +13,7 @@
 #include "Animation.h"
 #include "Canvas.h"
 #include "D4See.h"
+#include "Input.h"
 
 #include "libs/toml11/toml.hpp"
 
@@ -36,6 +37,7 @@ public:
     ImageContainer* frame_prefetch = nullptr; // prefecth container
     Playlist* playlist = nullptr;
     PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
+    D4See::InputHandler input;
 
     bool isMovingOrSizing = false;
     bool isPanning = false;
@@ -105,3 +107,5 @@ public:
     ~WindowManager();
     
 };
+
+extern WindowManager gWinMgr;

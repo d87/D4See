@@ -177,12 +177,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Animation.h" />
+    <ClInclude Include="src\Bindings.h" />
     <ClInclude Include="src\Canvas.h" />
     <ClInclude Include="src\D4See.h" />
     <ClInclude Include="src\framework.h" />
     <ClInclude Include="src\DecodeBuffer.h" />
     <ClInclude Include="src\ImageFormats.h" />
     <ClInclude Include="src\ImageContainer.h" />
+    <ClInclude Include="src\Input.h" />
     <ClInclude Include="src\playlist.h" />
     <ClInclude Include="src\resource.h" />
     <ClInclude Include="src\targetver.h" />
@@ -191,10 +193,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Animation.cpp" />
+    <ClCompile Include="src\Bindings.cpp" />
     <ClCompile Include="src\Canvas.cpp" />
     <ClCompile Include="src\DecodeBuffer.cpp" />
     <ClCompile Include="src\D4See.cpp" />
     <ClCompile Include="src\ImageContainer.cpp" />
+    <ClCompile Include="src\Input.cpp" />
     <ClCompile Include="src\playlist.cpp" />
     <ClCompile Include="src\util.cpp" />
     <ClCompile Include="src\WindowManager.cpp" />

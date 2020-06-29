@@ -5,8 +5,6 @@
 #include <dwrite.h>
 #pragma comment (lib,"Dwrite.lib")
 
-#include <stdint.h> // Standard types
-
 #ifdef _DEBUG
 
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
@@ -31,7 +29,6 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #define WM_FRAMEREADY WM_USER+1
 #define WM_FRAMEERROR WM_USER+2
-
 
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 

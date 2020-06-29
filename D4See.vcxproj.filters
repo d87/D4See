@@ -51,6 +51,12 @@
     <ClInclude Include="src\Canvas.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Input.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Bindings.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\playlist.cpp">
@@ -75,6 +81,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Canvas.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Bindings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

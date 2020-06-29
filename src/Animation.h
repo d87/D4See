@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Canvas.h"
+#include "D4See.h"
 
 #include <chrono>
 #include <queue>
@@ -35,5 +36,16 @@ public:
 	void CountAverage();
 	//void AddVelocity(float dx, float dy, float dt);
 	void AddVelocity(float dx, float dy);
+	virtual int Animate(D4See::Canvas& canvas, std::chrono::duration<float> elapsed) override;
+};
+
+class TranslateAnimation: public virtual Animation {
+protected:
+	float vx = 0;
+	float vy = 0;
+
+public:
+	TranslateAnimation(float vx, float vy);
+	~TranslateAnimation() { LOG_DEBUG("Destroying translate animation."); };
 	virtual int Animate(D4See::Canvas& canvas, std::chrono::duration<float> elapsed) override;
 };
