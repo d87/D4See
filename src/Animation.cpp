@@ -70,10 +70,7 @@ int MomentumAnimation::Animate(D4See::Canvas& canvas, std::chrono::duration<floa
 	return 1;
 }
 
-
-
-
-
+// -----------------------------
 
 TranslateAnimation::TranslateAnimation(float vx, float vy) {
 	this->vx = vx;

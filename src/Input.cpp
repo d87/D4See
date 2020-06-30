@@ -16,29 +16,9 @@ const uint8_t SINPUT_BUTTON4 = 8;
 const uint8_t SINPUT_BUTTON5 = 16;
 const uint8_t SINPUT_WHEEL = 32;
 
-int old_xPos = 0;
-int old_yPos = 0;
-
 InputHandler::InputHandler(){
-	//this->hWnd = hWnd;
 	memset(kbBindTable,0,sizeof(Action)*2048);
-	//memset(MBINDTABLE,0,sizeof(BINDING)*1024);
-	//memset(MOUSEMOVE,0,sizeof(BINDING));
-	memset(&dragData,0,sizeof(DRAGDATA));
-	MODIFIERMASK = 0;
-	//MButtonsState = 0;
 }
-
-void InputHandler::__MouseButton(unsigned char btnbit, int released){
-	//if (!released)	MButtonsState|=btnbit; //0|btnbit; //resetting 
-	//else			MButtonsState&=~btnbit;
-
-	//short bindaddr = (MODIFIERMASK << 8) + MButtonsState|btnbit;
-	//if (MBINDTABLE[bindaddr].Callback)
-	//	MBINDTABLE[bindaddr].Callback(released,  0);
-	//MButtonsState&=~SINPUT_WHEEL;
-}
-
 
 
 void InputHandler::FireAction(uint8_t VKey, int isDown) {
@@ -85,8 +65,6 @@ void InputHandler::FireAction(uint8_t VKey, int isDown) {
 				i--;
 			}
 		}
-
-
 	}
 }
 
@@ -99,22 +77,6 @@ InputHandler::ProcessInput(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 		case WM_KEYUP:{
 			short VKey = (short)wParam;
 			switch (VKey){
-				//case VK_MENU:
-				//case VK_SHIFT:
-				//case VK_CONTROL:{
-				//	unsigned char flag = SINPUT_CTRL;
-				//	if (VKey == VK_MENU) flag = SINPUT_ALT;
-				//	else if (VKey == VK_SHIFT) flag = SINPUT_SHIFT;
-
-				//	if (message == WM_KEYDOWN)
-				//		 MODIFIERMASK |=flag;
-				//	else MODIFIERMASK &=~flag;
-
-				//	short bindaddr = VKey;
-				//	if (KBBINDTABLE[bindaddr].Callback)
-				//		KBBINDTABLE[bindaddr].Callback( (message == WM_KEYUP) ? 1 : 0, 0);
-				//	break;
-				//}
 
 				default:{
 					FireAction(VKey, (message == WM_KEYDOWN || message == WM_SYSKEYDOWN) ? 1 : 0);
@@ -127,18 +89,12 @@ InputHandler::ProcessInput(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 			if (currentMouseMoveCallback != NULL) {
 				currentMouseMoveCallback();
 			}
-			//int new_xPos = GET_X_LPARAM(lParam);
-			//int new_yPos = GET_Y_LPARAM(lParam);
-			////POINT * newPos = MAKEPOINTS(lParam);
-
-			//int dX = new_xPos - old_xPos;
-			//int dY = new_yPos - old_yPos;
-			//old_xPos = new_xPos;
-			//old_yPos = new_yPos;
-
-			//if (MOUSEMOVE[0].Callback)
-			//	MOUSEMOVE[0].Callback(dX,dY);
-			//	//(new_xPos,new_yPos);
+			//for (int i = 0; i < pressedActions.size(); i++) {
+			//	auto cbOnMouseMove = pressedActions[i].action.cbOnMouseMove;
+			//	if (cbOnMouseMove != NULL) {
+			//		cbOnMouseMove();
+			//	}
+			//}
 			break;
 		}
 		case WM_LBUTTONDOWN:
@@ -186,32 +142,13 @@ InputHandler::ProcessInput(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 	return 1;
 }
 
-inline int InputHandler::IsCtrlDown() {	return MODIFIERMASK&SINPUT_CTRL;  }
-inline int InputHandler::IsAltDown()  {	return MODIFIERMASK&SINPUT_ALT;   }
-inline int InputHandler::IsShiftDown(){	return MODIFIERMASK&SINPUT_SHIFT; }
-//inline int InputHandler::IsLMBDown()  { return MButtonsState&SINPUT_BUTTON1; }
-//inline int InputHandler::IsRMBDown()  { return MButtonsState&SINPUT_BUTTON2; }
-//inline int InputHandler::IsMMBDown()  { return MButtonsState&SINPUT_BUTTON3; }
-
-void InputHandler::StartDragging(HWND hWnd){
-	SetCapture(hWnd);
-	GetCursorPos(&dragData.init);
-}
-void InputHandler::StopDragging(HWND hWnd){
-	dragData.Xo = 0; dragData.Yo = 0;
-	dragData.init.x = -1;
-	ReleaseCapture();
-}
-int InputHandler::IsDragging(){
-	if (dragData.init.x > 0) return 1;
-	else return 0;
-}
 
 
 enum ModifierMask {
 	CTRL = 1,
 	ALT = 2,
 	SHIFT = 4,
+	WIN = 8
 };
 
 uint8_t
@@ -233,6 +170,9 @@ const std::unordered_map<std::string, ModifierMask> modifierMap = {
 	{ "ALT", ModifierMask::ALT },
 	{ "LALT", ModifierMask::ALT },
 	{ "RALT", ModifierMask::ALT },
+	//{ "WIN", ModifierMask::WIN },
+	//{ "LWIN", ModifierMask::WIN },
+	//{ "RWIN", ModifierMask::WIN },
 };
 
 
@@ -278,17 +218,3 @@ int InputHandler::BindKey(std::string keyStr, std::string actionStr ){
 
 	return 0;
 }
-
-int InputHandler::BindMouseButton(short Button, unsigned char MODS, void (*Callback)(int released, void*)){
-	//short bindaddr = (MODS << 8) + Button;
-	//MBINDTABLE[bindaddr].Callback = Callback;
-	//MBINDTABLE[bindaddr].params = 0;
-	return 1;
-}
-
-int InputHandler::BindMouseMove(void (*Callback)(long,long)){
-	//MOUSEMOVE[0].Callback = Callback;
-	return 1;
-}
-
-

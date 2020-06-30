@@ -1,5 +1,6 @@
 #include "Action.h"
 #include <string>
+#include <memory>
 
 #include "WindowManager.h"
 
@@ -114,18 +115,18 @@ void MoveToPlaylistStart() {
     gWinMgr.LoadImageFromPlaylist(0);
 }
 
-void KbPanLeft() {
-    gWinMgr.Pan(-60, 0);
-}
-void KbPanRight() {
-    gWinMgr.Pan(60, 0);
-}
-void KbPanUp() {
-    gWinMgr.Pan(0, -60);
-}
-void KbPanDown() {
-    gWinMgr.Pan(0, 60);
-}
+//void KbPanLeft() {
+//    gWinMgr.Pan(-60, 0);
+//}
+//void KbPanRight() {
+//    gWinMgr.Pan(60, 0);
+//}
+//void KbPanUp() {
+//    gWinMgr.Pan(0, -60);
+//}
+//void KbPanDown() {
+//    gWinMgr.Pan(0, 60);
+//}
 
 void ShowMenu() {
     POINT p;
@@ -180,6 +181,39 @@ void MouseZoomEnd() {
     ReleaseCapture();
 }
 
+// ----------------
+TranslateAnimation pos_horiz_anim(1500, 0);
+void PosHPanStart() {
+    gWinMgr.animations["HScroll"] = &pos_horiz_anim;
+}
+void PosHPanStop() {
+    gWinMgr.animations.erase("HScroll");
+}
+
+TranslateAnimation neg_horiz_anim(-1500, 0);
+void NegHPanStart() {
+    gWinMgr.animations["HScroll"] = &neg_horiz_anim;
+}
+void NegHPanStop() {
+    gWinMgr.animations.erase("HScroll");
+}
+
+TranslateAnimation pos_vert_anim(0, -1500);
+void PosVPanStart() {
+    gWinMgr.animations["VScroll"] = &pos_vert_anim;
+}
+void PosVPanStop() {
+    gWinMgr.animations.erase("VScroll");
+}
+
+TranslateAnimation neg_vert_anim(0, 1500);
+void NegVPanStart() {
+    gWinMgr.animations["VScroll"] = &neg_vert_anim;
+}
+void NegVPanStop() {
+    gWinMgr.animations.erase("VScroll");
+}
+
 
 void RegisterAction(std::string actionName, ActionType actionType, callback_function cbOnDown, callback_function cbOnUp = NULL, callback_function cbOnMouseMove = NULL) {
     Action newAction;
@@ -207,10 +241,10 @@ void RegisterActions() {
     RegisterAction("ZOOMOUTPOINT", ActionType::PRESS, ZoomOutToPoint);
     RegisterAction("MOUSEZOOM", ActionType::MOUSEMOVE, MouseZoomStart, MouseZoomEnd, MouseZoomUpdate);
     RegisterAction("ALWAYSONTOP", ActionType::PRESS, ToggleAlwaysOnTop);
-    RegisterAction("PANUP", ActionType::PRESS, KbPanUp);
-    RegisterAction("PANDOWN", ActionType::PRESS, KbPanDown);
-    RegisterAction("PANLEFT", ActionType::PRESS, KbPanLeft);
-    RegisterAction("PANRIGHT", ActionType::PRESS, KbPanRight);
+    RegisterAction("PANUP", ActionType::HOLD, PosVPanStart, PosVPanStop);
+    RegisterAction("PANDOWN", ActionType::HOLD, NegVPanStart, NegVPanStop);
+    RegisterAction("PANLEFT", ActionType::HOLD, NegHPanStart, NegHPanStop);
+    RegisterAction("PANRIGHT", ActionType::HOLD, PosHPanStart, PosHPanStop);
 
     RegisterAction("MOUSEPAN", ActionType::MOUSEMOVE, PanOnBtnDown, PanOnBtnUp, PanOnMouseMove);
 }

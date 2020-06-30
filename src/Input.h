@@ -2,24 +2,9 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <unordered_map>
-
 #include "Action.h"
 
 namespace D4See {
-
-	//struct BINDING{
-	//	void (*Callback)(int released, void*);
-	//	void *params;
-	//};
-	//struct MMBINDING{
-	//	void (*Callback)(long lastX, long lastY);
-	//};
-	struct DRAGDATA{
-		int Xo;
-		int Yo;
-		POINT init;
-	};
-
 	struct ActiveKeyPress {
 		uint8_t VKey;
 		uint8_t modMask;
@@ -27,42 +12,19 @@ namespace D4See {
 	};
 
 	class InputHandler {
-		unsigned char MODIFIERMASK;
-		//BINDING KBBINDTABLE[2048];
-		//BINDING MBINDTABLE[1024];
-		Action kbBindTable[2048];
+		//std::unordered_map<uint16_t, Action> kbBindTable;
+		Action kbBindTable[2048]; // 8 bits for 256 VKeys and 3 bits for modifier states, WIN key isn't used
 		callback_function currentMouseMoveCallback;
 		std::vector<ActiveKeyPress> pressedActions;
-		//MMBINDING MOUSEMOVE[1];
-		//unsigned char MButtonsState;
-	
-		public:
-			DRAGDATA dragData;
-
-		private:
-			void __MouseButton(unsigned char btnbit, int released);
 
 		public:
 			InputHandler();
 			int ProcessInput(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-			inline int IsCtrlDown();
-			inline int IsAltDown();
-			inline int IsShiftDown();
-			inline int IsLMBDown();
-			inline int IsRMBDown();
-			inline int IsMMBDown();
 			uint8_t GetModifierMask();
 			void FireAction(uint8_t VKey, int isDown);
 			int BindKey(std::string keyStr, std::string actionStr);
-			int BindMouseButton(short Button, unsigned char MODS, void (*Callback)(int released, void*));
-			int BindMouseMove(void (*Callback)(long, long));
-
-			void StartDragging(HWND hWnd);
-			void StopDragging(HWND hWnd);
-			int IsDragging();
 	};
 }
-
 
 // Using a single vk table for both keys and mouse button presses
 enum MBVKeys {
