@@ -7,5 +7,6 @@ const enum class ImageFormat {
 	BMP,
 	GIF,
 	TIFF,
+	PSD,
 	WEBP
 };
