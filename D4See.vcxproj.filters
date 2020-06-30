@@ -54,7 +54,7 @@
     <ClInclude Include="src\Input.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Bindings.h">
+    <ClInclude Include="src\Action.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -86,7 +86,7 @@
     <ClCompile Include="src\Input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Bindings.cpp">
+    <ClCompile Include="src\Action.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

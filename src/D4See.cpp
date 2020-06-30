@@ -23,7 +23,7 @@
 #include "ImageContainer.h"
 #include "WindowManager.h"
 #include "Animation.h"
-#include "Bindings.h"
+#include "Action.h"
 
 
 WindowManager gWinMgr; // globaled in WindowManager.h
@@ -290,10 +290,36 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     ShowWindow(hWnd, iCmdShow);
 
 
-    gWinMgr.input.BindKey(L"RETURN", D4See::BindToggleFullscreen);
+    RegisterActions();
 
+    gWinMgr.input.BindKey("CTRL-F", "TOGGLEFULLSCREEN");
+    gWinMgr.input.BindKey("RETURN", "TOGGLEFULLSCREEN");
+    gWinMgr.input.BindKey("MBUTTON3", "TOGGLEFULLSCREEN");
+    gWinMgr.input.BindKey("TAB", "TOGGLEBORDERLESS");
 
-    MomentumAnimation inertia;
+    gWinMgr.input.BindKey("MBUTTON1", "MOUSEPAN");
+    gWinMgr.input.BindKey("MBUTTON2", "SHOWMENU");
+    gWinMgr.input.BindKey("CTRL-X", "CUTFILE");
+    gWinMgr.input.BindKey("CTRL-C", "COPYFILE");
+    gWinMgr.input.BindKey("DEL", "DELETEFILE");
+    gWinMgr.input.BindKey("SHIFT-DEL", "NUKEFILE");
+    gWinMgr.input.BindKey("ESC", "QUIT");
+    
+    gWinMgr.input.BindKey("PAGEDOWN", "NEXTIMAGE");
+    gWinMgr.input.BindKey("MWHEELDOWN", "NEXTIMAGE");
+    gWinMgr.input.BindKey("PAGEUP", "PREVIMAGE");
+    gWinMgr.input.BindKey("MWHEELUP", "PREVIMAGE");
+    gWinMgr.input.BindKey("HOME", "FIRSTIMAGE");
+    gWinMgr.input.BindKey("END", "LASTIMAGE");
+
+    gWinMgr.input.BindKey("CTRL-MWHEELUP", "ZOOMINPOINT");
+    gWinMgr.input.BindKey("CTRL-MWHEELDOWN", "ZOOMOUTPOINT");
+
+    gWinMgr.input.BindKey("UP", "PANUP");
+    gWinMgr.input.BindKey("DOWN", "PANDOWN");
+    gWinMgr.input.BindKey("LEFT", "PANLEFT");
+    gWinMgr.input.BindKey("RIGHT", "PANRIGHT");
+
     using namespace std::chrono_literals;
     std::chrono::duration<float> elapsed = 0ms;
 
@@ -335,152 +361,26 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     }
                     break;
                 }
-                //case WM_LBUTTONDOWN: {
-                //    int& sxPos = gWinMgr.mouseX;
-                //    int& syPos = gWinMgr.mouseY;
-                //    sxPos = GET_X_LPARAM(msg.lParam);
-                //    syPos = GET_Y_LPARAM(msg.lParam);
-                //    inertia.Start();
-                //    break;
-                //}
-                //case WM_LBUTTONUP: {
-                //    if (gWinMgr.isPanning) {
-                //        gWinMgr.isPanning = false;
-                //        inertia.AddVelocity(0, 0);
-                //        inertia.CountAverage();
-                //        gWinMgr.animations["PanningMomentum"] = (Animation*)&inertia;
-                //    }
-                //    break;
-                //}
-                //case WM_MOUSEMOVE: {
-                //    int LMBDown = (msg.wParam)&MK_LBUTTON;
-                //    if (LMBDown) {
-                //        if (!gWinMgr.isPanning) {
-                //            gWinMgr.isPanning = true;
-                //        }
+                case WM_DROPFILES: {
+                    HDROP hDrop = (HDROP)msg.wParam;
+                    int fnSize = DragQueryFileW(hDrop, 0, NULL, 0);//Get Buffer Size
 
-                //        int& sxPos = gWinMgr.mouseX;
-                //        int& syPos = gWinMgr.mouseY;
+                    std::wstring filename;
+                    filename.resize(fnSize);
 
-                //        int xPos = GET_X_LPARAM(msg.lParam);
-                //        int yPos = GET_Y_LPARAM(msg.lParam);
+                    DragQueryFileW(hDrop, 0, &filename[0], fnSize+1);
 
-                //        if (sxPos != -1) {
-                //            int dx = xPos - sxPos;
-                //            int dy = yPos - syPos;
+                    DragFinish(hDrop);
 
-                //            //LOG_DEBUG("MouseMove: {0},{1}", dx, dy);
+                    auto playlist = new Playlist(filename, gWinMgr.sortMethod);
+                    gWinMgr.SelectPlaylist(playlist);
 
-                //            inertia.AddVelocity(dx, dy);
+                    auto cur = playlist->Current();
+                    gWinMgr.SelectImage(new ImageContainer(hWnd, cur->path, cur->format));
 
-                //            gWinMgr.Pan(-dx, -dy);
-                //        }
-
-                //        sxPos = xPos;
-                //        syPos = yPos;
-                //    }
-                //    break;
-                //}
-                //case WM_DROPFILES: {
-                //    HDROP hDrop = (HDROP)msg.wParam;
-                //    int fnSize = DragQueryFileW(hDrop, 0, NULL, 0);//Get Buffer Size
-
-                //    std::wstring filename;
-                //    filename.resize(fnSize);
-
-                //    DragQueryFileW(hDrop, 0, &filename[0], fnSize+1);
-
-                //    DragFinish(hDrop);
-
-                //    auto playlist = new Playlist(filename, gWinMgr.sortMethod);
-                //    gWinMgr.SelectPlaylist(playlist);
-
-                //    auto cur = playlist->Current();
-                //    gWinMgr.SelectImage(new ImageContainer(hWnd, cur->path, cur->format));
-
-                //    break;
-                //}
-                //case WM_KEYDOWN: {
-                //    TranslateMessage(&msg);
-                //    switch (msg.wParam) {
-                //        case VK_DELETE: {
-                //            auto wpath = gWinMgr.playlist->Current()->filename;
-
-                //            bool recycle = !GetKeyState(VK_SHIFT);
-
-                //            DeleteFileDialog(wpath, recycle);
-                //            break;
-                //        }
-
-                //        case 0x58: { // X key
-                //            if (GetKeyState(VK_CONTROL)) {
-                //                std::wstring path = playlist->Current()->path;
-                //                if (CutCopyFile(path, DROPEFFECT_MOVE)) { // successful cut
-                //                    // Remove from playlist
-                //                    gWinMgr.playlist->EraseCurrent();
-                //                    gWinMgr.PreviousImage();
-                //                }
-                //            }
-                //            break;
-                //        }
-                //        case 0x43: { // C key
-                //            if (GetKeyState(VK_CONTROL)) {
-                //                std::wstring path = playlist->Current()->path;
-                //                CutCopyFile(path, DROPEFFECT_COPY);
-                //            }
-                //            break;
-                //        }
-                //        case VK_ESCAPE: {
-                //            PostQuitMessage(0);
-                //            break;
-                //        }
-                //        case VK_RETURN: {
-                //            gWinMgr.ToggleFullscreen();
-                //            break;
-                //        }
-                //        case VK_LEFT: {
-                //            gWinMgr.Pan(-60, 0);
-                //            break;
-                //        }
-                //        case VK_RIGHT: {
-                //            gWinMgr.Pan(60, 0);
-                //            //gWinMgr.animations["HScroll"] = new TranslateAnimation(500, 0);
-                //            break;
-                //        }
-                //        case VK_UP: {
-                //            gWinMgr.Pan(0, -60);
-                //            break;
-                //        }
-                //        case VK_DOWN: {
-                //            gWinMgr.Pan(0, 60);
-                //            break;
-                //        }                                    
-                //        case VK_PRIOR: {
-                //            gWinMgr.PreviousImage();
-                //            break;
-                //        }
-                //        case VK_SPACE:
-                //        case VK_NEXT: {
-                //            gWinMgr.NextImage();
-                //            break;
-                //        }
-                //        case VK_TAB: {
-                //            gWinMgr.ToggleBorderless();
-                //            break;
-                //        }
-                //        case VK_END: {
-                //            gWinMgr.playlist->Move(PlaylistPos::End, 0);
-                //            gWinMgr.LoadImageFromPlaylist(0);
-                //            break;
-                //        }
-                //        case VK_HOME: {
-                //            gWinMgr.playlist->Move(PlaylistPos::Start, 0);
-                //            gWinMgr.LoadImageFromPlaylist(0);
-                //            break;
-                //        }
-                //    }
-                //    break;
-                //}
+                    break;
+                }
+               
 
                 case WM_QUIT:
                     shouldShutdown = true;
@@ -554,44 +454,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
     PAINTSTRUCT  ps;
 
     switch (message)
-    {
-    case WM_MBUTTONDOWN: {
-        gWinMgr.ToggleFullscreen();
-        break;
-    }
-    case WM_RBUTTONDOWN: {
-        POINT p;
-        GetCursorPos(&p);
-        //p.x = GET_X_LPARAM(lParam);
-        //p.y = GET_Y_LPARAM(lParam);
-        gWinMgr.ShowPopupMenu(p);
-        break;
-    }
-    
-    case WM_MOUSEWHEEL: {
-        int fwKeys = GET_KEYSTATE_WPARAM(wParam);
-        int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-        bool isCtrlDown = fwKeys & MK_CONTROL;
-        if (isCtrlDown) {
-            POINT p;
-            GetCursorPos(&p);
-            ScreenToClient(hWnd, &p);
-            if (zDelta < 0) {
-                gWinMgr.ManualZoomToPoint(-0.15f, p.x, p.y);
-            }
-            else if (zDelta > 0) {
-                gWinMgr.ManualZoomToPoint(+0.15f, p.x, p.y);
-            }
-        } else {
-            if (zDelta < 0) {
-                gWinMgr.NextImage();
-            }
-            else if (zDelta > 0) {
-                gWinMgr.PreviousImage();
-            }
-        }
-        break;
-    }
+    {    
+    //case WM_MOUSEWHEEL: {
+    //    int fwKeys = GET_KEYSTATE_WPARAM(wParam);
+    //    int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+    //    bool isCtrlDown = fwKeys & MK_CONTROL;
+    //    if (isCtrlDown) {
+    //        POINT p;
+    //        GetCursorPos(&p);
+    //        ScreenToClient(hWnd, &p);
+    //        if (zDelta < 0) {
+    //            gWinMgr.ManualZoomToPoint(-0.15f, p.x, p.y);
+    //        }
+    //        else if (zDelta > 0) {
+    //            gWinMgr.ManualZoomToPoint(+0.15f, p.x, p.y);
+    //        }
+    //    } else {
+    //        if (zDelta < 0) {
+    //            gWinMgr.NextImage();
+    //        }
+    //        else if (zDelta > 0) {
+    //            gWinMgr.PreviousImage();
+    //        }
+    //    }
+    //    break;
+    //}
     case WM_NCHITTEST: {
         if (GetAsyncKeyState(VK_MENU)) {
             LRESULT hit = DefWindowProc(hWnd, message, wParam, lParam);

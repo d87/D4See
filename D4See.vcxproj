@@ -176,8 +176,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Action.h" />
     <ClInclude Include="src\Animation.h" />
-    <ClInclude Include="src\Bindings.h" />
     <ClInclude Include="src\Canvas.h" />
     <ClInclude Include="src\D4See.h" />
     <ClInclude Include="src\framework.h" />
@@ -192,8 +192,8 @@
     <ClInclude Include="src\WindowManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Action.cpp" />
     <ClCompile Include="src\Animation.cpp" />
-    <ClCompile Include="src\Bindings.cpp" />
     <ClCompile Include="src\Canvas.cpp" />
     <ClCompile Include="src\DecodeBuffer.cpp" />
     <ClCompile Include="src\D4See.cpp" />
