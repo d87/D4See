@@ -96,6 +96,10 @@ void PrevImage() {
     gWinMgr.PreviousImage();
 }
 
+void ToggleAlwaysOnTop() {
+    gWinMgr.ToggleAlwaysOnTop();
+}
+
 void ToggleBorderless() {
     gWinMgr.ToggleBorderless();
 }
@@ -129,18 +133,51 @@ void ShowMenu() {
     gWinMgr.ShowPopupMenu(p);
 }
 
+// ---------- ZOOM
+
 void ZoomInToPoint() {
     POINT p;
     GetCursorPos(&p);
     ScreenToClient(gWinMgr.hWnd, &p);
-    gWinMgr.ManualZoomToPoint(+0.15f, p.x, p.y);
+    gWinMgr.ManualZoomToPoint(+0.15f, 0.0, p.x, p.y);
 }
 
 void ZoomOutToPoint() {
     POINT p;
     GetCursorPos(&p);
     ScreenToClient(gWinMgr.hWnd, &p);
-    gWinMgr.ManualZoomToPoint(-0.15f, p.x, p.y);
+    gWinMgr.ManualZoomToPoint(-0.15f, 0.0, p.x, p.y);
+}
+
+float zoomStartValue;
+void MouseZoomStart() {
+    POINT p;
+    GetCursorPos(&p);
+    HWND hWnd = gWinMgr.hWnd;
+    //ScreenToClient(hWnd, &p);
+    SetCapture(hWnd);
+
+    zoomStartValue = gWinMgr.canvas.scale_effective;
+    sxPos = p.x;
+    syPos = p.y;
+}
+
+void MouseZoomUpdate() {
+    POINT p;
+    GetCursorPos(&p);
+    HWND hWnd = gWinMgr.hWnd;
+    //ScreenToClient(hWnd, &p);
+    float xoffset = p.x - sxPos;
+
+    POINT zp;
+    zp.x = sxPos;
+    zp.y = syPos;
+    ScreenToClient(hWnd, &zp);
+    gWinMgr.ManualZoomToPoint(0.0, zoomStartValue + xoffset/200, zp.x, zp.y);
+}
+
+void MouseZoomEnd() {
+    ReleaseCapture();
 }
 
 
@@ -168,7 +205,8 @@ void RegisterActions() {
     RegisterAction("LASTIMAGE", ActionType::PRESS, MoveToPlaylistEnd);
     RegisterAction("ZOOMINPOINT", ActionType::PRESS, ZoomInToPoint);
     RegisterAction("ZOOMOUTPOINT", ActionType::PRESS, ZoomOutToPoint);
-
+    RegisterAction("MOUSEZOOM", ActionType::MOUSEMOVE, MouseZoomStart, MouseZoomEnd, MouseZoomUpdate);
+    RegisterAction("ALWAYSONTOP", ActionType::PRESS, ToggleAlwaysOnTop);
     RegisterAction("PANUP", ActionType::PRESS, KbPanUp);
     RegisterAction("PANDOWN", ActionType::PRESS, KbPanDown);
     RegisterAction("PANLEFT", ActionType::PRESS, KbPanLeft);

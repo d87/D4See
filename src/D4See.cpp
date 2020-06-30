@@ -297,6 +297,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     gWinMgr.input.BindKey("MBUTTON3", "TOGGLEFULLSCREEN");
     gWinMgr.input.BindKey("TAB", "TOGGLEBORDERLESS");
 
+    gWinMgr.input.BindKey("Z", "MOUSEZOOM");
+
     gWinMgr.input.BindKey("MBUTTON1", "MOUSEPAN");
     gWinMgr.input.BindKey("MBUTTON2", "SHOWMENU");
     gWinMgr.input.BindKey("CTRL-X", "CUTFILE");
@@ -311,6 +313,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     gWinMgr.input.BindKey("MWHEELUP", "PREVIMAGE");
     gWinMgr.input.BindKey("HOME", "FIRSTIMAGE");
     gWinMgr.input.BindKey("END", "LASTIMAGE");
+
+    gWinMgr.input.BindKey("CTRL-A", "ALWAYSONTOP");
 
     gWinMgr.input.BindKey("CTRL-MWHEELUP", "ZOOMINPOINT");
     gWinMgr.input.BindKey("CTRL-MWHEELDOWN", "ZOOMOUTPOINT");

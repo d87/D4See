@@ -406,12 +406,12 @@ void WindowManager::ManualZoom(float mod, float absolute) {
         canvas.scale_manual = absolute;
     } else {
         canvas.scale_manual = canvas.scale_effective + mod;
-        if (canvas.scale_manual < 0.10f) {
-            canvas.scale_manual = 0.10;
-        }
-        if (canvas.scale_manual > 10.0f) {
-            canvas.scale_manual = 10.0;
-        }
+    }
+    if (canvas.scale_manual < 0.10f) {
+        canvas.scale_manual = 0.10;
+    }
+    if (canvas.scale_manual > 10.0f) {
+        canvas.scale_manual = 10.0;
     }
     if (canvas.scale_manual == old_scale) {
         return;
@@ -421,7 +421,7 @@ void WindowManager::ManualZoom(float mod, float absolute) {
     Redraw(RDW_ERASE);
 }
 
-void WindowManager::ManualZoomToPoint(float mod, int zoomPointX,  int zoomPointY) {
+void WindowManager::ManualZoomToPoint(float mod, float absolute, int zoomPointX,  int zoomPointY) {
     float old_scale = canvas.scale_effective;
 
 
@@ -460,7 +460,7 @@ void WindowManager::ManualZoomToPoint(float mod, int zoomPointX,  int zoomPointY
     //LOG_DEBUG("Native point: {0},{1}", x_click_offset_native, y_click_offset_native);
 
 
-    ManualZoom(mod);
+    ManualZoom(mod, absolute);
 
     // Converting it to new scale coords
     float x_click_offset = x_click_offset_native * canvas.scale_effective;
