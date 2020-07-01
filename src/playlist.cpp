@@ -31,6 +31,7 @@ const std::unordered_map<std::wstring, ImageFormat> exts = {
 	// Should re-eanble webp after image load error handling is done
 	{ L".webp", ImageFormat::WEBP },
 	{ L".psd", ImageFormat::PSD },
+	//{ L".dds", ImageFormat::DDS },
 	{ L".tiff", ImageFormat::TIFF }
 };
 

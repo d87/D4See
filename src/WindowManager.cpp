@@ -756,9 +756,9 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             playlist->ChangeSortingMethod(sortMethod);
             break;
         }
-        //case IDM_ABOUT:
-        //    DialogBox(hInstance, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-        //    break;
+        case ID_ROOT_SETTINGS:
+            DialogBox(NULL, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
         case IDM_EXIT: {
             DestroyWindow(hWnd);
             break;

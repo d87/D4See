@@ -1,4 +1,5 @@
 #include "util.h"
+#include "D4See.h"
 #pragma warning(disable: 4996)
 
 #ifdef _WIN32
@@ -132,14 +133,18 @@ std::string wide_to_utf8(std::wstring wstr) {
 	return u8str;
 }
 
-std::filesystem::path GetExecutableDir() {
+std::filesystem::path GetExecutableFilePath() {
     std::filesystem::path exePath;
 
     WCHAR path[1000];
     GetModuleFileNameW(GetModuleHandle(NULL), path, 1000);
 
     exePath = path;
-    return exePath.parent_path();
+    return exePath;
+}
+
+std::filesystem::path GetExecutableDir() {
+    return GetExecutableFilePath().parent_path();
 }
 
 std::filesystem::path GetAppDataRoaming() {
@@ -201,4 +206,136 @@ int write_file(std::string const& filepath, const char* data, unsigned int size)
     //ofs.close();
 
     return 1;
+}
+
+std::string GetStringRegistryValue(HKEY hKey, std::string valueName) {
+    DWORD dwType;
+    DWORD dataSize = 200;
+    if (RegQueryValueExA(hKey, valueName.c_str(), 0, &dwType, NULL, &dataSize) != ERROR_SUCCESS) {
+        MessageBoxW(NULL, L"Couldn't query Registry key", L"Registry Error", MB_ICONERROR);
+        return nullptr;
+    }
+
+    std::string data(dataSize, 0);
+    RegQueryValueExA(hKey, valueName.c_str(), 0, &dwType, (BYTE*)&data[0], &dataSize);
+    return data;
+}
+
+int KeyExists(HKEY hKey, std::string subKey) {
+    HKEY hk;
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, subKey.c_str(), 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS) {
+        return 0;
+    }
+    RegCloseKey(hk);
+    return 1;
+}
+
+int IsExtensionAssociated(std::string ext, std::string progClass) {
+    if (!KeyExists(HKEY_CURRENT_USER, "Software\\Classes\\" + progClass))
+        return 0;
+
+    HKEY hk;
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, ("Software\\Classes\\" + ext).c_str(), 0, KEY_QUERY_VALUE, &hk) != ERROR_SUCCESS) {
+        return 0;
+    }
+
+    std::string data = GetStringRegistryValue(hk, "");
+
+    RegCloseKey(hk);
+
+    return (data == progClass);
+}
+
+void AddFileHandlerClass(std::string name, std::wstring iconPathStr) {
+    HKEY hKey;
+    DWORD disposition; // Receives REG_OPENED_EXISTING_KEY or REG_CREATED_NEW_KEY
+    DWORD err;
+    err = RegCreateKeyEx(HKEY_CURRENT_USER, ("Software\\Classes\\" + name).c_str(), 0, NULL,
+        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &disposition);
+    if (err == ERROR_SUCCESS) {
+
+        HKEY iconKey;
+        if (RegCreateKeyEx(hKey, "DefaultIcon", 0, NULL,
+            REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &iconKey, &disposition) == ERROR_SUCCESS) {
+
+            auto exeDir = GetExecutableDir();
+            std::filesystem::path iconPath(iconPathStr);
+            auto fullIconPath = exeDir / iconPath;
+            std::wstring quotesPathString = L'"'+fullIconPath.wstring()+L'"';
+
+            RegSetValueExW(iconKey, L"", 0, REG_SZ, (BYTE*)quotesPathString.c_str(), quotesPathString.length() * sizeof(WCHAR));
+
+            RegCloseKey(iconKey);
+        }
+
+        HKEY shellOpenCommandKey;
+        if (RegCreateKeyEx(hKey, "shell\\open\\command", 0, NULL,
+            REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &shellOpenCommandKey, &disposition) == ERROR_SUCCESS) {
+
+            auto exePath = GetExecutableFilePath();
+            std::wstring quotesPathString = L'"' + exePath.wstring() + L"\" \"%1\"" ;
+
+            RegSetValueExW(shellOpenCommandKey, L"", 0, REG_SZ, (BYTE*)quotesPathString.c_str(), quotesPathString.length() * sizeof(WCHAR));
+
+            RegCloseKey(shellOpenCommandKey);
+        }
+
+        HKEY shellOpenKey;
+        if (RegCreateKeyEx(hKey, "shell\\open", 0, NULL,
+            REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &shellOpenKey, &disposition) == ERROR_SUCCESS) {
+
+            std::wstring friendlyName = L"D4See";
+
+            RegSetValueExW(shellOpenKey, L"FriendlyAppName", 0, REG_SZ, (BYTE*)friendlyName.c_str(), friendlyName.length() * sizeof(WCHAR));
+
+            RegCloseKey(shellOpenKey);
+        }
+
+        RegCloseKey(hKey);
+    }
+}
+
+void AssignExtensionToFileTypeHandler(std::string ext, std::string progClass) {
+    HKEY hKey;
+    DWORD disposition; // Receives REG_OPENED_EXISTING_KEY or REG_CREATED_NEW_KEY
+    DWORD err;
+    err = RegCreateKeyEx(HKEY_CURRENT_USER, ("Software\\Classes\\" + ext).c_str(), 0, NULL,
+        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &disposition);
+    if (err == ERROR_SUCCESS) {
+
+        RegSetValueExA(hKey, "", 0, REG_SZ, (BYTE*)progClass.c_str(), progClass.length() * sizeof(char) );
+
+        HKEY OpenWithProgids;
+        if (RegCreateKeyEx(hKey, "OpenWithProgids", 0, NULL,
+            REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &OpenWithProgids, &disposition) == ERROR_SUCCESS) {
+
+            RegSetValueExA(OpenWithProgids, progClass.c_str(), 0, REG_SZ, (BYTE*)"", 0);
+
+            RegCloseKey(OpenWithProgids);
+        }
+        RegCloseKey(hKey);
+    }
+}
+
+void AssociateAllTypes() {
+    AddFileHandlerClass("D4See.png", L"Icons\\PNG_ICON.ico"); // "H:\soft\D4See\D4See.exe" "%1"
+    AssignExtensionToFileTypeHandler(".png", "D4See.png");
+
+    AddFileHandlerClass("D4See.bmp", L"Icons\\BMP_ICON.ico");
+    AssignExtensionToFileTypeHandler(".bmp", "D4See.bmp");
+
+    AddFileHandlerClass("D4See.jpg", L"Icons\\JPG_ICON.ico");
+    AssignExtensionToFileTypeHandler(".jpg", "D4See.jpg");
+
+    AddFileHandlerClass("D4See.gif", L"Icons\\GIF_ICON.ico");
+    AssignExtensionToFileTypeHandler(".gif", "D4See.gif");
+
+    AddFileHandlerClass("D4See.tga", L"Icons\\TGA_ICON.ico");
+    AssignExtensionToFileTypeHandler(".tga", "D4See.tga");
+
+    //AddFileHandlerClass("D4See.img", L"Icons\\IMG_ICON.ico");
+    //AssignExtensionToFileTypeHandler(".dds", "D4See.img");
+
+    //AddFileHandlerClass("D4See.webp", L"Icons\\WEBP_ICON.ico");
+    //AssignExtensionToFileTypeHandler(".webp", "D4See.webp");
 }

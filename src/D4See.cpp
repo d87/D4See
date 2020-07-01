@@ -319,10 +319,16 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     gWinMgr.input.BindKey("CTRL-MWHEELUP", "ZOOMINPOINT");
     gWinMgr.input.BindKey("CTRL-MWHEELDOWN", "ZOOMOUTPOINT");
 
+    gWinMgr.input.BindKey("F5", "REFRESHPLAYLIST");
+
     gWinMgr.input.BindKey("UP", "PANUP");
     gWinMgr.input.BindKey("DOWN", "PANDOWN");
     gWinMgr.input.BindKey("LEFT", "PANLEFT");
     gWinMgr.input.BindKey("RIGHT", "PANRIGHT");
+
+
+    //IsExtensionAssociated(".png1231541", "D4See.png");
+
 
     using namespace std::chrono_literals;
     std::chrono::duration<float> elapsed = 0ms;
@@ -565,16 +571,35 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
-
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
+        case WM_INITDIALOG:
             return (INT_PTR)TRUE;
+
+        case WM_COMMAND: {
+            switch (LOWORD(wParam)) {
+                case IDC_ASSOCIATE_ALL: {
+                    AssociateAllTypes();
+                    break;
+                }
+                case IDC_CHECK_FT_PNG: {
+                    switch (HIWORD(wParam))
+                    {
+                        case BN_CLICKED: {
+                            if (SendDlgItemMessage(hDlg, IDC_CHECK_FT_PNG, BM_GETCHECK, 0, 0))
+                                MessageBox(NULL, "Checkbox Selected", "Success", MB_OK | MB_ICONINFORMATION);
+                            else
+                                MessageBox(NULL, "Checkbox Unselected", "Success", MB_OK | MB_ICONINFORMATION);
+                        }
+                    }
+                    break;
+                }
+                case IDOK:
+                case IDCANCEL: {
+                    EndDialog(hDlg, LOWORD(wParam));
+                    return (INT_PTR)TRUE;
+                }
+            }
+            break;
         }
-        break;
     }
     return (INT_PTR)FALSE;
 }

@@ -182,6 +182,7 @@ void MouseZoomEnd() {
 }
 
 // ----------------
+
 TranslateAnimation pos_horiz_anim(1500, 0);
 void PosHPanStart() {
     gWinMgr.animations["HScroll"] = &pos_horiz_anim;
@@ -215,6 +216,11 @@ void NegVPanStop() {
 }
 
 
+void RefreshPlaylist() {
+    gWinMgr.playlist->Refresh();
+}
+
+
 void RegisterAction(std::string actionName, ActionType actionType, callback_function cbOnDown, callback_function cbOnUp = NULL, callback_function cbOnMouseMove = NULL) {
     Action newAction;
     newAction.actionType = actionType;
@@ -245,6 +251,8 @@ void RegisterActions() {
     RegisterAction("PANDOWN", ActionType::HOLD, NegVPanStart, NegVPanStop);
     RegisterAction("PANLEFT", ActionType::HOLD, NegHPanStart, NegHPanStop);
     RegisterAction("PANRIGHT", ActionType::HOLD, PosHPanStart, PosHPanStop);
+
+    RegisterAction("REFRESHPLAYLIST", ActionType::PRESS, RefreshPlaylist);
 
     RegisterAction("MOUSEPAN", ActionType::MOUSEMOVE, PanOnBtnDown, PanOnBtnUp, PanOnMouseMove);
 }
