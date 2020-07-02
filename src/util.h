@@ -21,3 +21,4 @@ int IsExtensionAssociated(std::string ext, std::string progClass);
 void AddFileHandlerClass(std::string name, std::wstring iconPath);
 void AssignExtensionToFileTypeHandler(std::string ext, std::string progClass);
 void AssociateAllTypes();
+void RemoveAssociations();

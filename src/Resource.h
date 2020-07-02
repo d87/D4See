@@ -17,8 +17,8 @@
 #define IDR_MAINFRAME                   128
 #define IDC_CHECK_FT_PNG                1000
 #define IDC_CHECK_FT_JPG                1001
-#define IDC_BUTTON1                     1002
 #define IDC_ASSOCIATE_ALL               1002
+#define IDC_ASSOCIATE_NONE              1003
 #define ID_ZOOMLOCK                     32771
 #define ID_SHRINKTOWIDTH                32772
 #define ID_SHRINKTOHEIGHT               32773
@@ -47,7 +47,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         32800
-#define _APS_NEXT_CONTROL_VALUE         1003
+#define _APS_NEXT_CONTROL_VALUE         1004
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

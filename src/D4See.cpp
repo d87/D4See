@@ -580,6 +580,10 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                     AssociateAllTypes();
                     break;
                 }
+                case IDC_ASSOCIATE_NONE: {
+                    RemoveAssociations();
+                    break;
+                }
                 case IDC_CHECK_FT_PNG: {
                     switch (HIWORD(wParam))
                     {
