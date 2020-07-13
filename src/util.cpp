@@ -67,13 +67,15 @@ int DeleteFileDialog(std::wstring path, bool recycle) {
     IShellItem * item = nullptr;
     SHCreateItemFromParsingName(path.c_str(), NULL, IID_PPV_ARGS(&item));
 
-    DWORD flags = FOF_WANTNUKEWARNING;
-    if (recycle) {
-        flags |= FOFX_RECYCLEONDELETE;
-    }
+    if (item) {
+        DWORD flags = FOF_WANTNUKEWARNING | FOF_FILESONLY; // | FOF_NORECURSION;
+        if (recycle) {
+            flags |= FOFX_RECYCLEONDELETE;
+        }
 
-    if (SUCCEEDED(ShellDeleteFileOperation(item, flags))) {
-        return 1;
+        if (SUCCEEDED(ShellDeleteFileOperation(item, flags))) {
+            return 1;
+        }
     }
     return 0;
 }

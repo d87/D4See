@@ -46,6 +46,5 @@ protected:
 
 public:
 	TranslateAnimation(float vx, float vy);
-	~TranslateAnimation() { LOG_DEBUG("Destroying translate animation."); };
 	virtual int Animate(D4See::Canvas& canvas, std::chrono::duration<float> elapsed) override;
 };

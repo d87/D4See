@@ -76,12 +76,12 @@ void CopyCurrentFile() {
 }
 
 void RecycleFile() {
-    auto wpath = gWinMgr.playlist->Current()->filename;
+    auto wpath = gWinMgr.playlist->Current()->path;
     DeleteFileDialog(wpath, true);
 }
 
 void NukeFile() {
-    auto wpath = gWinMgr.playlist->Current()->filename;
+    auto wpath = gWinMgr.playlist->Current()->path;
     DeleteFileDialog(wpath, true);
 }
 
