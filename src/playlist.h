@@ -5,6 +5,7 @@
 #include <forward_list>
 #include <vector>
 #include "ImageFormats.h"
+#include "error.h"
 
 enum class PlaylistSortMethod {
 	ByName,
@@ -33,14 +34,14 @@ class Playlist {
 		std::wstring basepath;
 
 	private:
-		PlaylistSortMethod currentSortingMethod = PlaylistSortMethod::ByName;
+		PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
 
 	public:
 		Playlist();
 		Playlist(const std::wstring initialFile, PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName);
 		void Refresh();
 		int GeneratePlaylist(const std::wstring initialFile);
-		void ChangeSortingMethod(PlaylistSortMethod sortMethod);
+		void SetSortingMethod(PlaylistSortMethod sortMethod);
 		int MoveCursor(std::wstring filename);
 		bool Move(PlaylistPos pos, int mod);
 		inline PlaylistEntry* Current();

@@ -40,7 +40,7 @@ Playlist::Playlist() {
 }
 
 Playlist::Playlist(const std::wstring initialFile, PlaylistSortMethod sortMethod) {
-	currentSortingMethod = sortMethod;
+	sortMethod = sortMethod;
 	GeneratePlaylist(initialFile);
 }
 
@@ -126,7 +126,7 @@ PlaylistEntry* Playlist::Prev() {
 int Playlist::GeneratePlaylist(std::wstring initialFile) {
 	auto found = initialFile.rfind(L"\\");
 	if (found == std::string::npos)
-		// No directory in initial filename, should do cwd
+		// TODO: No directory in initial filename, should do cwd
 		return NULL;
 
 	std::wstring initialFileDir = initialFile.substr(0, found+1);
@@ -136,7 +136,13 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 	WCHAR oldWD[1000];
 	GetCurrentDirectoryW(1000, oldWD);
 
-	SetCurrentDirectoryW(initialFileDir.c_str());
+	if (!SetCurrentDirectoryW(initialFileDir.c_str())) {
+		// TODO: Can't open
+		D4See::SetError(D4See::Error::DirectoryNotExists);
+		MessageBoxW(NULL, (L"Couldn't open directory: " + initialFileDir).c_str(), L"Error", MB_ICONERROR | MB_OK);
+		return NULL;
+	}
+
 
 	int filesAdded = 0;
 	HANDLE hSearch;
@@ -190,13 +196,18 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 
 	SetCurrentDirectoryW(oldWD);
 
-	if (currentSortingMethod == PlaylistSortMethod::ByDateModified) {
+	if (filesAdded == 0) {
+		// TODO: No supported images inside a dir
+		D4See::SetError(D4See::Error::EmptyPlaylist);
+		MessageBoxW(NULL, (L"No supoprted files in: " + initialFileDir).c_str(), L"Error", MB_ICONERROR | MB_OK);
+		return NULL;
+	}
+
+	if (sortMethod == PlaylistSortMethod::ByDateModified) {
 		std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
 			return a.tmFileWrite < b.tmFileWrite;
 		});
-	}
-
-	
+	}	
 
 	MoveCursor(initialFile);
 
@@ -204,20 +215,23 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 }
 
 
-void Playlist::ChangeSortingMethod(PlaylistSortMethod sortMethod) {
-	auto cur = Current();
-	std::wstring oldCursor = cur->path;
+void Playlist::SetSortingMethod(PlaylistSortMethod newSortMethod) {
+	sortMethod = newSortMethod;
 
-	if (sortMethod == PlaylistSortMethod::ByDateModified) {
-		std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
-			return a.tmFileWrite < b.tmFileWrite;
-		});
+	if (list.size() > 0) {
+		auto cur = Current();
+		std::wstring oldCursor = cur->path;
+
+		if (newSortMethod == PlaylistSortMethod::ByDateModified) {
+			std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
+				return a.tmFileWrite < b.tmFileWrite;
+			});
+		}
+		else {
+			std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
+				return a.filename < b.filename;
+			});
+		}
+		MoveCursor(oldCursor);
 	}
-	else {
-		std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
-			return a.filename < b.filename;
-		});
-	}
-	currentSortingMethod = sortMethod;
-	MoveCursor(oldCursor);
 }

@@ -234,16 +234,21 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     PWCHAR cmdLine = GetCommandLineW();
     int argc = 0;
     WCHAR** argv = CommandLineToArgvW(cmdLine, &argc);
-    Playlist* playlist;
+    Playlist* playlist = new Playlist();
+    playlist->SetSortingMethod(gWinMgr.sortMethod);
 
     if (argc > 1) {
-        playlist = new Playlist(argv[1], gWinMgr.sortMethod);
+        if (!playlist->GeneratePlaylist(argv[1])) {
+            return 0;
+        }
     }
     else {
         auto exeDir = GetExecutableDir();
         std::filesystem::path file(L"Splash.png");
         auto default_image = exeDir / file;
-        playlist = new Playlist(default_image.wstring(), gWinMgr.sortMethod);
+        if (!playlist->GeneratePlaylist(default_image.wstring())) {
+            return 0;
+        }
     }
 
     gWinMgr.ReadOrigin();

@@ -748,12 +748,12 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
         }
         case ID_SORTBY_NAME: {
             sortMethod = PlaylistSortMethod::ByName;
-            playlist->ChangeSortingMethod(sortMethod);
+            playlist->SetSortingMethod(sortMethod);
             break;
         }
         case ID_SORTBY_DATEMODIFIED: {
             sortMethod = PlaylistSortMethod::ByDateModified;
-            playlist->ChangeSortingMethod(sortMethod);
+            playlist->SetSortingMethod(sortMethod);
             break;
         }
         case ID_ROOT_SETTINGS:
