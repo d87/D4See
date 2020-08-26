@@ -215,12 +215,11 @@ void WindowManager::ToggleFullscreen() {
         //int w = rc->right - rc->left;
         //int h = rc->bottom - rc->top;
         //SetWindowPos(hWnd, NULL, rc->left, rc->top, w, h, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
-        ResizeForImage();
 
         if (stash.isMaximized)
             ::SendMessage(hWnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
     }
-
+    ResizeForImage();
     Redraw();
 }
 
