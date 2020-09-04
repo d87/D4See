@@ -1,4 +1,5 @@
 #include "D4See.h"
+#include "util.h"
 #include <Windows.h>
 #include "ImageFormats.h"
 #include "Decoder_WIC.h"
@@ -7,18 +8,23 @@ using namespace D4See;
 
 bool WICDecoder::open(const wchar_t* filename) {
 
-	mutex.lock();
+	
 
 	FILE* f;
 	_wfopen_s(&f, filename, L"rb");
 	if (!f) {
-		//errorf("Could not open file \"%s\"", m_filename);
+		LOG("Could not open file \"%s\"", wide_to_utf8(filename));
 		return false;
 	}
+	
 	spec.filedesc = f;
 
 	// Initialize COM
 	CoInitialize(NULL);
+
+	//mutex.lock();
+
+	bool bResult = false;
 
 	// Create the COM imaging factory
 	HRESULT hr = CoCreateInstance(
@@ -49,8 +55,12 @@ bool WICDecoder::open(const wchar_t* filename) {
 			spec.rowPitch = spec.nchannels * spec.width;
 			spec.size = static_cast<uint64_t>(spec.height) * spec.rowPitch;
 			spec.flipRowOrder = false;
+			bResult = true;
 		}
 	}
+
+	//mutex.unlock();
+	return bResult;
 }
 
 bool WICDecoder::select_frame(int frameIndex) {
@@ -115,6 +125,10 @@ inline void SafeRelease(T*& p)
 }
 
 void WICDecoder::close() {
+	if (spec.filedesc) {
+		fclose(spec.filedesc);
+		spec.filedesc = NULL;
+	}
 	SafeRelease(m_pConvertedSourceBitmap);
 	SafeRelease(pFrame);
 	SafeRelease(m_pDecoder);
@@ -122,5 +136,5 @@ void WICDecoder::close() {
 }
 
 WICDecoder::~WICDecoder() {
-	//close();
+	close();
 }

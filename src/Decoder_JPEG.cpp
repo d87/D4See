@@ -85,10 +85,8 @@ unsigned int JPEGDecoder::read(int startLine, int numLines, uint8_t* pDst) {
 void JPEGDecoder::close() {
 	mutex.lock();
 	if (spec.filedesc) {
-		
 		jpeg_destroy_decompress(&cinfo);
 		fclose(spec.filedesc);
-		LOG_DEBUG("Closing decoder");
 		spec.filedesc = NULL;
 	}
 	mutex.unlock();

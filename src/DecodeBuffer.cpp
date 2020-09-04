@@ -30,7 +30,7 @@ int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
 	if (format == ImageFormat::JPEG) {
 		decoder = new D4See::JPEGDecoder();
 	}
-	else if (format == ImageFormat::PNG) {
+	else {
 		decoder = new D4See::WICDecoder();
 	}
 
