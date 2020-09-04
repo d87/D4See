@@ -17,8 +17,8 @@
 #include <chrono>
 
 #include "util.h"
-#include "playlist.h"
 #include "D4See.h"
+#include "playlist.h"
 #include "DecodeBuffer.h"
 #include "ImageContainer.h"
 #include "WindowManager.h"

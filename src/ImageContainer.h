@@ -7,6 +7,9 @@
 #include <d2d1.h>
 #include "DecodeBuffer.h"
 #include "ImageFormats.h"
+#include <mutex>
+#include <atomic>
+#include <future>
 
 using namespace std::chrono_literals;
 

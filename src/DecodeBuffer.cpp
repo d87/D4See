@@ -1,8 +1,18 @@
 #include "DecodeBuffer.h"
+#include "Decoder.h"
+#include "Decoder_JPEG.h"
 #include "D4See.h"
 #include <algorithm>
+#include <chrono>
 
 DecodeBuffer::DecodeBuffer() {
+}
+
+DecodeBuffer::~DecodeBuffer() {
+	if (decoder) {
+		decoder->close();
+		delete decoder;
+	}
 }
 
 DecodeBuffer::DecodeBuffer(std::string filename, ImageFormat format) {
@@ -14,12 +24,24 @@ int DecodeBuffer::Open(std::string filename, ImageFormat format) {
 	
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-	in = OIIO::ImageInput::open(filename);
-	if (!in) {
-		std::string error = OIIO::geterror();
-		throw std::runtime_error(error);
+	if (format == ImageFormat::JPEG) {
+		decoder = new D4See::JPEGDecoder();
 	}
-	const OIIO::ImageSpec& spec = in->spec();
+
+	if (!decoder) {
+		return 0;
+	}
+
+	decoder->open(filename.c_str());
+
+	auto spec = decoder->spec;
+
+	//in = OIIO::ImageInput::open(filename);
+	//if (!in) {
+	//	std::string error = OIIO::geterror();
+	//	throw std::runtime_error(error);
+	//}
+	//const OIIO::ImageSpec& spec = in->spec();
 
 	xres = spec.width;
 	yres = spec.height;
@@ -29,31 +51,31 @@ int DecodeBuffer::Open(std::string filename, ImageFormat format) {
 	pixels.resize(size);
 
 
-	
-	if (format == ImageFormat::GIF) {
-		// Some animated gifs don't have either of these params.
+	//
+	//if (format == ImageFormat::GIF) {
+	//	// Some animated gifs don't have either of these params.
 
-		OIIO::TypeDesc typedesc;
-		typedesc = spec.getattributetype("oiio:Movie");
-		int isMovie = 0;
-		spec.getattribute("oiio:Movie", typedesc, &isMovie);
-		isAnimated = isMovie == 1;
+	//	OIIO::TypeDesc typedesc;
+	//	typedesc = spec.getattributetype("oiio:Movie");
+	//	int isMovie = 0;
+	//	spec.getattribute("oiio:Movie", typedesc, &isMovie);
+	//	isAnimated = isMovie == 1;
 
 
-		typedesc = spec.getattributetype("FramesPerSecond");
-		int fps[2];
-		if (spec.getattribute("FramesPerSecond", typedesc, &fps)) {
-			frameDelay = float(fps[1]) / fps[0];
-			isAnimated = true;
-		}
-	}
-	
+	//	typedesc = spec.getattributetype("FramesPerSecond");
+	//	int fps[2];
+	//	if (spec.getattribute("FramesPerSecond", typedesc, &fps)) {
+	//		frameDelay = float(fps[1]) / fps[0];
+	//		isAnimated = true;
+	//	}
+	//}
+	//
 	
 
 	int mip = 0;
-	while (in->seek_subimage(0, mip)) {
-		mip++;
-	}
+	//while (in->seek_subimage(0, mip)) {
+	//	mip++;
+	//}
 
 	// Seeking through the whole file just to get the amount of frames is very slow, for gifs at least
 
@@ -82,12 +104,80 @@ bool DecodeBuffer::IsFullyLoaded() {
 }
 
 
-
 DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLoadFirstMipLevel) {
 	if (IsFullyLoaded())
 		return { 0, 0, 0, 0, 0 };
 
-	const OIIO::ImageSpec& spec = in->spec();
+	auto spec = decoder->spec;
+
+	//if (shouldSeek) {
+	//	in->seek_subimage(curSubimage, curMipLevel);
+	//	if (isAnimated) {
+	//		OIIO::TypeDesc typedesc = spec.getattributetype("FramesPerSecond");
+	//		int fps[2];
+	//		if (spec.getattribute("FramesPerSecond", typedesc, &fps)) {
+	//			frameDelay = float(fps[1]) / fps[0];
+	//		}
+	//	}
+	//}
+
+
+	int reqScanlines = numBytes / xstride + 1;
+
+	unsigned long n = currentScanline * xstride;
+	unsigned char* startingPoint = &pixels[n];
+	unsigned char* cursor = startingPoint;
+
+	unsigned int yStart = currentScanline;
+
+	if (fullLoadFirstMipLevel) {
+		//if ((curMipLevel == numMipLevels - 1) && numMipLevels > 1)
+		//	reqScanlines = std::min((unsigned int)1200, yres);
+	}
+
+	//int completed = 0;
+	//for (completed = 0; completed < reqScanlines && currentScanline < yres; completed++) {
+	//	//in->read_scanline(currentScanline, 0, OIIO::TypeDesc::UINT8, cursor);
+	//	decoder->read(currentScanline, 1, cursor);
+	//	currentScanline++;
+	//	cursor += xstride;
+	//}
+	int completed = decoder->read(currentScanline, 1, cursor);
+	currentScanline += completed;
+	cursor += completed*xstride;
+
+	unsigned int yEnd = yStart + completed;
+
+	unsigned int cSI = curSubimage;
+	unsigned int cML = curMipLevel;
+
+	// This way avoids unnecessary seeking, which is causing slowdown on gifs
+	// 
+
+	if (currentScanline == yres) {
+		curSubimage++;
+		if (decoder->spec.isFinished) {
+			decodingComplete = true;
+			decoder->close();
+		}
+		else {
+			curMipLevel++;
+			currentScanline = 0;
+		}
+
+		return { 2, cSI, cML, yStart, yEnd };
+	}
+
+	return { 1, cSI, cML, yStart, yEnd };
+}
+
+/*
+DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLoadFirstMipLevel) {
+	if (IsFullyLoaded())
+		return { 0, 0, 0, 0, 0 };
+
+	//const OIIO::ImageSpec& spec = in->spec();
+	auto spec = decoder->spec;
 
 	//if (shouldSeek) {
 	//	in->seek_subimage(curSubimage, curMipLevel);
@@ -167,3 +257,4 @@ DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLo
 		throw std::runtime_error("Not handling tiled files");;
 	}
 }
+*/

@@ -4,8 +4,8 @@
 #include <memory>
 #undef min // oiio got macro conflicts with gdi
 #undef max
-#include <OpenImageIO/imageio.h>
-
+//#include <OpenImageIO/imageio.h>
+#include "Decoder.h"
 #include "ImageFormats.h"
 
 struct DecoderBatchReturns {
@@ -20,7 +20,8 @@ class DecodeBuffer {
 	public: 
 		std::string filename;
 		ImageFormat format;
-		std::unique_ptr<OIIO::ImageInput> in;
+		//std::unique_ptr<OIIO::ImageInput> in;
+		D4See::Decoder* decoder = nullptr;
 		unsigned int xres = 0; // image resolution
 		unsigned int yres = 0;
 		unsigned int xstride = 0;
@@ -39,6 +40,7 @@ class DecodeBuffer {
 		unsigned int curMipLevel;
 
 		DecodeBuffer();
+		~DecodeBuffer();
 		DecodeBuffer(std::string filename, ImageFormat format);
 		int Open(std::string filename, ImageFormat format);
 		bool IsFullyLoaded();

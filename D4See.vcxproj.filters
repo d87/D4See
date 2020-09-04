@@ -63,6 +63,12 @@
     <ClInclude Include="src\error.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Decoder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Decoder_JPEG.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\playlist.cpp">
@@ -96,6 +102,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Decoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Decoder_JPEG.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -251,7 +251,7 @@ void WindowManager::SelectImage(ImageContainer* f) {
     }
 
     LOG_DEBUG("<<<<<<< FRAME SWITCH >>>>>>>");
-    LOG_DEBUG(" -- {0} --", f->filename);
+    //LOG_DEBUG(" -- {0} --", f->filename);
     frame = f;
     canvas.x_poffset = 0;
     canvas.y_poffset = 0;
