@@ -37,4 +37,3 @@ extern ID2D1Factory* pD2DFactory;
 //extern ID2D1DCRenderTarget* pRenderTarget;
 extern ID2D1HwndRenderTarget* pRenderTarget;
 extern IDWriteFactory* pDWriteFactory;
-

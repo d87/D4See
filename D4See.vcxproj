@@ -194,6 +194,7 @@
     <ClInclude Include="src\D4See.h" />
     <ClInclude Include="src\Decoder.h" />
     <ClInclude Include="src\Decoder_JPEG.h" />
+    <ClInclude Include="src\Decoder_WIC.h" />
     <ClInclude Include="src\error.h" />
     <ClInclude Include="src\framework.h" />
     <ClInclude Include="src\DecodeBuffer.h" />
@@ -215,6 +216,7 @@
     <ClCompile Include="src\D4See.cpp" />
     <ClCompile Include="src\Decoder.cpp" />
     <ClCompile Include="src\Decoder_JPEG.cpp" />
+    <ClCompile Include="src\Decoder_WIC.cpp" />
     <ClCompile Include="src\error.cpp" />
     <ClCompile Include="src\ImageContainer.cpp" />
     <ClCompile Include="src\Input.cpp" />

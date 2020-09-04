@@ -1,9 +1,12 @@
 #include "DecodeBuffer.h"
 #include "Decoder.h"
 #include "Decoder_JPEG.h"
+#include "Decoder_WIC.h"
 #include "D4See.h"
+#include "util.h"
 #include <algorithm>
 #include <chrono>
+#include <stdexcept>
 
 DecodeBuffer::DecodeBuffer() {
 }
@@ -15,11 +18,11 @@ DecodeBuffer::~DecodeBuffer() {
 	}
 }
 
-DecodeBuffer::DecodeBuffer(std::string filename, ImageFormat format) {
+DecodeBuffer::DecodeBuffer(std::wstring filename, ImageFormat format) {
 	Open(filename, format);
 }
 
-int DecodeBuffer::Open(std::string filename, ImageFormat format) {
+int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
 	this->format = format;
 	
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -27,12 +30,17 @@ int DecodeBuffer::Open(std::string filename, ImageFormat format) {
 	if (format == ImageFormat::JPEG) {
 		decoder = new D4See::JPEGDecoder();
 	}
+	else if (format == ImageFormat::PNG) {
+		decoder = new D4See::WICDecoder();
+	}
 
 	if (!decoder) {
 		return 0;
 	}
 
-	decoder->open(filename.c_str());
+	if (!decoder->open(filename.c_str())) {
+		throw std::runtime_error("Couldn't open decoder");
+	}
 
 	auto spec = decoder->spec;
 
@@ -89,7 +97,7 @@ int DecodeBuffer::Open(std::string filename, ImageFormat format) {
 	curMipLevel = mip - 1;
 
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	LOG("Opened {0} in {1}ms", filename, std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
+	LOG("Opened {0} in {1}ms", wide_to_utf8(filename), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 
 	return 1;
 }

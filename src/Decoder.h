@@ -28,7 +28,7 @@ namespace D4See {
     public:
 		ImageSpec spec;
 
-		virtual bool open(const char* filename) = NULL;
+		virtual bool open(const wchar_t* filename) = NULL;
 		virtual void close() = NULL;
 		virtual unsigned int read(int startLine, int numLines, uint8_t* pDst) = NULL;
 		virtual bool select_frame(int frameIndex) { return true; };

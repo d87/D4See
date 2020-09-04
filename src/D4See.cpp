@@ -367,12 +367,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     if (f == gWinMgr.frame) {
                         //gWinMgr.newImagePending = true;
                         //RedrawWindow(hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
-                        LOG("Accepted WM_FRAMEREADY for {0}", f->filename);
+                        LOG("Accepted WM_FRAMEREADY for {0}", wide_to_utf8(f->filename));
                         gWinMgr.ResizeForImage();
                         gWinMgr.Redraw(RDW_ERASE);
                     }
                     else {
-                        LOG("Discarded WM_FRAMEREADY for {0}", f->filename);
+                        LOG("Discarded WM_FRAMEREADY for {0}", wide_to_utf8(f->filename));
                     }
                     break;
                 }

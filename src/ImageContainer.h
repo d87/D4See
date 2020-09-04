@@ -37,7 +37,7 @@ typedef struct
 
 class ImageContainer {
 	public:
-		std::string filename;
+		std::wstring filename;
 		ImageFormat format;
 		HWND hWnd; // HWND of the main window to send it messages
 		std::mutex bitmap_mutex;

@@ -21,15 +21,15 @@ long long WindowsTickToUnixSeconds(FILETIME ft)
 }
 
 const std::unordered_map<std::wstring, ImageFormat> exts = {
-	{ L".jpg", ImageFormat::JPEG },
+	//{ L".jpg", ImageFormat::JPEG },
 	//{ L".jpeg", ImageFormat::JPEG },
-	//{ L".png", ImageFormat::PNG },
+	{ L".png", ImageFormat::PNG },
 	//{ L".tga", ImageFormat::TGA },
 	//{ L".bmp", ImageFormat::BMP },
 	//{ L".gif", ImageFormat::GIF },
 	// OIIO supports normal webp, but animated ones fail to load at all because "Unsupported feature"
 	// Should re-eanble webp after image load error handling is done
-	//{ L".webp", ImageFormat::WEBP },
+	{ L".webp", ImageFormat::WEBP },
 	//{ L".psd", ImageFormat::PSD },
 	//{ L".dds", ImageFormat::DDS },
 	//{ L".tiff", ImageFormat::TIFF }

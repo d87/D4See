@@ -87,7 +87,7 @@ void WindowManager::LoadImageFromPlaylist(int prefetchDir) {
     if (cur) {
         bool prefetchHit = false;
         if (frame_prefetch)
-            if (frame_prefetch->filename == wide_to_utf8(cur->path))
+            if (frame_prefetch->filename == cur->path)
                 prefetchHit = true;
         if (prefetchHit) {
             ShowPrefetch();

@@ -17,7 +17,7 @@ void ImageContainer::_Init(HWND hWnd) {
 }
 
 void ImageContainer::OpenFile(std::wstring filename, ImageFormat format) {
-	this->filename = wide_to_utf8(filename);
+	this->filename = filename;
     this->format = format;
 	StartThread();
 }

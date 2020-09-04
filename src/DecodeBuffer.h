@@ -18,7 +18,7 @@ struct DecoderBatchReturns {
 
 class DecodeBuffer {
 	public: 
-		std::string filename;
+		std::wstring filename;
 		ImageFormat format;
 		//std::unique_ptr<OIIO::ImageInput> in;
 		D4See::Decoder* decoder = nullptr;
@@ -41,8 +41,8 @@ class DecodeBuffer {
 
 		DecodeBuffer();
 		~DecodeBuffer();
-		DecodeBuffer(std::string filename, ImageFormat format);
-		int Open(std::string filename, ImageFormat format);
+		DecodeBuffer(std::wstring filename, ImageFormat format);
+		int Open(std::wstring filename, ImageFormat format);
 		bool IsFullyLoaded();
 		bool IsSubimageLoaded(int subimage);
 		DecoderBatchReturns PartialLoad(unsigned int numBytes, bool fullLoadFirstMipLevel);

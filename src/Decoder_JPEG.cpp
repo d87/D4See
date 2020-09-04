@@ -4,13 +4,12 @@
 
 using namespace D4See;
 
-bool JPEGDecoder::open(const char* filename) {
+bool JPEGDecoder::open(const wchar_t* filename) {
 
 	mutex.lock();
 
 	FILE* f;
-
-	fopen_s(&f, filename, "rb");
+	_wfopen_s(&f, filename, L"rb");
 	if (!f) {
 		//errorf("Could not open file \"%s\"", m_filename);
 		return false;
