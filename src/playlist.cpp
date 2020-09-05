@@ -21,8 +21,8 @@ long long WindowsTickToUnixSeconds(FILETIME ft)
 }
 
 const std::unordered_map<std::wstring, ImageFormat> exts = {
-	//{ L".jpg", ImageFormat::JPEG },
-	//{ L".jpeg", ImageFormat::JPEG },
+	{ L".jpg", ImageFormat::JPEG },
+	{ L".jpeg", ImageFormat::JPEG },
 	{ L".png", ImageFormat::PNG },
 	//{ L".tga", ImageFormat::TGA },
 	{ L".bmp", ImageFormat::BMP },

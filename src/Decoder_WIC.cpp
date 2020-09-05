@@ -43,7 +43,7 @@ bool WICDecoder::open(const wchar_t* filename) {
 			&m_pDecoder                        // Pointer to the decoder
 		);
 
-		if (select_frame(1)) {
+		if (select_frame(0)) {
 			unsigned int width;
 			unsigned int height;
 			pFrame->GetSize(&width, &height);
@@ -65,7 +65,7 @@ bool WICDecoder::open(const wchar_t* filename) {
 
 bool WICDecoder::select_frame(int frameIndex) {
 	if (pFrame) pFrame->Release();
-	HRESULT hr = m_pDecoder->GetFrame(0, &pFrame);
+	HRESULT hr = m_pDecoder->GetFrame(frameIndex, &pFrame);
 	if (SUCCEEDED(hr))
 	{
 		//Step 3: Format convert the frame to 32bppPBGRA
