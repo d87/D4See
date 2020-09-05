@@ -81,7 +81,7 @@ bool DecodeBuffer::IsSubimageLoaded(int subimage) {
 }
 
 bool DecodeBuffer::IsFullyLoaded() {
-	return decodingComplete;
+	return decoder->spec.isFinished;
 }
 
 

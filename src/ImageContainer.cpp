@@ -96,15 +96,27 @@ void DecodingWork(ImageContainer *self) {
             D2D1_ALPHA_MODE_IGNORE
         );
 
-        
+        if (image->decoder->direct_pass_available()) {
 
-        HRESULT hr = pRenderTarget->CreateBitmap(
-            bitmapSize,
-            img.pPixels,
-            img.pitch,
-            &bitmapProperties,
-            &img.pBitmap
-        );
+            HRESULT hr = pRenderTarget->CreateBitmapFromWicBitmap(
+                image->decoder->get_direct_bitmap_source(),
+                nullptr,
+                &img.pBitmap
+            );
+            image->curSubimage++;
+            image->decoder->prepare_next_bitmap_source();
+        }
+        else {
+
+            HRESULT hr = pRenderTarget->CreateBitmap(
+                bitmapSize,
+                img.pPixels,
+                img.pitch,
+                &bitmapProperties,
+                &img.pBitmap
+            );
+
+        }
 
         self->frame.push_back(img);
         ImageFrame* pImage = &self->frame[subimage];

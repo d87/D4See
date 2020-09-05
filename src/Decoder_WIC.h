@@ -32,5 +32,9 @@ namespace D4See {
 		virtual unsigned int read(int startLine, int numLines, uint8_t* pDst) override;
 		virtual bool select_frame(int frameIndex) override;
 		virtual float get_current_frame_delay() override;
+
+		virtual bool direct_pass_available() override;
+		virtual IWICBitmapSource* get_direct_bitmap_source() override;
+		virtual void prepare_next_bitmap_source() override;
 	};
 }

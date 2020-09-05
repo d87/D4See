@@ -1,5 +1,6 @@
 #pragma once
 #include "ImageFormats.h"
+#include <wincodec.h>
 #include <stdint.h>
 #include <vector>
 #include <string>
@@ -36,6 +37,7 @@ namespace D4See {
 		virtual bool select_frame(int frameIndex) { return true; };
 		virtual float get_current_frame_delay() { return 0; };
 		virtual bool direct_pass_available() { return false; };
-		virtual IWICBitmapSource* get_direct_bitmap_source() = NULL;
+		virtual IWICBitmapSource* get_direct_bitmap_source() { return nullptr;  };
+		virtual void prepare_next_bitmap_source() {};
 	};
 }

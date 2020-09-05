@@ -209,6 +209,26 @@ float WICDecoder::get_current_frame_delay() {
 	return (float)m_uFrameDelay/1000;
 }
 
+bool WICDecoder::direct_pass_available() {
+	if (spec.format == ImageFormat::GIF) {
+		return true;
+	}
+	return false;
+}
+
+IWICBitmapSource* WICDecoder::get_direct_bitmap_source() {
+	return m_pConvertedSourceBitmap;
+}
+
+void WICDecoder::prepare_next_bitmap_source() {
+	if (spec.isAnimated && m_frameIndex < spec.numFrames - 1) {
+		select_frame(m_frameIndex + 1);
+	}
+	else {
+		spec.isFinished = true;
+	}
+}
+
 void WICDecoder::close() {
 	if (spec.filedesc) {
 		fclose(spec.filedesc);
