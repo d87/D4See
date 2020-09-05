@@ -1,15 +1,13 @@
 #include "D4See.h"
 #include "util.h"
 #include <Windows.h>
+#include <algorithm>
 #include "ImageFormats.h"
 #include "Decoder_WIC.h"
 
 using namespace D4See;
 
-bool WICDecoder::open(const wchar_t* filename) {
-
-	
-
+bool WICDecoder::open(const wchar_t* filename, ImageFormat format) {
 	FILE* f;
 	_wfopen_s(&f, filename, L"rb");
 	if (!f) {
@@ -21,8 +19,6 @@ bool WICDecoder::open(const wchar_t* filename) {
 
 	// Initialize COM
 	CoInitialize(NULL);
-
-	//mutex.lock();
 
 	bool bResult = false;
 
@@ -43,63 +39,152 @@ bool WICDecoder::open(const wchar_t* filename) {
 			&m_pDecoder                        // Pointer to the decoder
 		);
 
-		if (select_frame(0)) {
-			unsigned int width;
-			unsigned int height;
-			pFrame->GetSize(&width, &height);
-			spec.format = ImageFormat::PNG;
-			spec.filedesc = f;
-			spec.nchannels = 4;
-			spec.width = width;
-			spec.height = height;
-			spec.rowPitch = spec.nchannels * spec.width;
-			spec.size = static_cast<uint64_t>(spec.height) * spec.rowPitch;
-			spec.flipRowOrder = false;
-			bResult = true;
+		if (SUCCEEDED(hr))
+		{
+			unsigned int frameCount;
+			hr = m_pDecoder->GetFrameCount(&frameCount);
+			if (FAILED(hr)) {
+				frameCount = 1;
+			}
+
+			if (select_frame(0)) {
+				unsigned int width;
+				unsigned int height;
+				pFrame->GetSize(&width, &height);
+				spec.format = format;
+				spec.filedesc = f;
+				spec.numChannels = 4;
+				spec.numFrames = frameCount;
+				spec.isAnimated = (frameCount > 1);
+				spec.width = width;
+				spec.height = height;
+				spec.rowPitch = spec.numChannels * spec.width;
+				spec.size = static_cast<uint64_t>(spec.height) * spec.rowPitch;
+				spec.flipRowOrder = false;
+				bResult = true;
+			}
 		}
 	}
 
-	//mutex.unlock();
 	return bResult;
 }
 
 bool WICDecoder::select_frame(int frameIndex) {
-	if (pFrame) pFrame->Release();
+	if (m_frameIndex == frameIndex)
+		return true;
+
+	m_frameIndex = frameIndex;
+
+	IWICMetadataQueryReader* pFrameMetadataQueryReader = nullptr;
+
+	SafeRelease(pFrame);
 	HRESULT hr = m_pDecoder->GetFrame(frameIndex, &pFrame);
 	if (SUCCEEDED(hr))
 	{
-		//Step 3: Format convert the frame to 32bppPBGRA
-		if (SUCCEEDED(hr))
-		{
-			if (m_pConvertedSourceBitmap) m_pConvertedSourceBitmap->Release();
-			hr = m_pIWICFactory->CreateFormatConverter(&m_pConvertedSourceBitmap);
-			
+		//SafeRelease(pQueryReader);
+		//hr = pFrame->GetMetadataQueryReader(&pQueryReader);
+		hr = pFrame->GetMetadataQueryReader(&pFrameMetadataQueryReader);
+
+		PROPVARIANT propValue;
+		PropVariantInit(&propValue);
+
+		if (spec.format == ImageFormat::GIF) {
+
 			if (SUCCEEDED(hr))
 			{
-				hr = m_pConvertedSourceBitmap->Initialize(
-					pFrame,                          // Input bitmap to convert
-					GUID_WICPixelFormat32bppPRGBA,   // Destination pixel format
-					WICBitmapDitherTypeNone,         // Specified dither pattern
-					nullptr,                         // Specify a particular palette 
-					0.f,                             // Alpha threshold
-					WICBitmapPaletteTypeCustom       // Palette translation type
-				);
+				// Get delay from the optional Graphic Control Extension
+				if (SUCCEEDED(pFrameMetadataQueryReader->GetMetadataByName(
+					L"/grctlext/Delay",
+					&propValue)))
+				{
+					hr = (propValue.vt == VT_UI2 ? S_OK : E_FAIL);
+					if (SUCCEEDED(hr))
+					{
+						// Convert the delay retrieved in 10 ms units to a delay in 1 ms units
+						hr = UIntMult(propValue.uiVal, 10, &m_uFrameDelay);
+					}
+					PropVariantClear(&propValue);
+				}
+				else
+				{
+					// Failed to get delay from graphic control extension. Possibly a
+					// single frame image (non-animated gif)
+					m_uFrameDelay = 0;
+				}
 
-
-				// m_pConvertedSourceBitmap->CopyPixels(...)
-
-				return true;
 			}
 		}
+
+		if (spec.format == ImageFormat::WEBP) {
+			// WebP Animation metadata
+			// / ANIM / LoopCount(on a container query reader, returns a PropVariant of type VT_UI2)
+			// / ANMF / FrameDuration(on a frame query reader, returns a PropVariant of type VT_UI4)
+
+			if (SUCCEEDED(hr))
+			{
+				// Get delay from the optional Graphic Control Extension
+				if (SUCCEEDED(pFrameMetadataQueryReader->GetMetadataByName(
+					L"/ANMF/FrameDuration",
+					&propValue)))
+				{
+					hr = (propValue.vt == VT_UI4 ? S_OK : E_FAIL);
+					m_uFrameDelay = propValue.uiVal;
+					//if (SUCCEEDED(hr))
+					//{
+					//	// Convert the delay retrieved in 10 ms units to a delay in 1 ms units
+					//	hr = UIntMult(propValue.uiVal, 10, &m_uFrameDelay);
+					//}
+					PropVariantClear(&propValue);
+				}
+				else
+				{
+					// Failed to get delay from graphic control extension. Possibly a
+					// single frame image (non-animated gif)
+					m_uFrameDelay = 0;
+				}
+
+			}
+		}
+
+
+		
+	}
+
+	
+	if (SUCCEEDED(hr))
+	{
+		// Format convert the frame to 32bppPRGBA
+		SafeRelease(m_pConvertedSourceBitmap);
+		if (!m_pConvertedSourceBitmap) {
+			hr = m_pIWICFactory->CreateFormatConverter(&m_pConvertedSourceBitmap);
+			if (FAILED(hr))
+			{
+				return false;
+			}
+		}
+
+		hr = m_pConvertedSourceBitmap->Initialize(
+			pFrame,                          // Input bitmap to convert
+			GUID_WICPixelFormat32bppPRGBA,   // Destination pixel format
+			WICBitmapDitherTypeNone,         // Specified dither pattern
+			nullptr,                         // Specify a particular palette 
+			0.5f,                             // Alpha threshold
+			WICBitmapPaletteTypeCustom       // Palette translation type
+		);
+
+		if (SUCCEEDED(hr))
+			return true;
 	}
 	return false;
 };
-
+#undef min
 unsigned int WICDecoder::read(int startLine, int numLines, uint8_t* pDst) {
 	WICRect rc;
 	rc.X = 0;
 	rc.Y = startLine;
 	rc.Width = spec.width;
+	//int remains = (spec.height - startLine);
+	//numLines = std::min(remains, numLines);
 	rc.Height = numLines;
 	uint32_t size = numLines * spec.rowPitch;
 	HRESULT hr = m_pConvertedSourceBitmap->CopyPixels(&rc, spec.rowPitch, size, pDst);
@@ -107,21 +192,21 @@ unsigned int WICDecoder::read(int startLine, int numLines, uint8_t* pDst) {
 	{
 		spec.linesRead += numLines;
 		if (spec.linesRead == spec.height) {
-			spec.isFinished = true;
+			if (spec.isAnimated && m_frameIndex < spec.numFrames - 1) {
+				select_frame(m_frameIndex + 1);
+				spec.linesRead = 0;
+			}
+			else {
+				spec.isFinished = true;
+			}
 		}
 		return numLines;
 	}
 	return 0;
 }
 
-template <typename T>
-inline void SafeRelease(T*& p)
-{
-	if (nullptr != p)
-	{
-		p->Release();
-		p = nullptr;
-	}
+float WICDecoder::get_current_frame_delay() {
+	return (float)m_uFrameDelay/1000;
 }
 
 void WICDecoder::close() {

@@ -35,27 +35,17 @@ int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
 	}
 
 	if (!decoder) {
-		return 0;
-	}
-
-	if (!decoder->open(filename.c_str())) {
 		throw std::runtime_error("Couldn't open decoder");
 	}
 
-	auto spec = decoder->spec;
+	if (!decoder->open(filename.c_str(), format)) {
+		throw std::runtime_error("Couldn't open decoder");
+	}
 
-	//in = OIIO::ImageInput::open(filename);
-	//if (!in) {
-	//	std::string error = OIIO::geterror();
-	//	throw std::runtime_error(error);
-	//}
-	//const OIIO::ImageSpec& spec = in->spec();
+	spec = decoder->spec;
+	
 
-	xres = spec.width;
-	yres = spec.height;
-	xstride = xres * spec.nchannels;
-	channels = spec.nchannels;
-	unsigned long size = yres * xres * channels;
+	unsigned long size = spec.height * spec.width * spec.numChannels;
 	pixels.resize(size);
 
 
@@ -78,23 +68,6 @@ int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
 	//	}
 	//}
 	//
-	
-
-	int mip = 0;
-	//while (in->seek_subimage(0, mip)) {
-	//	mip++;
-	//}
-
-	// Seeking through the whole file just to get the amount of frames is very slow, for gifs at least
-
-	//int subi = 1;
-	//while (in->seek_subimage(subi, 0)) {
-	//	subi++;
-	//}
-	//numSubimages = subi;
-
-	numMipLevels = mip;
-	curMipLevel = mip - 1;
 
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 	LOG("Opened {0} in {1}ms", wide_to_utf8(filename), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
@@ -130,18 +103,13 @@ DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLo
 	//}
 
 
-	int reqScanlines = numBytes / xstride + 1;
+	int reqScanlines = numBytes / spec.rowPitch + 1;
 
-	unsigned long n = currentScanline * xstride;
+	unsigned long n = currentScanline * spec.rowPitch;
 	unsigned char* startingPoint = &pixels[n];
 	unsigned char* cursor = startingPoint;
 
 	unsigned int yStart = currentScanline;
-
-	if (fullLoadFirstMipLevel) {
-		//if ((curMipLevel == numMipLevels - 1) && numMipLevels > 1)
-		//	reqScanlines = std::min((unsigned int)1200, yres);
-	}
 
 	//int completed = 0;
 	//for (completed = 0; completed < reqScanlines && currentScanline < yres; completed++) {
@@ -150,26 +118,24 @@ DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLo
 	//	currentScanline++;
 	//	cursor += xstride;
 	//}
+
+	// Reading 1 scanline, because in practice it's the fastest
 	int completed = decoder->read(currentScanline, 1, cursor);
 	currentScanline += completed;
-	cursor += completed*xstride;
+	cursor += completed * spec.rowPitch;
 
 	unsigned int yEnd = yStart + completed;
 
 	unsigned int cSI = curSubimage;
-	unsigned int cML = curMipLevel;
+	unsigned int cML = 0;
 
-	// This way avoids unnecessary seeking, which is causing slowdown on gifs
-	// 
-
-	if (currentScanline == yres) {
+	if (currentScanline == spec.height) {
 		curSubimage++;
 		if (decoder->spec.isFinished) {
 			decodingComplete = true;
 			decoder->close();
 		}
 		else {
-			curMipLevel++;
 			currentScanline = 0;
 		}
 
@@ -178,91 +144,3 @@ DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLo
 
 	return { 1, cSI, cML, yStart, yEnd };
 }
-
-/*
-DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLoadFirstMipLevel) {
-	if (IsFullyLoaded())
-		return { 0, 0, 0, 0, 0 };
-
-	//const OIIO::ImageSpec& spec = in->spec();
-	auto spec = decoder->spec;
-
-	//if (shouldSeek) {
-	//	in->seek_subimage(curSubimage, curMipLevel);
-	//	if (isAnimated) {
-	//		OIIO::TypeDesc typedesc = spec.getattributetype("FramesPerSecond");
-	//		int fps[2];
-	//		if (spec.getattribute("FramesPerSecond", typedesc, &fps)) {
-	//			frameDelay = float(fps[1]) / fps[0];
-	//		}
-	//	}
-	//}
-
-	if (spec.tile_width == 0) {
-
-		int reqScanlines = numBytes / xstride + 1;
-
-		unsigned long n = currentScanline * xstride;
-		unsigned char* startingPoint = &pixels[n];
-		unsigned char* cursor = startingPoint;
-
-		unsigned int yStart = currentScanline;
-
-		if (fullLoadFirstMipLevel) {
-			if ((curMipLevel == numMipLevels - 1) && numMipLevels > 1)
-				reqScanlines = std::min((unsigned int)1200, yres);
-		}
-
-		int completed = 0;
-		for (completed = 0; completed < reqScanlines && currentScanline < yres; completed++) {
-			in->read_scanline(currentScanline, 0, OIIO::TypeDesc::UINT8, cursor);
-			currentScanline++;
-			cursor += xstride;
-		}
-
-		unsigned int yEnd = yStart + completed;
-
-		unsigned int cSI = curSubimage;
-		unsigned int cML = curMipLevel;
-
-		// This way avoids unnecessary seeking, which is causing slowdown on gifs
-		// 
-
-		if (currentScanline == yres) {
-			if (curMipLevel == 0) {
-				if (in->seek_subimage(curSubimage+1, numMipLevels-1)) { // try to open next subimage
-					curMipLevel = numMipLevels - 1;
-					currentScanline = 0;
-					curSubimage++;
-					numSubimages = curSubimage+1;
-					if (isAnimated) {
-						OIIO::TypeDesc typedesc = spec.getattributetype("FramesPerSecond");
-						int fps[2];
-						if (spec.getattribute("FramesPerSecond", typedesc, &fps)) {
-							frameDelay = float(fps[1]) / fps[0];
-						}
-					}
-					//shouldSeek = true;
-				} else {
-					curSubimage++;
-					decodingComplete = true;
-					in->close();
-				}
-			}
-			else {
-				curMipLevel--;
-				currentScanline = 0;
-				in->seek_subimage(curSubimage, curMipLevel);
-				//shouldSeek = true;
-			}
-
-			return { 2, cSI, cML, yStart, yEnd };
-		}
-
-		return { 1, cSI, cML, yStart, yEnd };
-	}
-	else {
-		throw std::runtime_error("Not handling tiled files");;
-	}
-}
-*/

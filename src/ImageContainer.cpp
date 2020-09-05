@@ -50,9 +50,9 @@ void DecodingWork(ImageContainer *self) {
     try {
 	    image->Open(self->filename, self->format);
 
-        self->width = image->xres;
-        self->height = image->yres;
-        self->isAnimated = image->isAnimated;
+        self->width = image->spec.width;
+        self->height = image->spec.height;
+        self->isAnimated = image->spec.isAnimated;
     }
     catch (const std::runtime_error& e) {
 
@@ -79,9 +79,9 @@ void DecodingWork(ImageContainer *self) {
         // next scan line starts on a 4-byte memory boundary. The 'pitch' member
         // of the Image structure contains width of each scan line (in bytes).
 
-        img.width = image->xres;
-        img.height = image->yres;
-        img.pitch = ((image->xres * 32 + 31) & ~31) >> 3;
+        img.width = image->spec.width;
+        img.height = image->spec.height;
+        img.pitch = ((image->spec.width * 32 + 31) & ~31) >> 3;
         img.pPixels = NULL;
 
         D2D1_SIZE_U bitmapSize;
@@ -110,7 +110,7 @@ void DecodingWork(ImageContainer *self) {
         ImageFrame* pImage = &self->frame[subimage];
 
         using namespace std::chrono_literals;
-        pImage->frameDelay = std::chrono::duration<float>(image->frameDelay);
+        pImage->frameDelay = std::chrono::duration<float>(image->decoder->get_current_frame_delay());
 
         self->bitmap_mutex.unlock();
 
@@ -149,12 +149,12 @@ void DecodingWork(ImageContainer *self) {
             unsigned char* pRawBitmapOrig = &pImage->pPixels[(long long)yStart * pImage->pitch];
             unsigned char* pBatchStart = pRawBitmapOrig;
 
-            unsigned char* oiioBufferPointer = &image->pixels[(long long)yStart * image->xstride];
+            unsigned char* oiioBufferPointer = &image->pixels[(long long)yStart * image->spec.rowPitch];
 
-            switch (image->channels) {
+            switch (image->spec.numChannels) {
 
             case 3:
-                for (int i = 0; i < image->xres * loadedScanlines; i++) {
+                for (int i = 0; i < image->spec.width * loadedScanlines; i++) {
                     pRawBitmapOrig[0] = oiioBufferPointer[2];
                     pRawBitmapOrig[1] = oiioBufferPointer[1];
                     pRawBitmapOrig[2] = oiioBufferPointer[0];
@@ -165,7 +165,7 @@ void DecodingWork(ImageContainer *self) {
                 break;
 
             case 4:
-                for (int i = 0; i < image->xres * loadedScanlines; i++) {
+                for (int i = 0; i < image->spec.width * loadedScanlines; i++) {
                     pRawBitmapOrig[0] = oiioBufferPointer[2];
                     pRawBitmapOrig[1] = oiioBufferPointer[1];
                     pRawBitmapOrig[2] = oiioBufferPointer[0];
@@ -176,7 +176,7 @@ void DecodingWork(ImageContainer *self) {
                 break;
 
             case 2:
-                for (int i = 0; i < image->xres * loadedScanlines; i++) {
+                for (int i = 0; i < image->spec.width * loadedScanlines; i++) {
                     pRawBitmapOrig[0] = oiioBufferPointer[0];
                     pRawBitmapOrig[1] = oiioBufferPointer[0];
                     pRawBitmapOrig[2] = oiioBufferPointer[0];
@@ -187,7 +187,7 @@ void DecodingWork(ImageContainer *self) {
                 break;
 
             case 1:
-                for (int i = 0; i < image->xres * loadedScanlines; i++) {
+                for (int i = 0; i < image->spec.width * loadedScanlines; i++) {
                     pRawBitmapOrig[0] = oiioBufferPointer[0];
                     pRawBitmapOrig[1] = oiioBufferPointer[0];
                     pRawBitmapOrig[2] = oiioBufferPointer[0];
@@ -217,14 +217,13 @@ void DecodingWork(ImageContainer *self) {
         self->counter_mutex.lock();
         self->subimagesReady++;
         self->numSubimages = self->subimagesReady;
-        if (self->format == ImageFormat::GIF && self->subimagesReady > 1) {
+        if (self->subimagesReady > 1) {
             self->isAnimated = true;
         }
 
         self->counter_mutex.unlock();
 
         if (self->isAnimated) {
-            ;
             if (self->frameTimeElapsed < 0s) {
                 //self->PrevSubimage(); // seeking to previous frame, which is the same first frame at this point anyway
                 self->frameTimeElapsed = pImage->frameDelay; // Will start advancing animation

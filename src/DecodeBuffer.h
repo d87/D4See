@@ -20,24 +20,21 @@ class DecodeBuffer {
 	public: 
 		std::wstring filename;
 		ImageFormat format;
-		//std::unique_ptr<OIIO::ImageInput> in;
 		D4See::Decoder* decoder = nullptr;
-		unsigned int xres = 0; // image resolution
-		unsigned int yres = 0;
-		unsigned int xstride = 0;
-		unsigned int channels = 0;
+
+		D4See::ImageSpec spec;
+		//unsigned int xres = 0; // image resolution
+		//unsigned int yres = 0;
+		//unsigned int xstride = 0;
+		//unsigned int channels = 0;
 		std::vector<unsigned char> pixels; // where pixel data is getting stored
 		bool decodingComplete = false;
 		unsigned int currentScanline = 0; // Goes back to 0 on the next mip/subimage
 
-		bool shouldSeek = true;
 		float frameDelay = 0.1; // Applicable to animated GIFs. Stores frame delay for the currently decoded subimage
 
-		bool isAnimated = false;
 		unsigned int numSubimages = 1;
 		unsigned int curSubimage = 0;
-		unsigned int numMipLevels = 0;
-		unsigned int curMipLevel;
 
 		DecodeBuffer();
 		~DecodeBuffer();

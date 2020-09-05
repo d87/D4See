@@ -14,12 +14,14 @@ namespace D4See {
 		uint32_t rowPitch;
 		uint32_t rowPadding;
 		bool flipRowOrder;
-		uint8_t nchannels;
+		uint8_t numChannels;
+		uint32_t numFrames;
+		bool isAnimated;
 		ImageFormat format;
 		FILE* filedesc;
 		wchar_t* filename;
 		unsigned int linesRead;
-		unsigned int linesPerChunk;
+		unsigned int linesPerChunk; // unused?
 		bool isFinished;
 	};
 
@@ -27,10 +29,13 @@ namespace D4See {
 	class Decoder {
     public:
 		ImageSpec spec;
-
-		virtual bool open(const wchar_t* filename) = NULL;
+		Decoder();
+		virtual bool open(const wchar_t* filename, ImageFormat format) = NULL;
 		virtual void close() = NULL;
 		virtual unsigned int read(int startLine, int numLines, uint8_t* pDst) = NULL;
 		virtual bool select_frame(int frameIndex) { return true; };
+		virtual float get_current_frame_delay() { return 0; };
+		virtual bool direct_pass_available() { return false; };
+		virtual IWICBitmapSource* get_direct_bitmap_source() = NULL;
 	};
 }

@@ -26,7 +26,7 @@ const std::unordered_map<std::wstring, ImageFormat> exts = {
 	{ L".png", ImageFormat::PNG },
 	//{ L".tga", ImageFormat::TGA },
 	{ L".bmp", ImageFormat::BMP },
-	//{ L".gif", ImageFormat::GIF },
+	{ L".gif", ImageFormat::GIF },
 	// OIIO supports normal webp, but animated ones fail to load at all because "Unsupported feature"
 	// Should re-eanble webp after image load error handling is done
 	{ L".webp", ImageFormat::WEBP },

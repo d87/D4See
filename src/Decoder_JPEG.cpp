@@ -2,6 +2,7 @@
 #include "ImageFormats.h"
 #include "Decoder_JPEG.h"
 
+#include <algorithm>
 #include <limits>
 
 #define M_SOI    0xD8
@@ -41,7 +42,7 @@ my_output_message(j_common_ptr cinfo)
 }
 
 
-bool JPEGDecoder::open(const wchar_t* filename) {
+bool JPEGDecoder::open(const wchar_t* filename, ImageFormat format) {
 
 
 	FILE* f;
@@ -79,7 +80,7 @@ bool JPEGDecoder::open(const wchar_t* filename) {
 	if (cinfo.jpeg_color_space == JCS_CMYK || cinfo.jpeg_color_space == JCS_YCCK) {
 		// CMYK jpegs get converted by us to RGB
 		cinfo.out_color_space = JCS_CMYK;  // pre-convert YCbCrK->CMYK
-		//nchannels = 3;
+		//numChannels = 3;
 		m_isCMYK = true;
 	}
 	else {
@@ -98,10 +99,10 @@ bool JPEGDecoder::open(const wchar_t* filename) {
 
 	spec.format = ImageFormat::JPEG;
 	spec.filedesc = f;
-	spec.nchannels = 3;
+	spec.numChannels = 3;
 	spec.width = cinfo.output_width;
 	spec.height = cinfo.output_height;
-	spec.rowPitch = cinfo.output_components * spec.width;
+	spec.rowPitch = spec.numChannels * spec.width;
 	spec.size = static_cast<uint64_t>(spec.height) * spec.rowPitch;
 	spec.flipRowOrder = false;
 
@@ -237,10 +238,12 @@ unsigned int JPEGDecoder::read(int startLine, int numLines, uint8_t* pDst) {
 			jpeg_start_output(&cinfo, cinfo.input_scan_number);
 		}
 	}
-	//jpeg_start_output(&cinfo, cinfo.input_scan_number);
 
 	int linesRead = 0;
+	//int remains = (spec.height - startLine);
+	//numLines = std::min(remains, numLines);
 	if (m_isCMYK) {
+		
 		// libjpeg can't covert CMYK to RGB automatically, so doing it here
 		m_cmyk_buf.resize(numLines * spec.width * 4);
 		void* pCMYKDst = &m_cmyk_buf[0];
@@ -272,10 +275,7 @@ unsigned int JPEGDecoder::read(int startLine, int numLines, uint8_t* pDst) {
 		
 	}
 	
-
-	return linesRead;
-	//jpeg_finish_output(&cinfo);
-	
+	return linesRead;	
 }
 
 void JPEGDecoder::close() {
