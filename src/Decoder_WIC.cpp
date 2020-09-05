@@ -75,20 +75,18 @@ bool WICDecoder::select_frame(int frameIndex) {
 
 	m_frameIndex = frameIndex;
 
-	IWICMetadataQueryReader* pFrameMetadataQueryReader = nullptr;
-
 	SafeRelease(pFrame);
 	HRESULT hr = m_pDecoder->GetFrame(frameIndex, &pFrame);
 	if (SUCCEEDED(hr))
 	{
-		//SafeRelease(pQueryReader);
-		//hr = pFrame->GetMetadataQueryReader(&pQueryReader);
-		hr = pFrame->GetMetadataQueryReader(&pFrameMetadataQueryReader);
+		IWICMetadataQueryReader* pFrameMetadataQueryReader = nullptr;
 
 		PROPVARIANT propValue;
 		PropVariantInit(&propValue);
 
 		if (spec.format == ImageFormat::GIF) {
+
+			hr = pFrame->GetMetadataQueryReader(&pFrameMetadataQueryReader);
 
 			if (SUCCEEDED(hr))
 			{
@@ -119,6 +117,7 @@ bool WICDecoder::select_frame(int frameIndex) {
 			// WebP Animation metadata
 			// / ANIM / LoopCount(on a container query reader, returns a PropVariant of type VT_UI2)
 			// / ANMF / FrameDuration(on a frame query reader, returns a PropVariant of type VT_UI4)
+			hr = pFrame->GetMetadataQueryReader(&pFrameMetadataQueryReader);
 
 			if (SUCCEEDED(hr))
 			{

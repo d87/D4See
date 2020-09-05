@@ -83,6 +83,7 @@ void DecodingWork(ImageContainer *self) {
         img.height = image->spec.height;
         img.pitch = ((image->spec.width * 32 + 31) & ~31) >> 3;
         img.pPixels = NULL;
+        img.pBitmap = nullptr;
 
         D2D1_SIZE_U bitmapSize;
         bitmapSize.height = img.height;
