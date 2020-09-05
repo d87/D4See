@@ -7,13 +7,7 @@
 #include <objidl.h>
 #include <shellapi.h>
 
-#undef min // oiio got macro conflicts with gdi
-#undef max
-#include <OpenImageIO/imageio.h>
-#pragma comment (lib,"OpenImageIO.lib")
-#pragma comment (lib,"OpenImageIO_Util.lib")
-
-
+#include <locale>
 #include <codecvt>
 #include <chrono>
 
@@ -143,8 +137,18 @@ VOID OnPaint() //HDC hdc)
                 );
 
 
-                std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-                std::wstring wtext = converter.from_bytes(frame->thread_error);
+                std::wstring wtext;
+                std::string str = frame->thread_error;
+                int mbSize = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &wtext[0], 0);
+                wtext.resize(mbSize);
+                MultiByteToWideChar(CP_UTF8, 0, str.c_str(), str.length(), &wtext[0], mbSize);
+                //std::string u8str;
+                //int mbSize = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.length(), &u8str[0], 0, NULL, nullptr);
+                //u8str.resize(mbSize);
+                //WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), wstr.length(), &u8str[0], mbSize, NULL, nullptr);
+
+                //std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+                //std::wstring wtext = converter.from_bytes(frame->thread_error);
 
                 // Use the DrawText method of the D2D render target interface to draw.
                 pRenderTarget->DrawText(
@@ -373,7 +377,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                         gWinMgr.Redraw(RDW_ERASE);
                     }
                     else {
-                        LOG("Discarded WM_FRAMEREADY for {0}", wide_to_utf8(f->filename));
+                        LOG("Discarded WM_FRAMEREADY");
                     }
                     break;
                 }
