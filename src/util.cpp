@@ -189,7 +189,7 @@ std::vector<std::byte> load_file(std::string const& filepath)
     if (!ifs.read((char*)buffer.data(), buffer.size()))
         throw std::runtime_error(filepath + ": " + std::strerror(errno));
 
-    //ifs.close();
+    //ifs.Close();
 
     return buffer;
 }
@@ -205,7 +205,7 @@ int write_file(std::string const& filepath, const char* data, unsigned int size)
 
     std::vector<std::byte> buffer(size);
 
-    //ofs.close();
+    //ofs.Close();
 
     return 1;
 }

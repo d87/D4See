@@ -42,17 +42,17 @@ my_output_message(j_common_ptr cinfo)
 }
 
 
-bool JPEGDecoder::open(const wchar_t* filename, ImageFormat format) {
+bool JPEGDecoder::Open(const wchar_t* filename, ImageFormat format) {
 
 
 	FILE* f;
 	_wfopen_s(&f, filename, L"rb");
 	if (!f) {
-		//errorf("Could not open file \"%s\"", m_filename);
+		//errorf("Could not Open file \"%s\"", m_filename);
 		return false;
 	}
 
-	if (!is_valid(f)) {
+	if (!IsValid(f)) {
 		LOG("Not a valid JPEG file");
 		return false;
 	}
@@ -65,7 +65,7 @@ bool JPEGDecoder::open(const wchar_t* filename, ImageFormat format) {
 	if (setjmp(jerr.setjmp_buffer)) {
 		// Jump to here if there's a libjpeg internal error
 		// Prevent memory leaks, see example.c in jpeg distribution
-		close();
+		Close();
 		throw std::runtime_error("JPEG fatal error");
 		//jpeg_destroy_decompress(&m_cinfo);
 		//close_file();
@@ -109,7 +109,7 @@ bool JPEGDecoder::open(const wchar_t* filename, ImageFormat format) {
 	return true;
 }
 
-bool JPEGDecoder::is_valid(FILE* f) {
+bool JPEGDecoder::IsValid(FILE* f) {
 	uint8_t buf[2];
 	fread(&buf, 1, 2, f);
 	fseek(f, 0, SEEK_SET);
@@ -230,7 +230,7 @@ cmyk_to_rgb(int n, const unsigned char* cmyk, size_t cmyk_stride,
 	}
 }
 
-unsigned int JPEGDecoder::read(int startLine, int numLines, uint8_t* pDst) {
+unsigned int JPEGDecoder::Read(int startLine, int numLines, uint8_t* pDst) {
 	// Start a pass on a current mip level
 	if (cinfo.output_scanline == 0 || cinfo.output_scanline == cinfo.output_height) {
 		spec.linesRead = 0;
@@ -264,13 +264,13 @@ unsigned int JPEGDecoder::read(int startLine, int numLines, uint8_t* pDst) {
 			if (jpeg_input_complete(&cinfo)) {
 				jpeg_finish_decompress(&cinfo);
 				spec.isFinished = true;
-				close();
+				Close();
 			}
 		}
 		else {
 			jpeg_finish_decompress(&cinfo);
 			spec.isFinished = true;
-			close();
+			Close();
 		}
 		
 	}
@@ -278,7 +278,7 @@ unsigned int JPEGDecoder::read(int startLine, int numLines, uint8_t* pDst) {
 	return linesRead;	
 }
 
-void JPEGDecoder::close() {
+void JPEGDecoder::Close() {
 	if (spec.filedesc) {
 		jpeg_destroy_decompress(&cinfo);
 		fclose(spec.filedesc);
@@ -287,5 +287,5 @@ void JPEGDecoder::close() {
 }
 
 JPEGDecoder::~JPEGDecoder() {
-	//close();
+	//Close();
 }

@@ -13,7 +13,7 @@ DecodeBuffer::DecodeBuffer() {
 
 DecodeBuffer::~DecodeBuffer() {
 	if (decoder) {
-		decoder->close();
+		decoder->Close();
 		delete decoder;
 	}
 }
@@ -38,7 +38,7 @@ int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
 		throw std::runtime_error("Couldn't open decoder");
 	}
 
-	if (!decoder->open(filename.c_str(), format)) {
+	if (!decoder->Open(filename.c_str(), format)) {
 		throw std::runtime_error("Couldn't open decoder");
 	}
 
@@ -114,13 +114,13 @@ DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLo
 	//int completed = 0;
 	//for (completed = 0; completed < reqScanlines && currentScanline < yres; completed++) {
 	//	//in->read_scanline(currentScanline, 0, OIIO::TypeDesc::UINT8, cursor);
-	//	decoder->read(currentScanline, 1, cursor);
+	//	decoder->Read(currentScanline, 1, cursor);
 	//	currentScanline++;
 	//	cursor += xstride;
 	//}
 
 	// Reading 1 scanline, because in practice it's the fastest
-	int completed = decoder->read(currentScanline, 1, cursor);
+	int completed = decoder->Read(currentScanline, 1, cursor);
 	currentScanline += completed;
 	cursor += completed * spec.rowPitch;
 
@@ -133,7 +133,7 @@ DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLo
 		curSubimage++;
 		if (decoder->spec.isFinished) {
 			decodingComplete = true;
-			decoder->close();
+			decoder->Close();
 		}
 		else {
 			currentScanline = 0;

@@ -137,7 +137,7 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 	GetCurrentDirectoryW(1000, oldWD);
 
 	if (!SetCurrentDirectoryW(initialFileDir.c_str())) {
-		// TODO: Can't open
+		// TODO: Can't Open
 		D4See::SetError(D4See::Error::DirectoryNotExists);
 		MessageBoxW(NULL, (L"Couldn't open directory: " + initialFileDir).c_str(), L"Error", MB_ICONERROR | MB_OK);
 		return NULL;

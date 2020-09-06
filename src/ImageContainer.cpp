@@ -97,15 +97,15 @@ void DecodingWork(ImageContainer *self) {
             D2D1_ALPHA_MODE_IGNORE
         );
 
-        if (image->decoder->direct_pass_available()) {
+        if (image->decoder->IsDirectPassAvailable()) {
 
             HRESULT hr = pRenderTarget->CreateBitmapFromWicBitmap(
-                image->decoder->get_direct_bitmap_source(),
+                image->decoder->GetFrameBitmapSource(),
                 nullptr,
                 &img.pBitmap
             );
             image->curSubimage++;
-            image->decoder->prepare_next_bitmap_source();
+            image->decoder->PrepareNextFrameBitmapSource();
         }
         else {
 
@@ -123,7 +123,7 @@ void DecodingWork(ImageContainer *self) {
         ImageFrame* pImage = &self->frame[subimage];
 
         using namespace std::chrono_literals;
-        pImage->frameDelay = std::chrono::duration<float>(image->decoder->get_current_frame_delay());
+        pImage->frameDelay = std::chrono::duration<float>(image->decoder->GetCurrentFrameDelay());
 
         self->bitmap_mutex.unlock();
 

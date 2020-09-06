@@ -27,14 +27,14 @@ namespace D4See {
 
 	public:
 		~WICDecoder();
-		virtual bool open(const wchar_t* filename, ImageFormat format) override;
-		virtual void close() override;
-		virtual unsigned int read(int startLine, int numLines, uint8_t* pDst) override;
-		virtual bool select_frame(int frameIndex) override;
-		virtual float get_current_frame_delay() override;
+		virtual bool Open(const wchar_t* filename, ImageFormat format) override;
+		virtual void Close() override;
+		virtual unsigned int Read(int startLine, int numLines, uint8_t* pDst) override;
+		virtual bool SelectFrame(int frameIndex) override;
+		virtual float GetCurrentFrameDelay() override;
 
-		virtual bool direct_pass_available() override;
-		virtual IWICBitmapSource* get_direct_bitmap_source() override;
-		virtual void prepare_next_bitmap_source() override;
+		virtual bool IsDirectPassAvailable() override;
+		virtual IWICBitmapSource* GetFrameBitmapSource() override;
+		virtual void PrepareNextFrameBitmapSource() override;
 	};
 }

@@ -7,7 +7,7 @@
 
 using namespace D4See;
 
-bool WICDecoder::open(const wchar_t* filename, ImageFormat format) {
+bool WICDecoder::Open(const wchar_t* filename, ImageFormat format) {
 	FILE* f;
 	_wfopen_s(&f, filename, L"rb");
 	if (!f) {
@@ -34,7 +34,7 @@ bool WICDecoder::open(const wchar_t* filename, ImageFormat format) {
 		hr = m_pIWICFactory->CreateDecoderFromFilename(
 			filename,                      // Image to be decoded
 			NULL,                            // Do not prefer a particular vendor
-			GENERIC_READ,                    // Desired read access to the file
+			GENERIC_READ,                    // Desired Read access to the file
 			WICDecodeMetadataCacheOnDemand,  // Cache metadata when needed
 			&m_pDecoder                        // Pointer to the decoder
 		);
@@ -47,7 +47,7 @@ bool WICDecoder::open(const wchar_t* filename, ImageFormat format) {
 				frameCount = 1;
 			}
 
-			if (select_frame(0)) {
+			if (SelectFrame(0)) {
 				unsigned int width;
 				unsigned int height;
 				pFrame->GetSize(&width, &height);
@@ -69,7 +69,7 @@ bool WICDecoder::open(const wchar_t* filename, ImageFormat format) {
 	return bResult;
 }
 
-bool WICDecoder::select_frame(int frameIndex) {
+bool WICDecoder::SelectFrame(int frameIndex) {
 	if (m_frameIndex == frameIndex)
 		return true;
 
@@ -177,7 +177,7 @@ bool WICDecoder::select_frame(int frameIndex) {
 	return false;
 };
 #undef min
-unsigned int WICDecoder::read(int startLine, int numLines, uint8_t* pDst) {
+unsigned int WICDecoder::Read(int startLine, int numLines, uint8_t* pDst) {
 	WICRect rc;
 	rc.X = 0;
 	rc.Y = startLine;
@@ -192,7 +192,7 @@ unsigned int WICDecoder::read(int startLine, int numLines, uint8_t* pDst) {
 		spec.linesRead += numLines;
 		if (spec.linesRead == spec.height) {
 			if (spec.isAnimated && m_frameIndex < spec.numFrames - 1) {
-				select_frame(m_frameIndex + 1);
+				SelectFrame(m_frameIndex + 1);
 				spec.linesRead = 0;
 			}
 			else {
@@ -204,31 +204,31 @@ unsigned int WICDecoder::read(int startLine, int numLines, uint8_t* pDst) {
 	return 0;
 }
 
-float WICDecoder::get_current_frame_delay() {
+float WICDecoder::GetCurrentFrameDelay() {
 	return (float)m_uFrameDelay/1000;
 }
 
-bool WICDecoder::direct_pass_available() {
+bool WICDecoder::IsDirectPassAvailable() {
 	if (spec.format == ImageFormat::GIF) {
 		return true;
 	}
 	return false;
 }
 
-IWICBitmapSource* WICDecoder::get_direct_bitmap_source() {
+IWICBitmapSource* WICDecoder::GetFrameBitmapSource() {
 	return m_pConvertedSourceBitmap;
 }
 
-void WICDecoder::prepare_next_bitmap_source() {
+void WICDecoder::PrepareNextFrameBitmapSource() {
 	if (spec.isAnimated && m_frameIndex < spec.numFrames - 1) {
-		select_frame(m_frameIndex + 1);
+		SelectFrame(m_frameIndex + 1);
 	}
 	else {
 		spec.isFinished = true;
 	}
 }
 
-void WICDecoder::close() {
+void WICDecoder::Close() {
 	if (spec.filedesc) {
 		fclose(spec.filedesc);
 		spec.filedesc = NULL;
@@ -240,5 +240,5 @@ void WICDecoder::close() {
 }
 
 WICDecoder::~WICDecoder() {
-	close();
+	Close();
 }

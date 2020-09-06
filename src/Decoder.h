@@ -31,13 +31,13 @@ namespace D4See {
     public:
 		ImageSpec spec;
 		Decoder();
-		virtual bool open(const wchar_t* filename, ImageFormat format) = NULL;
-		virtual void close() = NULL;
-		virtual unsigned int read(int startLine, int numLines, uint8_t* pDst) = NULL;
-		virtual bool select_frame(int frameIndex) { return true; };
-		virtual float get_current_frame_delay() { return 0; };
-		virtual bool direct_pass_available() { return false; };
-		virtual IWICBitmapSource* get_direct_bitmap_source() { return nullptr;  };
-		virtual void prepare_next_bitmap_source() {};
+		virtual bool Open(const wchar_t* filename, ImageFormat format) = NULL;
+		virtual void Close() = NULL;
+		virtual unsigned int Read(int startLine, int numLines, uint8_t* pDst) = NULL;
+		virtual bool SelectFrame(int frameIndex) { return true; };
+		virtual float GetCurrentFrameDelay() { return 0; };
+		virtual bool IsDirectPassAvailable() { return false; };
+		virtual IWICBitmapSource* GetFrameBitmapSource() { return nullptr;  };
+		virtual void PrepareNextFrameBitmapSource() {};
 	};
 }
