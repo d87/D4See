@@ -276,6 +276,10 @@ void ImageContainer::TerminateThread() {
 bool ImageContainer::IsFinished() {
     return thread_state >= ThreadState::Done;
 }
+int ImageContainer::GetActiveFrameIndex() {
+    return curFrame;
+}
+
 
 inline ImageFrame* ImageContainer::GetActiveSubimage() {
     if (curFrame == -1) return nullptr;

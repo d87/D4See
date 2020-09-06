@@ -79,6 +79,7 @@ class ImageContainer {
 		bool IsSubimageReady(int si);
 		bool NextSubimage();
 		inline ImageFrame* GetActiveSubimage();
+		int GetActiveFrameIndex();
 		void StartThread();
 		void TerminateThread();
 		bool IsFinished();
