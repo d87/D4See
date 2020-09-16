@@ -75,25 +75,25 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir)include;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir)include;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
-    <IncludePath>$(ProjectDir)include;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir)include;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgEnabled>true</VcpkgEnabled>
@@ -194,6 +194,7 @@
     <ClInclude Include="src\D4See.h" />
     <ClInclude Include="src\Decoder.h" />
     <ClInclude Include="src\Decoder_JPEG.h" />
+    <ClInclude Include="src\Decoder_TGA.h" />
     <ClInclude Include="src\Decoder_WIC.h" />
     <ClInclude Include="src\error.h" />
     <ClInclude Include="src\framework.h" />
@@ -216,6 +217,7 @@
     <ClCompile Include="src\D4See.cpp" />
     <ClCompile Include="src\Decoder.cpp" />
     <ClCompile Include="src\Decoder_JPEG.cpp" />
+    <ClCompile Include="src\Decoder_TGA.cpp" />
     <ClCompile Include="src\Decoder_WIC.cpp" />
     <ClCompile Include="src\error.cpp" />
     <ClCompile Include="src\ImageContainer.cpp" />

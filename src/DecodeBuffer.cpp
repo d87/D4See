@@ -1,6 +1,7 @@
 #include "DecodeBuffer.h"
 #include "Decoder.h"
 #include "Decoder_JPEG.h"
+#include "Decoder_TGA.h"
 #include "Decoder_WIC.h"
 #include "D4See.h"
 #include "util.h"
@@ -27,11 +28,17 @@ int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
 	
 	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-	if (format == ImageFormat::JPEG) {
+	switch (format)
+	{
+	case ImageFormat::JPEG:
 		decoder = new D4See::JPEGDecoder();
-	}
-	else {
+		break;
+	case ImageFormat::TGA:
+		decoder = new D4See::TGADecoder();
+		break;
+	default:
 		decoder = new D4See::WICDecoder();
+		break;
 	}
 
 	if (!decoder) {
