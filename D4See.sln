@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29911.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "D4See5000", "D4See.vcxproj", "{DCBFD247-EFF3-40DD-8678-4DF4315B64DE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "D4See", "D4See.vcxproj", "{DCBFD247-EFF3-40DD-8678-4DF4315B64DE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06} = {44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtga", "deps\libtga\libtga.vcxproj", "{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +26,14 @@ Global
 		{DCBFD247-EFF3-40DD-8678-4DF4315B64DE}.Release|x64.Build.0 = Release|x64
 		{DCBFD247-EFF3-40DD-8678-4DF4315B64DE}.Release|x86.ActiveCfg = Release|Win32
 		{DCBFD247-EFF3-40DD-8678-4DF4315B64DE}.Release|x86.Build.0 = Release|Win32
+		{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}.Debug|x64.ActiveCfg = Debug|x64
+		{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}.Debug|x64.Build.0 = Debug|x64
+		{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}.Debug|x86.ActiveCfg = Debug|Win32
+		{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}.Debug|x86.Build.0 = Debug|Win32
+		{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}.Release|x64.ActiveCfg = Release|x64
+		{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}.Release|x64.Build.0 = Release|x64
+		{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}.Release|x86.ActiveCfg = Release|Win32
+		{44C4FE1B-CE2D-484B-AE1A-D67D913AFD06}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
