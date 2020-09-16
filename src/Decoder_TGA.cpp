@@ -64,13 +64,12 @@ bool TGADecoder::Open(const wchar_t* filename, ImageFormat format) {
 
 	// Now ready to read scanlines
 
-	//if (TGAReadScanlines(tga, data->img_data, 0, tga->hdr.height, data->flags) != tga->hdr.height) {
-	//	data->flags &= ~TGA_IMAGE_DATA;
-	//	TGA_ERROR(tga, tga->last);
-	//}
-
-
-	// Should probably limit the support to only 24 and 32 bit images
+	// Limit the support to only 24 and 32 bit images
+	if (m_tga->hdr.depth < 24) {
+		// 15 and 16 bit TGAs aren't supported
+		return NULL;
+	}
+	
 	spec.format = ImageFormat::TGA;
 	spec.filedesc = f;
 	spec.numChannels = m_tga->hdr.depth / 8;;
