@@ -9,7 +9,10 @@
 
 using namespace D4See;
 
-
+static void exif_loader_write_file_descriptor(ExifLoader* l, FILE* f);
+static int get_rotation_from_exif_orientation(short orientation);
+static void show_tag(ExifData* d, ExifIfd ifd, ExifTag tag);
+static ExifShort get_tag_as_short(ExifData* d, ExifIfd ifd, ExifTag tag);
 
 static void
 my_error_exit(j_common_ptr cinfo)
@@ -57,6 +60,27 @@ bool JPEGDecoder::Open(const wchar_t* filename, ImageFormat format) {
 		return false;
 	}
 	spec.filedesc = f;
+
+
+	// EXIF parsing
+
+	ExifData* edata;
+	ExifLoader* loader;
+	uint16_t orientation = 1;
+
+	loader = exif_loader_new();
+	exif_loader_write_file_descriptor(loader, f);
+	edata = exif_loader_get_data(loader);
+	exif_loader_unref(loader);
+
+	if (edata) {
+		orientation = get_tag_as_short(edata, EXIF_IFD_0, EXIF_TAG_ORIENTATION);
+	}
+	exif_data_unref(edata);
+
+	// END EXIF
+
+	int rotation = get_rotation_from_exif_orientation(orientation);
 
 	jerr.jpegdecoder = this;
 	jerr.pub.error_exit = my_error_exit;
@@ -288,4 +312,107 @@ void JPEGDecoder::Close() {
 
 JPEGDecoder::~JPEGDecoder() {
 	//Close();
+}
+
+
+
+
+// EXIF stuff
+
+static void
+exif_loader_write_file_descriptor(ExifLoader* l, FILE* f)
+{
+	int size;
+	unsigned char data[1024];
+
+	if (!l || !f)
+		return;
+
+	// search just a little into a file
+	for (int i = 0; i < 10; i++) {
+		//while(1) {
+		size = fread(data, 1, sizeof(data), f);
+		if (size <= 0)
+			break;
+		if (!exif_loader_write(l, data, size))
+			break;
+	}
+	fseek(f, 0, SEEK_SET);
+}
+
+//{ EXIF_TAG_ORIENTATION,
+	//{ "",
+	//N_("Top-left"), // 0 degrees, no flip
+	//N_("Top-right"), // 0 degrees, flip
+	//N_("Bottom-right"), // 180 degrees, no flip
+	//N_("Bottom-left"), // 180 degrees, flip
+	//N_("Left-top"), // 270 degrees, flip
+	//N_("Right-top"), // 270 degrees, no flip
+	//N_("Right-bottom"), // 90 degrees, flip
+	//N_("Left-bottom"), // 90 degrees, no flip
+	//NULL }},
+
+static int get_rotation_from_exif_orientation(short orientation) {
+	switch (orientation)
+	{
+	case 1:
+	case 2:
+		return 0;
+	case 3:
+	case 4:
+		return 180;
+	case 5:
+	case 6:
+		return 270;
+	case 7:
+	case 8:
+		return 90;
+	default:
+		break;
+	}
+	return 0;
+}
+
+/* Remove spaces on the right of the string */
+static void trim_spaces(char* buf)
+{
+	char* s = buf - 1;
+	for (; *buf; ++buf) {
+		if (*buf != ' ')
+			s = buf;
+	}
+	*++s = 0; /* nul terminate the string on the first of the final spaces */
+}
+
+
+static ExifShort get_tag_as_short(ExifData* d, ExifIfd ifd, ExifTag tag) {
+	ExifEntry* e = exif_content_get_entry(d->ifd[ifd], tag);
+	if (e) {
+		const ExifByteOrder o = exif_data_get_byte_order(e->parent->parent);
+		if (e->format == EXIF_FORMAT_SHORT) {
+			ExifShort v_short;
+			v_short = exif_get_short(e->data, o);
+			return v_short;
+		}
+	}
+	return 0;
+}
+
+/* Show the tag name and contents if the tag exists */
+static void show_tag(ExifData* d, ExifIfd ifd, ExifTag tag)
+{
+	/* See if this tag exists */
+	ExifEntry* entry = exif_content_get_entry(d->ifd[ifd], tag);
+	if (entry) {
+		char buf[1024];
+
+		/* Get the contents of the tag in human-readable form */
+		exif_entry_get_value(entry, buf, sizeof(buf));
+
+		/* Don't bother printing it if it's entirely blank */
+		trim_spaces(buf);
+		if (*buf) {
+			printf("EXIF TAG %s: %s\n", exif_tag_get_name_in_ifd(tag, ifd), buf);
+		}
+	}
 }

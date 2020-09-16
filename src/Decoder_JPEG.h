@@ -5,8 +5,11 @@
 #include <jconfig.h>
 #include <jmorecfg.h>
 #include <setjmp.h>
+#include <libexif/exif-data.h>
+#include <libexif/exif-loader.h>
 #pragma(lib, "jpeg.lib")
 #pragma(lib, "turbojpeg.lib")
+#pragma(lib, "libexif.lib")
 
 namespace D4See {
 
