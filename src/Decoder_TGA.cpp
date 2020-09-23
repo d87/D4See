@@ -9,12 +9,6 @@ using namespace D4See;
 
 
 bool TGADecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
-	//FILE* f;
-	//_wfopen_s(&f, filename, L"rb");
-	//if (!f) {
-	//	//errorf("Could not Open file \"%s\"", m_filename);
-	//	return false;
-	//}
 
 	//if (!IsValid(f)) {
 	//	LOG("Not a valid TGA file");
@@ -23,11 +17,11 @@ bool TGADecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 	//spec.filedesc = f;
 
 
-	
 
 	m_tga = TGAOpenFd(f);
 	if (!m_tga || m_tga->last != TGA_OK) {
-		/* error handling goes here */
+		Close();
+		throw std::runtime_error("TGA: Not a valid TGA file");
 		return NULL;
 	}
 
@@ -37,13 +31,15 @@ bool TGADecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 	data->flags = TGA_IMAGE_DATA | TGA_IMAGE_ID;// | TGA_RGB;
 
 	if (TGAReadHeader(m_tga) != TGA_OK) {
-		// Couldn't read header
+		Close();
+		throw std::runtime_error("TGA: Not a valid TGA file");
 		return NULL;
 	}
 
 	if ((data->flags & TGA_IMAGE_ID) && m_tga->hdr.id_len != 0) {
 		if (TGAReadImageId(m_tga, &data->img_id) != TGA_OK) {
-			// Couldn't read image id
+			Close();
+			throw std::runtime_error("TGA: Couldn't read image Id");
 			return NULL;
 		}
 	}
@@ -54,7 +50,8 @@ bool TGADecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 	if (TGA_IS_MAPPED(m_tga)) {
 		if (!TGAReadColorMap(m_tga, &data->cmap, data->flags)) {
 			data->flags &= ~TGA_COLOR_MAP;
-			// Couldn't read color map
+			Close();
+			throw std::runtime_error("TGA: Couldn't read color map");
 			return NULL;
 		}
 		else {
@@ -118,7 +115,7 @@ unsigned int TGADecoder::Read(int startLine, int numLines, uint8_t* pDst) {
 
 void TGADecoder::Close() {
 	if (spec.filedesc) {
-		TGAClose(m_tga);
+		if (m_tga) TGAClose(m_tga);
 		fclose(spec.filedesc);
 		spec.filedesc = NULL;
 	}

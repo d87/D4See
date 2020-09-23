@@ -47,16 +47,9 @@ my_output_message(j_common_ptr cinfo)
 
 bool JPEGDecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 
-
-	//FILE* f;
-	//_wfopen_s(&f, filename, L"rb");
-	//if (!f) {
-	//	//errorf("Could not Open file \"%s\"", m_filename);
-	//	return false;
-	//}
-
 	if (!IsValid(f)) {
 		LOG("Not a valid JPEG file");
+		throw std::runtime_error("Not a valid JPEG file");
 		return false;
 	}
 	spec.filedesc = f;

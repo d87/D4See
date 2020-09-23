@@ -26,6 +26,13 @@
 	#define LOG_ERROR(x)
 #endif // DEBUG
 
+
+#ifdef _DEBUG
+#define ASSERT(x) if (!(x)) __debugbreak();
+#else
+#define ASSERT(x) x
+#endif
+
 #include "Resource.h"
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #define WM_FRAMEREADY WM_USER+1
