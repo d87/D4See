@@ -24,10 +24,9 @@ namespace D4See {
 	private:
 		int m_frameIndex = -1;
 		unsigned int m_uFrameDelay = 0;
-
 	public:
 		~WICDecoder();
-		virtual bool Open(const wchar_t* filename, ImageFormat format) override;
+		virtual bool Open(FILE* f, const wchar_t* filename, ImageFormat format) override;
 		virtual void Close() override;
 		virtual unsigned int Read(int startLine, int numLines, uint8_t* pDst) override;
 		virtual bool SelectFrame(int frameIndex) override;

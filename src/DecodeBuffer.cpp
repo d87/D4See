@@ -24,10 +24,21 @@ DecodeBuffer::DecodeBuffer(std::wstring filename, ImageFormat format) {
 }
 
 int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
+
+	FILE* f;
+	_wfopen_s(&f, filename.c_str(), L"rb");
+	if (!f) {
+		LOG("Could not open file \"%s\"", wide_to_utf8(filename));
+		throw std::runtime_error("Couldn't open decoder");
+		return NULL;
+	}
+
+	if (format == ImageFormat::JPEG && !D4See::JPEGDecoder::IsValid(f))
+		format = ImageFormat::UNKNOWN;
+
+
 	this->format = format;
 	
-	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-
 	switch (format)
 	{
 	case ImageFormat::JPEG:
@@ -45,7 +56,7 @@ int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
 		throw std::runtime_error("Couldn't open decoder");
 	}
 
-	if (!decoder->Open(filename.c_str(), format)) {
+	if (!decoder->Open(f, filename.c_str(), format)) {
 		throw std::runtime_error("Couldn't open decoder");
 	}
 
@@ -54,30 +65,6 @@ int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
 
 	unsigned long size = spec.height * spec.width * spec.numChannels;
 	pixels.resize(size);
-
-
-	//
-	//if (format == ImageFormat::GIF) {
-	//	// Some animated gifs don't have either of these params.
-
-	//	OIIO::TypeDesc typedesc;
-	//	typedesc = spec.getattributetype("oiio:Movie");
-	//	int isMovie = 0;
-	//	spec.getattribute("oiio:Movie", typedesc, &isMovie);
-	//	isAnimated = isMovie == 1;
-
-
-	//	typedesc = spec.getattributetype("FramesPerSecond");
-	//	int fps[2];
-	//	if (spec.getattribute("FramesPerSecond", typedesc, &fps)) {
-	//		frameDelay = float(fps[1]) / fps[0];
-	//		isAnimated = true;
-	//	}
-	//}
-	//
-
-	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	LOG("Opened {0} in {1}ms", wide_to_utf8(filename), std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count());
 
 	return 1;
 }
@@ -97,18 +84,6 @@ DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLo
 		return { 0, 0, 0, 0, 0 };
 
 	auto spec = decoder->spec;
-
-	//if (shouldSeek) {
-	//	in->seek_subimage(curSubimage, curMipLevel);
-	//	if (isAnimated) {
-	//		OIIO::TypeDesc typedesc = spec.getattributetype("FramesPerSecond");
-	//		int fps[2];
-	//		if (spec.getattribute("FramesPerSecond", typedesc, &fps)) {
-	//			frameDelay = float(fps[1]) / fps[0];
-	//		}
-	//	}
-	//}
-
 
 	int reqScanlines = numBytes / spec.rowPitch + 1;
 

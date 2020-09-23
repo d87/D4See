@@ -4,16 +4,18 @@
 #include <algorithm>
 #include "ImageFormats.h"
 #include "Decoder_WIC.h"
+#include <io.h>
 
 using namespace D4See;
 
-bool WICDecoder::Open(const wchar_t* filename, ImageFormat format) {
-	FILE* f;
-	_wfopen_s(&f, filename, L"rb");
-	if (!f) {
-		LOG("Could not open file \"%s\"", wide_to_utf8(filename));
-		return false;
-	}
+
+bool WICDecoder::Open(FILE *f, const wchar_t* filename, ImageFormat format) {
+	//FILE* f;
+	//_wfopen_s(&f, filename, L"rb");
+	//if (!f) {
+	//	LOG("Could not open file \"%s\"", wide_to_utf8(filename));
+	//	return false;
+	//}
 	
 	spec.filedesc = f;
 

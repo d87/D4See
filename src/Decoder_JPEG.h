@@ -36,12 +36,10 @@ namespace D4See {
 		//bool isBufferedMode = false;
 	public:
 		~JPEGDecoder();
-		virtual bool Open(const wchar_t* filename, ImageFormat format) override;
+		static bool IsValid(FILE* f);
+		virtual bool Open(FILE* f, const wchar_t* filename, ImageFormat format) override;
 		virtual void Close() override;
 		virtual unsigned int Read(int startLine, int numLines, uint8_t* pDst) override;
-
-		bool IsValid(FILE* f);
-
 	//private:
 		
 	};

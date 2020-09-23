@@ -8,13 +8,13 @@
 using namespace D4See;
 
 
-bool TGADecoder::Open(const wchar_t* filename, ImageFormat format) {
-	FILE* f;
-	_wfopen_s(&f, filename, L"rb");
-	if (!f) {
-		//errorf("Could not Open file \"%s\"", m_filename);
-		return false;
-	}
+bool TGADecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
+	//FILE* f;
+	//_wfopen_s(&f, filename, L"rb");
+	//if (!f) {
+	//	//errorf("Could not Open file \"%s\"", m_filename);
+	//	return false;
+	//}
 
 	//if (!IsValid(f)) {
 	//	LOG("Not a valid TGA file");

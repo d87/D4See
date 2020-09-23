@@ -9,5 +9,6 @@ const enum class ImageFormat {
 	TIFF,
 	PSD,
 	DDS,
-	WEBP
+	WEBP,
+	UNKNOWN
 };
