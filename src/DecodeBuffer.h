@@ -8,8 +8,14 @@
 #include "Decoder.h"
 #include "ImageFormats.h"
 
+enum DecoderStatus {
+	Finished,
+	InProgress,
+	SubimageFinished
+};
+
 struct DecoderBatchReturns {
-	int status;
+	DecoderStatus status;
 	unsigned int subimage;
 	unsigned int mipLevel;
 	unsigned int startLine;

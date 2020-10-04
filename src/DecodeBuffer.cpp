@@ -81,7 +81,7 @@ bool DecodeBuffer::IsFullyLoaded() {
 
 DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLoadFirstMipLevel) {
 	if (IsFullyLoaded())
-		return { 0, 0, 0, 0, 0 };
+		return { DecoderStatus::Finished, 0, 0, 0, 0 };
 
 	auto spec = decoder->spec;
 
@@ -110,19 +110,20 @@ DecoderBatchReturns DecodeBuffer::PartialLoad(unsigned int numBytes, bool fullLo
 
 	unsigned int cSI = curSubimage;
 	unsigned int cML = 0;
+	DecoderStatus status = InProgress;
 
 	if (currentScanline == spec.height) {
 		curSubimage++;
 		if (decoder->spec.isFinished) {
 			decodingComplete = true;
 			decoder->Close();
+			status = DecoderStatus::Finished;
 		}
 		else {
 			currentScanline = 0;
+			status = spec.isAnimated ? DecoderStatus::SubimageFinished : DecoderStatus::InProgress;
 		}
-
-		return { 2, cSI, cML, yStart, yEnd };
 	}
 
-	return { 1, cSI, cML, yStart, yEnd };
+	return { status, cSI, cML, yStart, yEnd };
 }

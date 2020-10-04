@@ -97,6 +97,7 @@ void DecodingWork(ImageContainer *self) {
             D2D1_ALPHA_MODE_IGNORE
         );
 
+        DecoderStatus status = InProgress;
         if (image->decoder->IsDirectPassAvailable()) {
 
             HRESULT hr = pRenderTarget->CreateBitmapFromWicBitmap(
@@ -105,6 +106,7 @@ void DecodingWork(ImageContainer *self) {
                 &img.pBitmap
             );
             image->curSubimage++;
+            status = SubimageFinished;
             image->decoder->PrepareNextFrameBitmapSource();
         }
         else {
@@ -142,14 +144,12 @@ void DecodingWork(ImageContainer *self) {
             self->threadInitPromise.set_value(true);
             PostMessage(self->hWnd, WM_FRAMEREADY, (WPARAM)self, NULL);
         }
-    
 
-        while (self->thread_state < ThreadState::Done && !image->IsSubimageLoaded(subimage)) {
+        while (self->thread_state < ThreadState::Done && status == DecoderStatus::InProgress) {//&& !image->IsSubimageLoaded(subimage)) {
 
             DecoderBatchReturns decodeInfo = image->PartialLoad(200000, true);
-
-
-            
+            status = decodeInfo.status;
+            //LOG(status);
 
             //Gdiplus::BitmapData bitmapData;
             unsigned int yStart = decodeInfo.startLine;
@@ -230,9 +230,9 @@ void DecodingWork(ImageContainer *self) {
         self->counter_mutex.lock();
         self->subimagesReady++;
         self->numSubimages = self->subimagesReady;
-        if (self->subimagesReady > 1) {
-            self->isAnimated = true;
-        }
+        //if (self->subimagesReady > 1) {
+        //    self->isAnimated = true;
+        //}
 
         self->counter_mutex.unlock();
 

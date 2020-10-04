@@ -55,6 +55,11 @@ bool JPEGDecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 	spec.filedesc = f;
 
 
+	fseek(f, 0, SEEK_END); // seek to end of file
+	long size = ftell(f);
+	fseek(f, 0, SEEK_SET); // seek back
+
+
 	// EXIF parsing
 
 	ExifData* edata;
@@ -106,11 +111,10 @@ bool JPEGDecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 	
 
 
-	// Buffered mode is pretty slow, not really worth using
-	
-	//if (jpeg_has_multiple_scans(&cinfo)) {
-	//	cinfo.buffered_image = TRUE;	// select buffered-image mode
-	//}
+	// Buffered mode is pretty slow, not really worth using on small jpegs
+	if (jpeg_has_multiple_scans(&cinfo) && size > 1048576) { // if size > 1MB and has mip levels
+		cinfo.buffered_image = TRUE; // select buffered-image mode
+	}
 
 	jpeg_start_decompress(&cinfo);
 
@@ -279,6 +283,7 @@ unsigned int JPEGDecoder::Read(int startLine, int numLines, uint8_t* pDst) {
 		if(cinfo.buffered_image) {
 			jpeg_finish_output(&cinfo);
 			if (jpeg_input_complete(&cinfo)) {
+			//if (cinfo.input_scan_number == cinfo.output_scan_number) {
 				jpeg_finish_decompress(&cinfo);
 				spec.isFinished = true;
 				Close();
@@ -289,7 +294,6 @@ unsigned int JPEGDecoder::Read(int startLine, int numLines, uint8_t* pDst) {
 			spec.isFinished = true;
 			Close();
 		}
-		
 	}
 	
 	return linesRead;	
