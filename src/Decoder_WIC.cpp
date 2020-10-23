@@ -2,6 +2,7 @@
 #include "util.h"
 #include <Windows.h>
 #include <algorithm>
+#include <optional>
 #include "ImageFormats.h"
 #include "Decoder_WIC.h"
 #include <io.h>
@@ -107,6 +108,66 @@ bool WICDecoder::SelectFrame(int frameIndex) {
 				}
 
 			}
+
+			m_framePosition = { 0.0f, 0.0f, 0.0f, 0.0f };
+			// Get the Metadata for the current frame
+			if (SUCCEEDED(hr))
+			{
+				hr = pFrameMetadataQueryReader->GetMetadataByName(L"/imgdesc/Left", &propValue);
+				if (SUCCEEDED(hr))
+				{
+					hr = (propValue.vt == VT_UI2 ? S_OK : E_FAIL);
+					if (SUCCEEDED(hr))
+					{
+						m_framePosition.left = static_cast<float>(propValue.uiVal);
+					}
+					PropVariantClear(&propValue);
+				}
+			}
+
+			if (SUCCEEDED(hr))
+			{
+				hr = pFrameMetadataQueryReader->GetMetadataByName(L"/imgdesc/Top", &propValue);
+				if (SUCCEEDED(hr))
+				{
+					hr = (propValue.vt == VT_UI2 ? S_OK : E_FAIL);
+					if (SUCCEEDED(hr))
+					{
+						m_framePosition.top = static_cast<float>(propValue.uiVal);
+					}
+					PropVariantClear(&propValue);
+				}
+			}
+
+			if (SUCCEEDED(hr))
+			{
+				hr = pFrameMetadataQueryReader->GetMetadataByName(L"/imgdesc/Width", &propValue);
+				if (SUCCEEDED(hr))
+				{
+					hr = (propValue.vt == VT_UI2 ? S_OK : E_FAIL);
+					if (SUCCEEDED(hr))
+					{
+						m_framePosition.right = static_cast<float>(propValue.uiVal)
+							+ m_framePosition.left;
+					}
+					PropVariantClear(&propValue);
+				}
+			}
+
+			if (SUCCEEDED(hr))
+			{
+				hr = pFrameMetadataQueryReader->GetMetadataByName(L"/imgdesc/Height", &propValue);
+				if (SUCCEEDED(hr))
+				{
+					hr = (propValue.vt == VT_UI2 ? S_OK : E_FAIL);
+					if (SUCCEEDED(hr))
+					{
+						m_framePosition.bottom = static_cast<float>(propValue.uiVal)
+							+ m_framePosition.top;
+					}
+					PropVariantClear(&propValue);
+				}
+			}
 		}
 
 		if (spec.format == ImageFormat::WEBP) {
@@ -202,6 +263,15 @@ unsigned int WICDecoder::Read(int startLine, int numLines, uint8_t* pDst) {
 
 float WICDecoder::GetCurrentFrameDelay() {
 	return (float)m_uFrameDelay/1000;
+}
+
+std::optional<D2D1_RECT_F> WICDecoder::GetCurrentFrameRect() {
+	if (m_framePosition.right > 0 && m_framePosition.bottom > 0) {
+		return m_framePosition;
+	}
+	else {
+		return std::nullopt;
+	}
 }
 
 bool WICDecoder::IsDirectPassAvailable() {

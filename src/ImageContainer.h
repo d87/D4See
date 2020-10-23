@@ -24,8 +24,13 @@ enum class ThreadState {
 
 typedef struct
 {
+	// Individual gif frames can have their own specific offsets and size
+	bool frameSpecificSize;
+	int top;
+	int left;
 	int width;
 	int height;
+
 	int pitch; // stride
 	std::chrono::duration<float> frameDelay; // If animated, delay before switching to the next subimage.
 	//HDC hdc; // Memory DC

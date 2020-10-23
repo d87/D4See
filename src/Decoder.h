@@ -3,6 +3,7 @@
 #include <wincodec.h>
 #include <stdint.h>
 #include <vector>
+#include <optional>
 #include <string>
 
 namespace D4See {
@@ -37,6 +38,7 @@ namespace D4See {
 		virtual unsigned int Read(int startLine, int numLines, uint8_t* pDst) = NULL;
 		virtual bool SelectFrame(int frameIndex) { return true; };
 		virtual float GetCurrentFrameDelay() { return 0; };
+		virtual std::optional<D2D1_RECT_F> GetCurrentFrameRect() { return std::nullopt; };
 		virtual bool IsDirectPassAvailable() { return false; };
 		virtual IWICBitmapSource* GetFrameBitmapSource() { return nullptr;  };
 		virtual void PrepareNextFrameBitmapSource() {};

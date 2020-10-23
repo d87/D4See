@@ -92,14 +92,23 @@ VOID OnPaint() //HDC hdc)
                     //int width = pImage->width;
                     //int height = pImage->height;
 
+                    D2D1_RECT_F targetRect = D2D1::RectF(
+                        static_cast<FLOAT>(rc.left),
+                        static_cast<FLOAT>(rc.top),
+                        static_cast<FLOAT>(rc.right),
+                        static_cast<FLOAT>(rc.bottom)
+                    );
+
+                    //if (pImage->frameSpecificSize) {
+                    //    targetRect.left += pImage->left;
+                    //    targetRect.top += pImage->top;
+                    //    targetRect.bottom = targetRect.top+ pImage->height;
+                    //    targetRect.right = targetRect.left + pImage->width;
+                    //}
+
                     pRenderTarget->DrawBitmap(
                         pImage->pBitmap,
-                        D2D1::RectF(
-                            static_cast<FLOAT>(rc.left),
-                            static_cast<FLOAT>(rc.top),
-                            static_cast<FLOAT>(rc.right),
-                            static_cast<FLOAT>(rc.bottom)
-                        )
+                        targetRect
                     );
                 }
 

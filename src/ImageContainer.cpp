@@ -126,6 +126,13 @@ void DecodingWork(ImageContainer *self) {
 
         using namespace std::chrono_literals;
         pImage->frameDelay = std::chrono::duration<float>(image->decoder->GetCurrentFrameDelay());
+        if (auto rect = image->decoder->GetCurrentFrameRect()) {
+            pImage->frameSpecificSize = true;
+            pImage->left = rect->left;
+            pImage->top = rect->top;
+            pImage->width = rect->right - rect->left;
+            pImage->height = rect->bottom - rect->top;
+        }
 
         self->bitmap_mutex.unlock();
 

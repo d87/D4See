@@ -24,6 +24,7 @@ namespace D4See {
 	private:
 		int m_frameIndex = -1;
 		unsigned int m_uFrameDelay = 0;
+		D2D1_RECT_F m_framePosition = {0.0f, 0.0f, 0.0f, 0.0f};
 	public:
 		~WICDecoder();
 		virtual bool Open(FILE* f, const wchar_t* filename, ImageFormat format) override;
@@ -31,6 +32,7 @@ namespace D4See {
 		virtual unsigned int Read(int startLine, int numLines, uint8_t* pDst) override;
 		virtual bool SelectFrame(int frameIndex) override;
 		virtual float GetCurrentFrameDelay() override;
+		virtual std::optional<D2D1_RECT_F> GetCurrentFrameRect() override;
 
 		virtual bool IsDirectPassAvailable() override;
 		virtual IWICBitmapSource* GetFrameBitmapSource() override;
