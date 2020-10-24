@@ -64,9 +64,7 @@ VOID OnPaint() //HDC hdc)
                     pRenderTarget->BeginDraw();
                     //pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
 
-                    if (frame->GetActiveFrameIndex() == 0) {
-                        pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
-                    }
+                    pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
 
                     // Draw a bitmap.
                     D2D1_MATRIX_3X2_F scaling = D2D1::Matrix3x2F::Scale(

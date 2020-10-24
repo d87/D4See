@@ -80,35 +80,6 @@ bool WICDecoder::SelectFrame(int frameIndex) {
 		PROPVARIANT propValue;
 		PropVariantInit(&propValue);
 
-		if (spec.format == ImageFormat::GIF) {
-
-			hr = pFrame->GetMetadataQueryReader(&pFrameMetadataQueryReader);
-
-			if (SUCCEEDED(hr))
-			{
-				// Get delay from the optional Graphic Control Extension
-				if (SUCCEEDED(pFrameMetadataQueryReader->GetMetadataByName(
-					L"/grctlext/Delay",
-					&propValue)))
-				{
-					hr = (propValue.vt == VT_UI2 ? S_OK : E_FAIL);
-					if (SUCCEEDED(hr))
-					{
-						// Convert the delay retrieved in 10 ms units to a delay in 1 ms units
-						hr = UIntMult(propValue.uiVal, 10, &m_uFrameDelay);
-					}
-					PropVariantClear(&propValue);
-				}
-				else
-				{
-					// Failed to get delay from graphic control extension. Possibly a
-					// single frame image (non-animated gif)
-					m_uFrameDelay = 0;
-				}
-
-			}
-		}
-
 		if (spec.format == ImageFormat::WEBP) {
 			// WebP Animation metadata
 			// / ANIM / LoopCount(on a container query reader, returns a PropVariant of type VT_UI2)
@@ -202,26 +173,6 @@ unsigned int WICDecoder::Read(int startLine, int numLines, uint8_t* pDst) {
 
 float WICDecoder::GetCurrentFrameDelay() {
 	return (float)m_uFrameDelay/1000;
-}
-
-bool WICDecoder::IsDirectPassAvailable() {
-	if (spec.format == ImageFormat::GIF) {
-		return true;
-	}
-	return false;
-}
-
-IWICBitmapSource* WICDecoder::GetFrameBitmapSource() {
-	return m_pConvertedSourceBitmap;
-}
-
-void WICDecoder::PrepareNextFrameBitmapSource() {
-	if (spec.isAnimated && m_frameIndex < spec.numFrames - 1) {
-		SelectFrame(m_frameIndex + 1);
-	}
-	else {
-		spec.isFinished = true;
-	}
 }
 
 void WICDecoder::Close() {

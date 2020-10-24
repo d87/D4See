@@ -1,6 +1,6 @@
 #pragma once
 #include "ImageFormats.h"
-#include <wincodec.h>
+#include <d2d1.h>
 #include <stdint.h>
 #include <vector>
 #include <string>
@@ -25,9 +25,14 @@ namespace D4See {
 		unsigned int linesPerChunk; // unused?
 		bool isFinished;
 	};
-
-
+	
 	class Decoder {
+
+	protected:
+		enum {
+			DP_NONE,
+			DP_D2D1BitmapRenderTarget,
+		};
     public:
 		ImageSpec spec;
 		Decoder();
@@ -37,8 +42,9 @@ namespace D4See {
 		virtual unsigned int Read(int startLine, int numLines, uint8_t* pDst) = NULL;
 		virtual bool SelectFrame(int frameIndex) { return true; };
 		virtual float GetCurrentFrameDelay() { return 0; };
-		virtual bool IsDirectPassAvailable() { return false; };
-		virtual IWICBitmapSource* GetFrameBitmapSource() { return nullptr;  };
+
+		virtual int GetDirectPassType() { return DP_NONE; };
+		virtual ID2D1BitmapRenderTarget* GetFrameD2D1BitmapRT() { return nullptr; };
 		virtual void PrepareNextFrameBitmapSource() {};
 	};
 }

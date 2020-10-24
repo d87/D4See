@@ -32,8 +32,8 @@ namespace D4See {
 		virtual bool SelectFrame(int frameIndex) override;
 		virtual float GetCurrentFrameDelay() override;
 
-		virtual bool IsDirectPassAvailable() override;
-		virtual IWICBitmapSource* GetFrameBitmapSource() override;
-		virtual void PrepareNextFrameBitmapSource() override;
+		//virtual int GetDirectPassType() override;
+		//virtual IWICBitmapSource* GetFrameBitmapSource() override;
+		//virtual void PrepareNextFrameBitmapSource() override;
 	};
 }

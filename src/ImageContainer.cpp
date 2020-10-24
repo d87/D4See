@@ -98,13 +98,34 @@ void DecodingWork(ImageContainer *self) {
         );
 
         DecoderStatus status = InProgress;
-        if (image->decoder->IsDirectPassAvailable()) {
+        if (image->decoder->GetDirectPassType() != NULL) {
 
-            HRESULT hr = pRenderTarget->CreateBitmapFromWicBitmap(
-                image->decoder->GetFrameBitmapSource(),
-                nullptr,
-                &img.pBitmap
-            );
+            ID2D1BitmapRenderTarget * pFrameRT= image->decoder->GetFrameD2D1BitmapRT();
+
+			ID2D1Bitmap* pFrameToBeSaved = nullptr;
+
+			HRESULT hr = pFrameRT->GetBitmap(&pFrameToBeSaved);
+			if (SUCCEEDED(hr))
+			{
+				auto bitmapSize = pFrameToBeSaved->GetPixelSize();
+				D2D1_BITMAP_PROPERTIES bitmapProp;
+				pFrameToBeSaved->GetDpi(&bitmapProp.dpiX, &bitmapProp.dpiY);
+				bitmapProp.pixelFormat = pFrameToBeSaved->GetPixelFormat();
+
+				hr = pFrameRT->CreateBitmap(
+					bitmapSize,
+					bitmapProp,
+					&img.pBitmap);
+		    }
+
+			if (SUCCEEDED(hr))
+			{
+				// Copy the whole bitmap
+				hr = img.pBitmap->CopyFromBitmap(nullptr, pFrameToBeSaved, nullptr);
+			}
+
+			SafeRelease(pFrameToBeSaved);
+
             image->curSubimage++;
             status = SubimageFinished;
             image->decoder->PrepareNextFrameBitmapSource();

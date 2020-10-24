@@ -3,6 +3,7 @@
 #include "Decoder_JPEG.h"
 #include "Decoder_TGA.h"
 #include "Decoder_WIC.h"
+#include "Decoder_WICGIF.h"
 #include "D4See.h"
 #include "util.h"
 #include <algorithm>
@@ -46,6 +47,9 @@ int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
 		break;
 	case ImageFormat::TGA:
 		decoder = new D4See::TGADecoder();
+		break;
+	case ImageFormat::GIF:
+		decoder = new D4See::WICGIFDecoder();
 		break;
 	default:
 		decoder = new D4See::WICDecoder();
