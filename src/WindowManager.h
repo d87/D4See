@@ -47,10 +47,16 @@ public:
     bool isAlwaysOnTop = false;
 
 
-    int x_origin; // point on the screen around which the windows is constucted
+    int x_origin; // point on the screen around which the window is constucted
     int y_origin;
 
-    //int borderlessBorder = 0;
+    //enum {
+    //    WND_XSCREENSTRETCH = 1,
+    //    WND_YSCREENSTRETCH = 2,
+    //    WND_XSCREENSHRINK = 4,
+    //    WND_YSCREENSHRINK = 8,
+    //};
+    //uint8_t stretchState = 0;
     bool zoomLock = false;
     bool stretchToScreenWidth = true;
     bool stretchToScreenHeight = false;

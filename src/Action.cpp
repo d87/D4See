@@ -115,6 +115,18 @@ void MoveToPlaylistStart() {
     gWinMgr.LoadImageFromPlaylist(0);
 }
 
+void ToggleFitToScreen() {
+    bool enabled = gWinMgr.shrinkToScreenWidth || gWinMgr.shrinkToScreenHeight || gWinMgr.stretchToScreenHeight || gWinMgr.stretchToScreenWidth;
+    enabled = !enabled;
+    gWinMgr.shrinkToScreenWidth = enabled;
+    gWinMgr.shrinkToScreenHeight = enabled;
+    gWinMgr.stretchToScreenHeight = enabled;
+    gWinMgr.stretchToScreenWidth = enabled;
+
+    gWinMgr.ResizeForImage();
+    gWinMgr.Redraw(RDW_ERASE);
+}
+
 //void KbPanLeft() {
 //    gWinMgr.Pan(-60, 0);
 //}
@@ -238,6 +250,7 @@ void RegisterActions() {
     RegisterAction("DELETEFILE", ActionType::PRESS, RecycleFile);
     RegisterAction("NUKEFILE", ActionType::PRESS, NukeFile);
     RegisterAction("QUIT", ActionType::PRESS, Quit);
+    RegisterAction("TOGGLESCREENFIT", ActionType::PRESS, ToggleFitToScreen);
     RegisterAction("SHOWMENU", ActionType::PRESS, ShowMenu);
     RegisterAction("NEXTIMAGE", ActionType::PRESS, NextImage);
     RegisterAction("PREVIMAGE", ActionType::PRESS, PrevImage);

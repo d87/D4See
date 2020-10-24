@@ -326,6 +326,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     gWinMgr.input.BindKey("HOME", "FIRSTIMAGE");
     gWinMgr.input.BindKey("END", "LASTIMAGE");
 
+    gWinMgr.input.BindKey("CTRL-SUBTRACT", "TOGGLESCREENFIT");
+
     
     gWinMgr.input.BindKey("CTRL-MWHEELUP", "ZOOMINPOINT");
     gWinMgr.input.BindKey("CTRL-MWHEELDOWN", "ZOOMOUTPOINT");

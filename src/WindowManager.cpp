@@ -679,8 +679,6 @@ void WindowManager::ShowPopupMenu(POINT& p) {
     DestroyMenu(popupMenu);
 }
 
-
-
 void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
     switch (uIDItem) {
         case ID_OPENFILE: {
