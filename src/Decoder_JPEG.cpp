@@ -54,12 +54,6 @@ bool JPEGDecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 	}
 	spec.filedesc = f;
 
-
-	fseek(f, 0, SEEK_END); // seek to end of file
-	long size = ftell(f);
-	fseek(f, 0, SEEK_SET); // seek back
-
-
 	// EXIF parsing
 
 	ExifData* edata;
@@ -93,7 +87,7 @@ bool JPEGDecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 		//close_file();
 		return false;
 	}
-	
+
 	jpeg_create_decompress(&cinfo);
 
 	jpeg_stdio_src(&cinfo, f);
@@ -108,11 +102,11 @@ bool JPEGDecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 	else {
 		cinfo.out_color_space = JCS_RGB;//JCS_RGB;//JCS_EXT_RGBX;//JCS_RGB;//JCS_EXT_BGRX;//JCS_EXT_RGBX; -- only for turbo
 	}
-	
 
 
+	long numPixels = cinfo.output_width * cinfo.output_height;
 	// Buffered mode is pretty slow, not really worth using on small jpegs
-	if (jpeg_has_multiple_scans(&cinfo) && size > 1048576) { // if size > 1MB and has mip levels
+	if (jpeg_has_multiple_scans(&cinfo) && numPixels > 3000000) { // if size > 1MB and has mip levels
 		cinfo.buffered_image = TRUE; // select buffered-image mode
 	}
 
