@@ -127,6 +127,10 @@ void ToggleFitToScreen() {
     gWinMgr.Redraw(RDW_ERASE);
 }
 
+void ToggleZoomLock() {
+    gWinMgr.zoomLock = !gWinMgr.zoomLock;
+}
+
 //void KbPanLeft() {
 //    gWinMgr.Pan(-60, 0);
 //}
@@ -251,6 +255,7 @@ void RegisterActions() {
     RegisterAction("NUKEFILE", ActionType::PRESS, NukeFile);
     RegisterAction("QUIT", ActionType::PRESS, Quit);
     RegisterAction("TOGGLESCREENFIT", ActionType::PRESS, ToggleFitToScreen);
+    RegisterAction("ZOOMLOCK", ActionType::PRESS, ToggleZoomLock);
     RegisterAction("SHOWMENU", ActionType::PRESS, ShowMenu);
     RegisterAction("NEXTIMAGE", ActionType::PRESS, NextImage);
     RegisterAction("PREVIMAGE", ActionType::PRESS, PrevImage);
