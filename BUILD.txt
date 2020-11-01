@@ -1,0 +1,2 @@
+.\vcpkg install libexif:x64-windows libjpeg-turbo:x64-windows
+

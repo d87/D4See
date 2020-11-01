@@ -1,1 +1,0 @@
-.\vcpkg install openimageio[gif,webp,openjpeg]:x64-windows
