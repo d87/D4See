@@ -524,6 +524,13 @@ void WindowManager::GetWindowSizeForImage(RECT& rrc) {
     int w_native = frame->width;
     int h_native = frame->height;
 
+    canvas.rotation = 90;
+
+    if (canvas.rotation == 90 || canvas.rotation == 270) {
+        w_native = frame->height;
+        h_native = frame->width;
+    }
+
     float w_scale_candidate = 0.0;
     if (w_native < w_screenwa && stretchToScreenWidth) {
         w_scale_candidate = float(w_screenwa) / w_native;

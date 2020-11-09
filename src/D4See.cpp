@@ -62,18 +62,71 @@ VOID OnPaint() //HDC hdc)
                     //pRenderTarget->BindDC(hdc, &rc);
 
                     pRenderTarget->BeginDraw();
-                    //pRenderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
-
                     pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::Black));
 
-                    // Draw a bitmap.
-                    D2D1_MATRIX_3X2_F scaling = D2D1::Matrix3x2F::Scale(
-                        D2D1::Size(gWinMgr.canvas.scale_effective, gWinMgr.canvas.scale_effective),
-                        D2D1::Point2F(0.0f, 0.0f)
-                    );
-                    D2D1_MATRIX_3X2_F translation = D2D1::Matrix3x2F::Translation(-gWinMgr.canvas.x_poffset, -gWinMgr.canvas.y_poffset);
+                    auto transforms = D2D1::Matrix3x2F::Identity();
 
-                    pRenderTarget->SetTransform(translation);
+                    float scale = gWinMgr.canvas.scale_effective;
+                    float angle = gWinMgr.canvas.rotation;
+
+                    /*
+                    bool flipHorizontal = true;
+                    if (flipHorizontal) {
+						transforms = transforms * D2D1::Matrix3x2F::Scale(
+							D2D1::Size(-1.0f, 1.0f),
+							D2D1::Point2F(0.0f, 0.0f)
+						);
+                        transforms = transforms * D2D1::Matrix3x2F::Translation(static_cast<float>(pImage->width), 0.0f);
+                    }
+
+					bool flipVertical = true;
+					if (flipVertical) {
+						transforms = transforms * D2D1::Matrix3x2F::Scale(
+							D2D1::Size(1.0f, -1.0f),
+							D2D1::Point2F(0.0f, 0.0f)
+						);
+						transforms = transforms * D2D1::Matrix3x2F::Translation(0.0f, static_cast<float>(pImage->height));
+					}
+                    */
+
+
+                    transforms = transforms * D2D1::Matrix3x2F::Rotation(angle, D2D1::Point2F(0.0f, 0.0f));
+
+                    if (angle == 90.f) {
+                        transforms = transforms * D2D1::Matrix3x2F::Translation(static_cast<float>(pImage->height), 0.0f);
+                    }
+                    else if (angle == 180.f) {
+                        transforms = transforms * D2D1::Matrix3x2F::Translation(static_cast<float>(pImage->width), static_cast<float>(pImage->height));
+                    }
+					else if (angle == 270.f) {
+						transforms = transforms * D2D1::Matrix3x2F::Translation(0, static_cast<float>(pImage->width));
+					}
+
+					transforms = transforms * D2D1::Matrix3x2F::Scale(
+						D2D1::Size(gWinMgr.canvas.scale_effective, gWinMgr.canvas.scale_effective),
+						D2D1::Point2F(0.0f, 0.0f)
+					);
+
+
+                    /*
+                    // Free Rotation
+                    auto rcch = static_cast<float>(rc.right - rc.left)/2;
+                    auto rccv = static_cast<float>(rc.bottom - rc.top)/2;
+                    transforms = transforms * D2D1::Matrix3x2F::Rotation(45.f, D2D1::Point2F(rcch, rccv));
+                    */
+
+
+					transforms = transforms * D2D1::Matrix3x2F::Translation(
+						static_cast<float>(rc.left),
+						static_cast<float>(rc.top)
+					);
+
+                    transforms = transforms * D2D1::Matrix3x2F::Translation(-gWinMgr.canvas.x_poffset, -gWinMgr.canvas.y_poffset);
+
+  
+                    pRenderTarget->SetTransform(transforms);
+                    
+
 
                     //int bb = (gWinMgr.isBorderless) ? gWinMgr.borderlessBorder : 0;
                     //pRenderTarget->PushAxisAlignedClip(
@@ -90,15 +143,15 @@ VOID OnPaint() //HDC hdc)
                     //int width = pImage->width;
                     //int height = pImage->height;
 
-                    pRenderTarget->DrawBitmap(
-                        pImage->pBitmap,
-                        D2D1::RectF(
-                            static_cast<FLOAT>(rc.left),
-                            static_cast<FLOAT>(rc.top),
-                            static_cast<FLOAT>(rc.right),
-                            static_cast<FLOAT>(rc.bottom)
-                        )
-                    );
+					pRenderTarget->DrawBitmap(
+						pImage->pBitmap,
+						D2D1::RectF(
+							0.0,
+							0.0f,
+							pImage->width,
+                            pImage->height
+						)
+					);
                 }
 
                 HRESULT hr = pRenderTarget->EndDraw();
