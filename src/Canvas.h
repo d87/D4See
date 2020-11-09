@@ -8,6 +8,7 @@ namespace D4See {
 
         float scale_manual = 1.0f; // 
         float scale_effective = 1.0f; // Actual current scale
+        float rotation = 0.0f;
 
         float x_poffset = 0; // Panning offset
         float y_poffset = 0;
