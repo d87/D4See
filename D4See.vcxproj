@@ -75,25 +75,25 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(SolutionDir)deps\lua\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(SolutionDir)deps\lua\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
-    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(SolutionDir)deps\lua\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)\bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)deps\libtga\src\;$(SolutionDir)deps\lua\;$(ProjectDir)src\libs\spdlog\include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <VcpkgEnabled>true</VcpkgEnabled>
@@ -191,6 +191,7 @@
     <ClInclude Include="src\Action.h" />
     <ClInclude Include="src\Animation.h" />
     <ClInclude Include="src\Canvas.h" />
+    <ClInclude Include="src\Configuration.h" />
     <ClInclude Include="src\D4See.h" />
     <ClInclude Include="src\Decoder.h" />
     <ClInclude Include="src\Decoder_JPEG.h" />
@@ -203,6 +204,7 @@
     <ClInclude Include="src\ImageFormats.h" />
     <ClInclude Include="src\ImageContainer.h" />
     <ClInclude Include="src\Input.h" />
+    <ClInclude Include="src\LuaVM.h" />
     <ClInclude Include="src\Object.h" />
     <ClInclude Include="src\playlist.h" />
     <ClInclude Include="src\resource.h" />
@@ -214,6 +216,7 @@
     <ClCompile Include="src\Action.cpp" />
     <ClCompile Include="src\Animation.cpp" />
     <ClCompile Include="src\Canvas.cpp" />
+    <ClCompile Include="src\Configuration.cpp" />
     <ClCompile Include="src\DecodeBuffer.cpp" />
     <ClCompile Include="src\D4See.cpp" />
     <ClCompile Include="src\Decoder.cpp" />
@@ -224,6 +227,7 @@
     <ClCompile Include="src\error.cpp" />
     <ClCompile Include="src\ImageContainer.cpp" />
     <ClCompile Include="src\Input.cpp" />
+    <ClCompile Include="src\LuaVM.cpp" />
     <ClCompile Include="src\playlist.cpp" />
     <ClCompile Include="src\util.cpp" />
     <ClCompile Include="src\WindowManager.cpp" />

@@ -176,7 +176,7 @@ const std::unordered_map<std::string, ModifierMask> modifierMap = {
 };
 
 
-int InputHandler::BindKey(std::string keyStr, std::string actionStr ){
+int InputHandler::BindKey(std::string& keyStr, const std::string& actionStr){
 	uint8_t modMask = 0;
 	
 	std::string::iterator tokenStart = keyStr.begin();

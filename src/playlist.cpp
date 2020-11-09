@@ -39,7 +39,7 @@ Playlist::Playlist() {
 
 }
 
-Playlist::Playlist(const std::wstring initialFile, PlaylistSortMethod sortMethod) {
+Playlist::Playlist(const std::wstring& initialFile, PlaylistSortMethod sortMethod) {
 	sortMethod = sortMethod;
 	GeneratePlaylist(initialFile);
 }

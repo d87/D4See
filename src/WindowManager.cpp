@@ -286,48 +286,15 @@ bool WindowManager::WasGeneratingEvents() {
 }
 
 
-toml::value WindowManager::ReadConfig() {
-
-    // TODO: Error handling of all sorts
-
-    auto root = GetExecutableDir();
-    fs::path file("config.toml");
-    fs::path path = root / file;
-
-    toml::value data;
-    try {
-        data = toml::parse(path.string());
-        //auto enabled = data["scaling"]["StretchToScreenWidth"].as_boolean();
-        LOG(data);
-    }
-    catch (const std::runtime_error& e) {
-        LOG_ERROR("No config file");
-        const toml::value data{
-            {"scaling", {{"StretchToScreenWidth", true}, {"StretchToScreenHeight", true}, {"ShrinkToScreenWidth", true}, {"ShrinkToScreenHeight", true}, }}
-        };
-    }
-    return data;
-}
-
-void WindowManager::RestoreConfigValues(toml::value& data) {
-    if (data["general"]["StartBorderless"].as_boolean()) {
+void WindowManager::RestoreConfigValues(D4See::Configuration& config) {
+    if (config.isBorderless) {
         ToggleBorderless(0);
     }
-
-    //borderlessBorder = data["general"]["BorderlessBorder"].as_integer();
-
-    std::string sortStr = data["general"]["SortMethod"].as_string();
-    if (sortStr == "ByName") {
-        sortMethod = PlaylistSortMethod::ByName;
-    }
-    else if (sortStr == "ByDateModified") {
-        sortMethod = PlaylistSortMethod::ByDateModified;
-    }
-
-    stretchToScreenWidth = data["scaling"]["StretchToScreenWidth"].as_boolean();
-    stretchToScreenHeight = data["scaling"]["StretchToScreenHeight"].as_boolean();
-    shrinkToScreenWidth = data["scaling"]["ShrinkToScreenWidth"].as_boolean();
-    shrinkToScreenHeight = data["scaling"]["ShrinkToScreenHeight"].as_boolean();
+    sortMethod = config.sortMethod;
+    stretchToScreenWidth = config.stretchToScreenWidth;
+    stretchToScreenHeight = config.stretchToScreenHeight;
+    shrinkToScreenWidth = config.shrinkToScreenWidth;
+    shrinkToScreenHeight = config.shrinkToScreenHeight;
 }
 
 void WindowManager::DumpConfigValues(toml::value& data) {

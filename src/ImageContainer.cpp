@@ -6,7 +6,7 @@ ImageContainer::ImageContainer(HWND hWnd) {
     _Init(hWnd);
 }
 
-ImageContainer::ImageContainer(HWND hWnd, std::wstring filename, ImageFormat format) {
+ImageContainer::ImageContainer(HWND hWnd, const std::wstring& filename, ImageFormat format) {
     _Init(hWnd);
 	OpenFile(filename, format);
 }
@@ -16,8 +16,8 @@ void ImageContainer::_Init(HWND hWnd) {
     frameTimeElapsed = std::chrono::duration<float>(-999.0); // Animation won't start playing until we're ready for it
 }
 
-void ImageContainer::OpenFile(std::wstring filename, ImageFormat format) {
-	this->filename = filename;
+void ImageContainer::OpenFile(const std::wstring& filename, ImageFormat format) {
+	this->filename = filename; //copy
     this->format = format;
 	StartThread();
 }

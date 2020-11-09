@@ -19,6 +19,8 @@
 #include "WindowManager.h"
 #include "Animation.h"
 #include "Action.h"
+#include "LuaVM.h"
+#include "Configuration.h"
 
 
 WindowManager gWinMgr; // globaled in WindowManager.h
@@ -286,9 +288,15 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     UpdateWindow(hWnd);
     DragAcceptFiles(hWnd, true);
 
-    toml::value configData = gWinMgr.ReadConfig();
-    gWinMgr.RestoreConfigValues(configData);
-
+    //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    L = InitLua();
+    {
+		D4See::Configuration config;
+		config.LoadFile(L, "config.lua");
+		gWinMgr.RestoreConfigValues(config);
+    }
+	//std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	//std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[mcs]" << std::endl;
     
     PWCHAR cmdLine = GetCommandLineW();
     int argc = 0;
@@ -353,45 +361,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
     ShowWindow(hWnd, iCmdShow);
 
-
+    // Input
     RegisterActions();
-
-    gWinMgr.input.BindKey("CTRL-F", "TOGGLEFULLSCREEN");
-    gWinMgr.input.BindKey("RETURN", "TOGGLEFULLSCREEN");
-    gWinMgr.input.BindKey("MBUTTON3", "TOGGLEFULLSCREEN");
-    gWinMgr.input.BindKey("TAB", "TOGGLEBORDERLESS");
-    gWinMgr.input.BindKey("CTRL-A", "ALWAYSONTOP");
-
-    gWinMgr.input.BindKey("Z", "MOUSEZOOM");
-    gWinMgr.input.BindKey("MBUTTON1", "MOUSEPAN");
-    gWinMgr.input.BindKey("MBUTTON2", "SHOWMENU");
-    gWinMgr.input.BindKey("CTRL-X", "CUTFILE");
-    gWinMgr.input.BindKey("CTRL-C", "COPYFILE");
-    gWinMgr.input.BindKey("DEL", "DELETEFILE");
-    gWinMgr.input.BindKey("SHIFT-DEL", "NUKEFILE");
-    gWinMgr.input.BindKey("ESC", "QUIT");
-    
-    gWinMgr.input.BindKey("SPACE", "NEXTIMAGE");
-    gWinMgr.input.BindKey("PAGEDOWN", "NEXTIMAGE");
-    gWinMgr.input.BindKey("MWHEELDOWN", "NEXTIMAGE");
-    gWinMgr.input.BindKey("PAGEUP", "PREVIMAGE");
-    gWinMgr.input.BindKey("MWHEELUP", "PREVIMAGE");
-    gWinMgr.input.BindKey("HOME", "FIRSTIMAGE");
-    gWinMgr.input.BindKey("END", "LASTIMAGE");
-    gWinMgr.input.BindKey("CTRL-L", "ZOOMLOCK");
-
-    gWinMgr.input.BindKey("CTRL-SUBTRACT", "TOGGLESCREENFIT");
-
-    
-    gWinMgr.input.BindKey("CTRL-MWHEELUP", "ZOOMINPOINT");
-    gWinMgr.input.BindKey("CTRL-MWHEELDOWN", "ZOOMOUTPOINT");
-
-    gWinMgr.input.BindKey("F5", "REFRESHPLAYLIST");
-
-    gWinMgr.input.BindKey("UP", "PANUP");
-    gWinMgr.input.BindKey("DOWN", "PANDOWN");
-    gWinMgr.input.BindKey("LEFT", "PANLEFT");
-    gWinMgr.input.BindKey("RIGHT", "PANRIGHT");
+    LoadScript(L, "bindings.lua");
 
 
     //IsExtensionAssociated(".png1231541", "D4See.png");
@@ -513,8 +485,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
         std::this_thread::sleep_for(5ms);
     }
-    gWinMgr.DumpConfigValues(configData);
-    gWinMgr.WriteConfig(configData);
+    //gWinMgr.DumpConfigValues(configData);
+    //gWinMgr.WriteConfig(configData);
 
     pDWriteFactory->Release();
     pRenderTarget->Release();

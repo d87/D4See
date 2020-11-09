@@ -38,8 +38,8 @@ class DecodeBuffer {
 
 		DecodeBuffer();
 		~DecodeBuffer();
-		DecodeBuffer(std::wstring filename, ImageFormat format);
-		int Open(std::wstring filename, ImageFormat format);
+		DecodeBuffer(const std::wstring& filename, ImageFormat format);
+		int Open(const std::wstring& filename, ImageFormat format);
 		bool IsFullyLoaded();
 		bool IsSubimageLoaded(int subimage);
 		DecoderBatchReturns PartialLoad(unsigned int numBytes, bool fullLoadFirstMipLevel);

@@ -22,7 +22,7 @@ namespace D4See {
 			int ProcessInput(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 			uint8_t GetModifierMask();
 			void FireAction(uint8_t VKey, int isDown);
-			int BindKey(std::string keyStr, std::string actionStr);
+			int BindKey(std::string& keyStr, const std::string& actionStr);
 	};
 }
 

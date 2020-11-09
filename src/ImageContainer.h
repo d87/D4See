@@ -70,10 +70,10 @@ class ImageContainer {
 	
 	public:
 		ImageContainer(HWND hWnd);
-		ImageContainer(HWND hWnd, std::wstring filename, ImageFormat format);
+		ImageContainer(HWND hWnd, const std::wstring& filename, ImageFormat format);
 		~ImageContainer();
 		void _Init(HWND hWnd);
-		void OpenFile(std::wstring filename, ImageFormat format);
+		void OpenFile(const std::wstring& filename, ImageFormat format);
 		bool AdvanceAnimation(std::chrono::duration<float> elapsed);
 		//bool PrevSubimage();
 		bool IsSubimageReady(int si);

@@ -20,11 +20,11 @@ DecodeBuffer::~DecodeBuffer() {
 	}
 }
 
-DecodeBuffer::DecodeBuffer(std::wstring filename, ImageFormat format) {
+DecodeBuffer::DecodeBuffer(const std::wstring& filename, ImageFormat format) {
 	Open(filename, format);
 }
 
-int DecodeBuffer::Open(std::wstring filename, ImageFormat format) {
+int DecodeBuffer::Open(const std::wstring& filename, ImageFormat format) {
 
 	FILE* f;
 	_wfopen_s(&f, filename.c_str(), L"rb");

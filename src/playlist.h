@@ -38,7 +38,7 @@ class Playlist {
 
 	public:
 		Playlist();
-		Playlist(const std::wstring initialFile, PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName);
+		Playlist(const std::wstring& initialFile, PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName);
 		void Refresh();
 		int GeneratePlaylist(const std::wstring initialFile);
 		void SetSortingMethod(PlaylistSortMethod sortMethod);

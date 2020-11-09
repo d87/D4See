@@ -14,6 +14,7 @@
 #include "Canvas.h"
 #include "D4See.h"
 #include "Input.h"
+#include "Configuration.h"
 
 #include "libs/toml11/toml.hpp"
 
@@ -96,8 +97,7 @@ public:
     void WriteOrigin();
     void ReadOrigin();
 
-    toml::value ReadConfig();
-    void RestoreConfigValues(toml::value& data);
+    void RestoreConfigValues(D4See::Configuration& config);
     void DumpConfigValues(toml::value& data);
     void WriteConfig(toml::value& data);
 
