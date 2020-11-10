@@ -131,6 +131,27 @@ void ToggleZoomLock() {
     gWinMgr.zoomLock = !gWinMgr.zoomLock;
 }
 
+void RotateClockwise() {
+    gWinMgr.canvas.CycleRotation(+1);
+
+	gWinMgr.ResizeForImage();
+	gWinMgr.Redraw(RDW_ERASE);
+}
+
+void RotateCounterClockwise() {
+	gWinMgr.canvas.CycleRotation(-1);
+
+	gWinMgr.ResizeForImage();
+	gWinMgr.Redraw(RDW_ERASE);
+}
+
+void FlipHorizontal() {
+    gWinMgr.canvas.flipHorizontal = !gWinMgr.canvas.flipHorizontal;
+
+	gWinMgr.ResizeForImage();
+	gWinMgr.Redraw(RDW_ERASE);
+}
+
 //void KbPanLeft() {
 //    gWinMgr.Pan(-60, 0);
 //}
@@ -257,6 +278,9 @@ void RegisterActions() {
     RegisterAction("TOGGLESCREENFIT", ActionType::PRESS, ToggleFitToScreen);
     RegisterAction("ZOOMLOCK", ActionType::PRESS, ToggleZoomLock);
     RegisterAction("SHOWMENU", ActionType::PRESS, ShowMenu);
+    RegisterAction("FLIPHORIZONTAL", ActionType::PRESS, FlipHorizontal);
+    RegisterAction("ROTATECLOCKWISE", ActionType::PRESS, RotateClockwise);
+    RegisterAction("ROTATECOUNTERCLOCKWISE", ActionType::PRESS, RotateCounterClockwise);
     RegisterAction("NEXTIMAGE", ActionType::PRESS, NextImage);
     RegisterAction("PREVIMAGE", ActionType::PRESS, PrevImage);
     RegisterAction("FIRSTIMAGE", ActionType::PRESS, MoveToPlaylistStart);

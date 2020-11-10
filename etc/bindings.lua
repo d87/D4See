@@ -12,7 +12,8 @@ BindAction("CTRL-C", "COPYFILE");
 BindAction("DEL", "DELETEFILE");
 BindAction("SHIFT-DEL", "NUKEFILE");
 BindAction("ESC", "QUIT");
-
+BindAction("R", "ROTATECLOCKWISE");
+BindAction("M", "FLIPHORIZONTAL");
 BindAction("SPACE", "NEXTIMAGE");
 BindAction("PAGEDOWN", "NEXTIMAGE");
 BindAction("MWHEELDOWN", "NEXTIMAGE");

@@ -44,6 +44,7 @@ class ImageContainer {
 
 		int width = 0;
 		int height = 0;
+		int internalRotation = 0;
 
 		std::vector<ImageFrame> frame;
 		int curFrame = -1; // index of currently active frame, -1 = no frames are ready yet

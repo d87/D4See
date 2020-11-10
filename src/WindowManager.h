@@ -98,8 +98,8 @@ public:
     void ReadOrigin();
 
     void RestoreConfigValues(D4See::Configuration& config);
-    void DumpConfigValues(toml::value& data);
-    void WriteConfig(toml::value& data);
+    //void DumpConfigValues(toml::value& data);
+    //void WriteConfig(toml::value& data);
 
     void UpdateOrigin();
     bool WasGeneratingEvents();

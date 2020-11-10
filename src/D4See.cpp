@@ -68,11 +68,11 @@ VOID OnPaint() //HDC hdc)
 
                     auto transforms = D2D1::Matrix3x2F::Identity();
 
-                    float scale = gWinMgr.canvas.scale_effective;
-                    float angle = gWinMgr.canvas.rotation;
+                    auto canvas = gWinMgr.canvas;
+                    float scale = canvas.scale_effective;
+                    float angle = canvas.GetRotation();
 
-                    /*
-                    bool flipHorizontal = true;
+                    bool flipHorizontal = canvas.flipHorizontal;
                     if (flipHorizontal) {
 						transforms = transforms * D2D1::Matrix3x2F::Scale(
 							D2D1::Size(-1.0f, 1.0f),
@@ -81,6 +81,7 @@ VOID OnPaint() //HDC hdc)
                         transforms = transforms * D2D1::Matrix3x2F::Translation(static_cast<float>(pImage->width), 0.0f);
                     }
 
+                    /*
 					bool flipVertical = true;
 					if (flipVertical) {
 						transforms = transforms * D2D1::Matrix3x2F::Scale(

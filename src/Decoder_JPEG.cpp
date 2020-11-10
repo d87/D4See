@@ -118,6 +118,7 @@ bool JPEGDecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 	spec.width = cinfo.output_width;
 	spec.height = cinfo.output_height;
 	spec.rowPitch = spec.numChannels * spec.width;
+	spec.internalRotation = rotation;
 	spec.size = static_cast<uint64_t>(spec.height) * spec.rowPitch;
 	spec.flipRowOrder = false;
 
@@ -358,6 +359,25 @@ static int get_rotation_from_exif_orientation(short orientation) {
 	case 7:
 	case 8:
 		return 90;
+	default:
+		break;
+	}
+	return 0;
+}
+
+static int get_mirrored_from_exif_orientation(short orientation) {
+	switch (orientation)
+	{
+	case 0:
+	case 3:
+	case 5:
+	case 7:
+		return 0;
+	case 2:
+	case 4:
+	case 6:
+	case 8:
+		return 1;
 	default:
 		break;
 	}

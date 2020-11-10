@@ -52,6 +52,7 @@ void DecodingWork(ImageContainer *self) {
 
         self->width = image->spec.width;
         self->height = image->spec.height;
+        self->internalRotation = image->spec.internalRotation;
         self->isAnimated = image->spec.isAnimated;
     }
     catch (const std::runtime_error& e) {

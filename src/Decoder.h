@@ -14,6 +14,7 @@ namespace D4See {
 		uint64_t size;
 		uint32_t rowPitch;
 		uint32_t rowPadding;
+		uint32_t internalRotation;
 		bool flipRowOrder;
 		uint8_t numChannels;
 		uint32_t numFrames;

@@ -296,7 +296,7 @@ void WindowManager::RestoreConfigValues(D4See::Configuration& config) {
     shrinkToScreenWidth = config.shrinkToScreenWidth;
     shrinkToScreenHeight = config.shrinkToScreenHeight;
 }
-
+/*
 void WindowManager::DumpConfigValues(toml::value& data) {
 
     std::string sortStr = (sortMethod == PlaylistSortMethod::ByDateModified) ? "ByDateModified" : "ByName";
@@ -314,7 +314,7 @@ void WindowManager::WriteConfig(toml::value& data) {
     fs::path file("config.toml");
     fs::path path = root / file;
 
-    const auto serial = toml::format(data, /*width = */ 0, /*prec = */ 17);
+    const auto serial = toml::format(data, 0, 17);
 
     LOG(serial);
 
@@ -322,7 +322,7 @@ void WindowManager::WriteConfig(toml::value& data) {
 
     return;
 }
-
+*/
 void WindowManager::ReadOrigin() {
     fs::path root = GetExecutableDir();
     fs::path file("origin.data");
@@ -490,10 +490,10 @@ void WindowManager::GetWindowSizeForImage(RECT& rrc) {
 
     int w_native = frame->width;
     int h_native = frame->height;
+    canvas.SetImageBaseRotation(frame->internalRotation);
+    float rotation = canvas.GetRotation();
 
-    canvas.rotation = 90;
-
-    if (canvas.rotation == 90 || canvas.rotation == 270) {
+    if (rotation == 90.0f || rotation == 270.0f) {
         w_native = frame->height;
         h_native = frame->width;
     }
