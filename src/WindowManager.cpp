@@ -532,6 +532,8 @@ void WindowManager::GetWindowSizeForImage(RECT& rrc) {
         endscale = canvas.scale_manual;
     }
 
+    endscale *= canvas.scale_thumb;
+
     canvas.w_scaled = w_native * endscale;
     canvas.h_scaled = h_native * endscale;
 

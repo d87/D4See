@@ -71,6 +71,7 @@ VOID OnPaint() //HDC hdc)
                     auto canvas = gWinMgr.canvas;
                     float scale = canvas.scale_effective;
                     float angle = canvas.GetRotation();
+                    //auto imageCenter = D2D1::Point2F(0.0f, 0.0f)
 
                     bool flipHorizontal = canvas.flipHorizontal;
                     if (flipHorizontal) {
@@ -106,7 +107,7 @@ VOID OnPaint() //HDC hdc)
 					}
 
 					transforms = transforms * D2D1::Matrix3x2F::Scale(
-						D2D1::Size(gWinMgr.canvas.scale_effective, gWinMgr.canvas.scale_effective),
+						D2D1::Size(scale, scale),
 						D2D1::Point2F(0.0f, 0.0f)
 					);
 

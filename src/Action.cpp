@@ -253,6 +253,19 @@ void NegVPanStop() {
 }
 
 
+void ThumbViewStart() {
+    gWinMgr.canvas.scale_thumb = 0.5f;
+
+	gWinMgr.ResizeForImage();
+	gWinMgr.Redraw(RDW_ERASE);
+}
+void ThumbViewStop() {
+    gWinMgr.canvas.scale_thumb = 1.0f;
+
+	gWinMgr.ResizeForImage();
+	gWinMgr.Redraw(RDW_ERASE);
+}
+
 void RefreshPlaylist() {
     gWinMgr.playlist->Refresh();
 }
@@ -293,6 +306,7 @@ void RegisterActions() {
     RegisterAction("PANDOWN", ActionType::HOLD, NegVPanStart, NegVPanStop);
     RegisterAction("PANLEFT", ActionType::HOLD, NegHPanStart, NegHPanStop);
     RegisterAction("PANRIGHT", ActionType::HOLD, PosHPanStart, PosHPanStop);
+    RegisterAction("THUMBNAILVIEW", ActionType::HOLD, ThumbViewStart, ThumbViewStop);
 
     RegisterAction("REFRESHPLAYLIST", ActionType::PRESS, RefreshPlaylist);
 

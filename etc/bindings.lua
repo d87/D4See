@@ -22,7 +22,7 @@ BindAction("MWHEELUP", "PREVIMAGE");
 BindAction("HOME", "FIRSTIMAGE");
 BindAction("END", "LASTIMAGE");
 BindAction("CTRL-L", "ZOOMLOCK");
-
+BindAction("T", "THUMBNAILVIEW");
 BindAction("CTRL-SUBTRACT", "TOGGLESCREENFIT");
 
 

@@ -8,6 +8,7 @@ namespace D4See {
 
         float scale_manual = 1.0f; // 
         float scale_effective = 1.0f; // Actual current scale
+        float scale_thumb = 1.0f;
         float baseRotation = 0.0f; // Inherent image rotation determined by EXIF metadata
         float orientRotation = 0.0f; // 90 degree rotation by user
         bool flipHorizontal = false;
