@@ -270,6 +270,15 @@ void RefreshPlaylist() {
     gWinMgr.playlist->Refresh();
 }
 
+void OpenPrevDir() {
+	if (gWinMgr.playlist->OpenPrevDir())
+		gWinMgr.LoadImageFromPlaylist(0);
+}
+void OpenNextDir() {
+	if (gWinMgr.playlist->OpenNextDir())
+	    gWinMgr.LoadImageFromPlaylist(0);
+}
+
 
 void RegisterAction(std::string actionName, ActionType actionType, callback_function cbOnDown, callback_function cbOnUp = NULL, callback_function cbOnMouseMove = NULL) {
     Action newAction;
@@ -296,6 +305,8 @@ void RegisterActions() {
     RegisterAction("ROTATECOUNTERCLOCKWISE", ActionType::PRESS, RotateCounterClockwise);
     RegisterAction("NEXTIMAGE", ActionType::PRESS, NextImage);
     RegisterAction("PREVIMAGE", ActionType::PRESS, PrevImage);
+	RegisterAction("NEXTDIR", ActionType::PRESS, OpenNextDir);
+	RegisterAction("PREVDIR", ActionType::PRESS, OpenPrevDir);
     RegisterAction("FIRSTIMAGE", ActionType::PRESS, MoveToPlaylistStart);
     RegisterAction("LASTIMAGE", ActionType::PRESS, MoveToPlaylistEnd);
     RegisterAction("ZOOMINPOINT", ActionType::PRESS, ZoomInToPoint);

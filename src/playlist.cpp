@@ -1,12 +1,13 @@
 #include "playlist.h"
 
-#include <windows.h>
 #include <TCHAR.h>
 #include <filesystem>
 #include <unordered_map>
 #include <vector>
 #include <string>
 #include <algorithm>
+
+namespace fs = std::filesystem;
 
 long long WindowsTickToUnixSeconds(FILETIME ft)
 {
@@ -74,6 +75,7 @@ int Playlist::MoveCursor(std::wstring filename) {
 }
 
 inline PlaylistEntry* Playlist::Current() {
+	if (list.size() == 0) return nullptr;
 	auto it = list.begin() + offset;
 	return &*it;
 }
@@ -123,15 +125,14 @@ PlaylistEntry* Playlist::Prev() {
 }
 
 
-int Playlist::GeneratePlaylist(std::wstring initialFile) {
-	auto found = initialFile.rfind(L"\\");
-	if (found == std::string::npos)
-		// TODO: No directory in initial filename, should do cwd
-		return NULL;
+int Playlist::GeneratePlaylist(const std::wstring& initialPathStr) {
 
-	std::wstring initialFileDir = initialFile.substr(0, found+1);
+	fs::path initialPath(initialPathStr);
+	bool initialFileSpecified = !fs::is_directory(initialPath);
 
-	basepath = initialFileDir;
+	this->path = initialFileSpecified ? initialPath.parent_path() : initialPath;
+	std::wstring initialFileDir = this->path.wstring() + L"\\";
+	
 
 	WCHAR oldWD[1000];
 	GetCurrentDirectoryW(1000, oldWD);
@@ -171,7 +172,7 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 					//SYSTEMTIME stLastWriteTime;
 					long long unixLastWrite = WindowsTickToUnixSeconds(fd.ftLastWriteTime);
 					//FileTimeToSystemTime(&fd.ftLastWriteTime, &stLastWriteTime);
-					Add(std::wstring(basepath+fd.cFileName), search->second, unixLastWrite); // name, format
+					Add(std::wstring(initialFileDir + fd.cFileName), search->second, unixLastWrite); // name, format
 					filesAdded++;
 				}
 			}
@@ -209,9 +210,64 @@ int Playlist::GeneratePlaylist(std::wstring initialFile) {
 		});
 	}	
 
-	MoveCursor(initialFile);
+	if (initialFileSpecified)
+		MoveCursor(initialPathStr);
+	else
+		this->offset = 0;
+	//else
 
 	return filesAdded;
+}
+
+fs::path FindSiblingDirectory(fs::path& currentDirPath, int mod){
+	if (!currentDirPath.has_parent_path())
+		return currentDirPath;
+
+	fs::path rootDirPath = currentDirPath.parent_path();
+
+	std::vector<fs::directory_entry> filelist;
+	for (auto& p : fs::directory_iterator(rootDirPath)) {
+		if (p.is_directory())
+			filelist.push_back(p);
+	}
+
+	auto result = std::find_if(filelist.begin(), filelist.end(), [&currentDirPath](fs::directory_entry entry) {
+		return (entry.path() == currentDirPath);
+	});
+
+	if (result != filelist.end()) {
+		int max_offset = filelist.size() - 1;
+		int offset = result - filelist.begin();
+		int new_offset = offset + mod;
+		new_offset = (std::max)(new_offset, 0);
+		new_offset = (std::min)(new_offset, max_offset);
+		auto newDirPath = filelist[new_offset].path();
+		return newDirPath;
+	}
+	else {
+		return currentDirPath;
+	}
+}
+
+int Playlist::OpenPrevDir() {
+	auto siblingDir = FindSiblingDirectory(this->path, -1);
+	// If can't switch for whatever reason FindSiblingDirectory returns current path
+	if (siblingDir != this->path) {
+		list.clear();
+		GeneratePlaylist(siblingDir.wstring());
+		return 1;
+	}
+	return 0;
+}
+int Playlist::OpenNextDir() {
+	auto siblingDir = FindSiblingDirectory(this->path, +1);
+	// If can't switch for whatever reason FindSiblingDirectory returns current path
+	if (siblingDir != this->path) { 
+		list.clear();
+		GeneratePlaylist(siblingDir.wstring());
+		return 1;
+	}
+	return 0;
 }
 
 

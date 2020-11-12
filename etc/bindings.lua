@@ -19,6 +19,10 @@ BindAction("PAGEDOWN", "NEXTIMAGE");
 BindAction("MWHEELDOWN", "NEXTIMAGE");
 BindAction("PAGEUP", "PREVIMAGE");
 BindAction("MWHEELUP", "PREVIMAGE");
+
+BindAction("SHIFT-PAGEDOWN", "NEXTDIR");
+BindAction("SHIFT-PAGEUP", "PREVDIR");
+
 BindAction("HOME", "FIRSTIMAGE");
 BindAction("END", "LASTIMAGE");
 BindAction("CTRL-L", "ZOOMLOCK");
@@ -35,3 +39,9 @@ BindAction("UP", "PANUP");
 BindAction("DOWN", "PANDOWN");
 BindAction("LEFT", "PANLEFT");
 BindAction("RIGHT", "PANRIGHT");
+BindAction("W", "PANUP");
+BindAction("S", "PANDOWN");
+BindAction("A", "PANLEFT");
+BindAction("D", "PANRIGHT");
+BindAction("E", "NEXTIMAGE");
+BindAction("Q", "PREVIMAGE");

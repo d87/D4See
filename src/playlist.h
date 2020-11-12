@@ -1,9 +1,11 @@
 #pragma once
 
 #include <Windows.h>
+#define NOMINMAX
 #include <string>
 #include <forward_list>
 #include <vector>
+#include <filesystem>
 #include "ImageFormats.h"
 #include "error.h"
 
@@ -31,7 +33,7 @@ class Playlist {
 	public:
 		std::vector<PlaylistEntry> list;
 		int offset = 0;
-		std::wstring basepath;
+		std::filesystem::path path;
 
 	private:
 		PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
@@ -40,7 +42,9 @@ class Playlist {
 		Playlist();
 		Playlist(const std::wstring& initialFile, PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName);
 		void Refresh();
-		int GeneratePlaylist(const std::wstring initialFile);
+		int GeneratePlaylist(const std::wstring& initialFile);
+		int OpenPrevDir();
+		int OpenNextDir();
 		void SetSortingMethod(PlaylistSortMethod sortMethod);
 		int MoveCursor(std::wstring filename);
 		bool Move(PlaylistPos pos, int mod);
