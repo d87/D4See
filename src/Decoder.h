@@ -37,7 +37,6 @@ namespace D4See {
 		};
     public:
 		ImageSpec spec;
-		Decoder();
 		virtual bool Open(const wchar_t* filename, ImageFormat format);
 		virtual bool Open(FILE* f, const wchar_t* filename, ImageFormat format) = NULL;
 		virtual void Close() = NULL;

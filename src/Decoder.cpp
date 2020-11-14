@@ -5,9 +5,6 @@
 
 using namespace D4See;
 
-Decoder::Decoder() {
-	memset(&spec, 0, sizeof(spec));
-}
 
 bool Decoder::Open(const wchar_t* filename, ImageFormat format) {
 	FILE* f;

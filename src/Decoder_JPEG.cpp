@@ -106,7 +106,7 @@ bool JPEGDecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 
 	long numPixels = cinfo.output_width * cinfo.output_height;
 	// Buffered mode is pretty slow, not really worth using on small jpegs
-	if (jpeg_has_multiple_scans(&cinfo) && numPixels > 3000000) { // if size > 1MB and has mip levels
+	if (jpeg_has_multiple_scans(&cinfo) && numPixels > 3000000) {
 		cinfo.buffered_image = TRUE; // select buffered-image mode
 	}
 
@@ -141,6 +141,10 @@ bool JPEGDecoder::IsValid(FILE* f) {
 				return 1;*/
 				//4A 46 49 46  = JFIF
 	return 0;
+}
+
+JPEGDecoder::~JPEGDecoder() {
+	Close();
 }
 
 
@@ -301,13 +305,6 @@ void JPEGDecoder::Close() {
 		spec.filedesc = NULL;
 	}
 }
-
-JPEGDecoder::~JPEGDecoder() {
-	//Close();
-}
-
-
-
 
 // EXIF stuff
 

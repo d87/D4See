@@ -26,7 +26,7 @@ class DecodeBuffer {
 	public: 
 		std::wstring filename;
 		ImageFormat format;
-		D4See::Decoder* decoder = nullptr;
+		std::shared_ptr<D4See::Decoder> decoder;
 		D4See::ImageSpec spec;
 
 		std::vector<unsigned char> pixels; // where pixel data is getting stored
@@ -37,7 +37,6 @@ class DecodeBuffer {
 		unsigned int curSubimage = 0;
 
 		DecodeBuffer();
-		~DecodeBuffer();
 		DecodeBuffer(const std::wstring& filename, ImageFormat format);
 		int Open(const std::wstring& filename, ImageFormat format);
 		bool IsFullyLoaded();

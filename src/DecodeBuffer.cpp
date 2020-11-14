@@ -13,13 +13,6 @@
 DecodeBuffer::DecodeBuffer() {
 }
 
-DecodeBuffer::~DecodeBuffer() {
-	if (decoder) {
-		decoder->Close();
-		delete decoder;
-	}
-}
-
 DecodeBuffer::DecodeBuffer(const std::wstring& filename, ImageFormat format) {
 	Open(filename, format);
 }
@@ -43,16 +36,16 @@ int DecodeBuffer::Open(const std::wstring& filename, ImageFormat format) {
 	switch (format)
 	{
 	case ImageFormat::JPEG:
-		decoder = new D4See::JPEGDecoder();
+		decoder = std::make_shared<D4See::JPEGDecoder>();
 		break;
 	case ImageFormat::TGA:
-		decoder = new D4See::TGADecoder();
+		decoder = std::make_shared<D4See::TGADecoder>();
 		break;
 	case ImageFormat::GIF:
-		decoder = new D4See::WICGIFDecoder();
+		decoder = std::make_shared<D4See::WICGIFDecoder>();
 		break;
 	default:
-		decoder = new D4See::WICDecoder();
+		decoder = std::make_shared<D4See::WICDecoder>();
 		break;
 	}
 

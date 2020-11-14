@@ -122,5 +122,5 @@ void TGADecoder::Close() {
 }
 
 TGADecoder::~TGADecoder() {
-	//Close();
+	Close();
 }

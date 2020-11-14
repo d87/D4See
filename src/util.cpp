@@ -4,7 +4,7 @@
 
 #ifdef _WIN32
 
-int CutCopyFile(std::wstring path, DWORD dropEffect ) { // DROPEFFECT_MOVE or DROPEFFECT_COPY
+int CutCopyFile(const std::wstring& path, DWORD dropEffect ) { // DROPEFFECT_MOVE or DROPEFFECT_COPY
     int result = 0;
 
     UINT prefDropEffectFormat = RegisterClipboardFormatA(CFSTR_PREFERREDDROPEFFECT);
@@ -63,7 +63,7 @@ HRESULT ShellDeleteFileOperation(IShellItem* siFile, DWORD flags)
     return hr;
 }
 
-int DeleteFileDialog(std::wstring path, bool recycle) {
+int DeleteFileDialog(const std::wstring& path, bool recycle) {
     IShellItem * item = nullptr;
     SHCreateItemFromParsingName(path.c_str(), NULL, IID_PPV_ARGS(&item));
 
@@ -210,7 +210,7 @@ int write_file(std::string const& filepath, const char* data, unsigned int size)
     return 1;
 }
 
-std::string GetStringRegistryValue(HKEY hKey, std::string valueName) {
+std::string GetStringRegistryValue(HKEY hKey, const std::string& valueName) {
     DWORD dwType;
     DWORD dataSize = 200;
     DWORD err = RegQueryValueExA(hKey, valueName.c_str(), 0, &dwType, NULL, &dataSize);
@@ -233,7 +233,7 @@ int KeyExists(HKEY hKey, std::string subKey) {
     return 1;
 }
 
-int IsExtensionAssociated(std::string ext, std::string progClass) {
+int IsExtensionAssociated(const std::string& ext, const std::string& progClass) {
     if (!KeyExists(HKEY_CURRENT_USER, "Software\\Classes\\" + progClass))
         return 0;
 
@@ -249,7 +249,7 @@ int IsExtensionAssociated(std::string ext, std::string progClass) {
     return (data == progClass);
 }
 
-void AddFileHandlerClass(std::string progClass, std::wstring iconPathStr) {
+void AddFileHandlerClass(const std::string& progClass, const std::wstring& iconPathStr) {
     HKEY hKey;
     DWORD disposition; // Receives REG_OPENED_EXISTING_KEY or REG_CREATED_NEW_KEY
     if (RegCreateKeyEx(HKEY_CURRENT_USER, ("Software\\Classes\\" + progClass).c_str(), 0, NULL,
@@ -290,11 +290,11 @@ void AddFileHandlerClass(std::string progClass, std::wstring iconPathStr) {
     }
 }
 
-void RemoveFileHandlerClass(std::string progClass) {
+void RemoveFileHandlerClass(const std::string& progClass) {
     RegDeleteKeyExA(HKEY_CURRENT_USER, ("Software\\Classes\\" + progClass).c_str(), KEY_WRITE, 0);
 }
 
-void AssignExtensionToFileTypeHandler(std::string ext, std::string progClass) {
+void AssignExtensionToFileTypeHandler(const std::string& ext, const std::string& progClass) {
     HKEY hKey;
     DWORD disposition; // Receives REG_OPENED_EXISTING_KEY or REG_CREATED_NEW_KEY
     if (RegCreateKeyEx(HKEY_CURRENT_USER, ("Software\\Classes\\" + ext).c_str(), 0, NULL,
@@ -313,7 +313,7 @@ void AssignExtensionToFileTypeHandler(std::string ext, std::string progClass) {
     }
 }
 
-void RemoveFileHandlerFromExtension(std::string ext, std::string progClass) {
+void RemoveFileHandlerFromExtension(const std::string& ext, const std::string& progClass) {
     HKEY hk;
     if (RegOpenKeyEx(HKEY_CURRENT_USER, ("Software\\Classes\\" + ext).c_str(), 0, KEY_ALL_ACCESS, &hk) != ERROR_SUCCESS) {
         return;
