@@ -104,7 +104,7 @@ bool JPEGDecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 	}
 
 
-	long numPixels = cinfo.output_width * cinfo.output_height;
+	long numPixels = cinfo.image_width * cinfo.image_height;
 	// Buffered mode is pretty slow, not really worth using on small jpegs
 	if (jpeg_has_multiple_scans(&cinfo) && numPixels > 3000000) {
 		cinfo.buffered_image = TRUE; // select buffered-image mode
