@@ -112,7 +112,7 @@ bool WICDecoder::SelectFrame(int frameIndex) {
 			}
 		}
 
-
+		SafeRelease(pFrameMetadataQueryReader);
 		
 	}
 
