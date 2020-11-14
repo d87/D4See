@@ -62,26 +62,26 @@ void ToggleFullscreenOnClick() {
 }
 
 void CutCurrentFile() {
-    std::wstring path = gWinMgr.playlist->Current()->path;
+    std::wstring path = gWinMgr.playlist.Current()->path;
     if (CutCopyFile(path, DROPEFFECT_MOVE)) { // successful cut
         // Remove from playlist
-        gWinMgr.playlist->EraseCurrent();
+        gWinMgr.playlist.EraseCurrent();
         gWinMgr.PreviousImage();
     }
 }
 
 void CopyCurrentFile() {
-    std::wstring path = gWinMgr.playlist->Current()->path;
+    std::wstring path = gWinMgr.playlist.Current()->path;
     CutCopyFile(path, DROPEFFECT_COPY);
 }
 
 void RecycleFile() {
-    auto wpath = gWinMgr.playlist->Current()->path;
+    auto wpath = gWinMgr.playlist.Current()->path;
     DeleteFileDialog(wpath, true);
 }
 
 void NukeFile() {
-    auto wpath = gWinMgr.playlist->Current()->path;
+    auto wpath = gWinMgr.playlist.Current()->path;
     DeleteFileDialog(wpath, true);
 }
 
@@ -106,12 +106,12 @@ void ToggleBorderless() {
 }
 
 void MoveToPlaylistEnd() {
-    gWinMgr.playlist->Move(PlaylistPos::End, 0);
+    gWinMgr.playlist.Move(PlaylistPos::End, 0);
     gWinMgr.LoadImageFromPlaylist(0);
 }
 
 void MoveToPlaylistStart() {
-    gWinMgr.playlist->Move(PlaylistPos::Start, 0);
+    gWinMgr.playlist.Move(PlaylistPos::Start, 0);
     gWinMgr.LoadImageFromPlaylist(0);
 }
 
@@ -267,15 +267,15 @@ void ThumbViewStop() {
 }
 
 void RefreshPlaylist() {
-    gWinMgr.playlist->Refresh();
+    gWinMgr.playlist.Refresh();
 }
 
 void OpenPrevDir() {
-	if (gWinMgr.playlist->OpenPrevDir())
+	if (gWinMgr.playlist.OpenPrevDir())
 		gWinMgr.LoadImageFromPlaylist(0);
 }
 void OpenNextDir() {
-	if (gWinMgr.playlist->OpenNextDir())
+	if (gWinMgr.playlist.OpenNextDir())
 	    gWinMgr.LoadImageFromPlaylist(0);
 }
 

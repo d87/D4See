@@ -303,11 +303,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     PWCHAR cmdLine = GetCommandLineW();
     int argc = 0;
     WCHAR** argv = CommandLineToArgvW(cmdLine, &argc);
-    Playlist* playlist = new Playlist();
-    playlist->SetSortingMethod(gWinMgr.sortMethod);
+
+    Playlist& playlist = gWinMgr.playlist;
+    playlist.SetSortingMethod(gWinMgr.sortMethod);
 
     if (argc > 1) {
-        if (!playlist->GeneratePlaylist(argv[1])) {
+        if (!playlist.GeneratePlaylist(argv[1])) {
             return 0;
         }
     }
@@ -315,13 +316,12 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         auto exeDir = GetExecutableDir();
         std::filesystem::path file(L"Splash.png");
         auto default_image = exeDir / file;
-        if (!playlist->GeneratePlaylist(default_image.wstring())) {
+        if (!playlist.GeneratePlaylist(default_image.wstring())) {
             return 0;
         }
     }
 
     gWinMgr.ReadOrigin();
-    gWinMgr.SelectPlaylist(playlist);
         
     //HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
     HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2DFactory);
@@ -357,7 +357,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     );
     hr = pD2DFactory->CreateHwndRenderTarget(props, D2D1::HwndRenderTargetProperties(hWnd, size), &pRenderTarget);
     
-    gWinMgr.SelectImage(std::make_shared<ImageContainer>(hWnd, playlist->Current()->path, playlist->Current()->format));
+    gWinMgr.SelectImage(std::make_shared<ImageContainer>(hWnd, playlist.Current()->path, playlist.Current()->format));
     gWinMgr.frame->threadInitFinished.wait();
     gWinMgr.ResizeForImage();
 
@@ -423,10 +423,9 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
 
                     DragFinish(hDrop);
 
-                    auto playlist = new Playlist(filename, gWinMgr.sortMethod);
-                    gWinMgr.SelectPlaylist(playlist);
+                    gWinMgr.playlist.GeneratePlaylist(filename);
 
-                    auto cur = playlist->Current();
+                    auto cur = gWinMgr.playlist.Current();
                     gWinMgr.SelectImage(std::make_shared<ImageContainer>(hWnd, cur->path, cur->format));
 
                     break;

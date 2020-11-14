@@ -11,12 +11,6 @@ void WindowManager::StopTimer(UINT_PTR id) {
     KillTimer(hWnd, id);
 }
 
-WindowManager::~WindowManager() {
-    if (playlist) delete playlist;
-    //if (frame) delete frame;
-    //if (frame_prefetch) delete frame_prefetch;
-}
-
 //void ClearWindowForFrame(HWND hWnd, ImageContainer* f) {
 //
 //    //HBRUSH newBrush = CreateSolidBrush(RGB(80, 80, 80));
@@ -65,24 +59,24 @@ void WindowManager::StartPrefetch(std::shared_ptr<ImageContainer> f) {
 }
 
 void WindowManager::PreviousImage() {
-    if (playlist->Move(PlaylistPos::Current, -1)) {
+    if (playlist.Move(PlaylistPos::Current, -1)) {
         LoadImageFromPlaylist(-1);
     }
 }
 
 void WindowManager::NextImage() {
-    if (playlist->Move(PlaylistPos::Current, +1)) {
+    if (playlist.Move(PlaylistPos::Current, +1)) {
         LoadImageFromPlaylist(+1);
     }
 }
 
 void WindowManager::LoadImageFromPlaylist(int prefetchDir) {
-    PlaylistEntry* cur = playlist->Current();
+    PlaylistEntry* cur = playlist.Current();
     PlaylistEntry* following = nullptr;
     if (prefetchDir > 0)
-        following = playlist->Next();
+        following = playlist.Next();
     else if (prefetchDir < 0)
-        following = playlist->Prev();
+        following = playlist.Prev();
 
     if (cur) {
         bool prefetchHit = false;
@@ -255,17 +249,9 @@ void WindowManager::SelectImage(std::shared_ptr<ImageContainer> f) {
     if (!zoomLock) {
         canvas.scale_manual = 1.0f;
     }
-    std::wstring title = playlist->Current()->filename + L" - D4See";
+    std::wstring title = playlist.Current()->filename + L" - D4See";
     SetWindowTextW(hWnd, title.c_str());
 }
-
-void WindowManager::SelectPlaylist(Playlist* playlist) {
-    if (this->playlist != nullptr) {
-        delete this->playlist;
-    }
-    this->playlist = playlist;
-}
-
 
 
 void WindowManager::_TouchSizeEventTimestamp() {
@@ -656,9 +642,8 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
         case ID_OPENFILE: {
             std::wstring filepath = OpenFileDialog();
             if (filepath != L"") {
-                auto pl = new Playlist(filepath);
-                SelectPlaylist(pl);
-                SelectImage(std::make_shared<ImageContainer>(hWnd, pl->Current()->path, pl->Current()->format));
+                playlist.GeneratePlaylist(filepath);
+                SelectImage(std::make_shared<ImageContainer>(hWnd, playlist.Current()->path, playlist.Current()->format));
                 //std::cout << filepath.c_str() << std::endl;
             }
             break;
@@ -717,12 +702,12 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
         }
         case ID_SORTBY_NAME: {
             sortMethod = PlaylistSortMethod::ByName;
-            playlist->SetSortingMethod(sortMethod);
+            playlist.SetSortingMethod(sortMethod);
             break;
         }
         case ID_SORTBY_DATEMODIFIED: {
             sortMethod = PlaylistSortMethod::ByDateModified;
-            playlist->SetSortingMethod(sortMethod);
+            playlist.SetSortingMethod(sortMethod);
             break;
         }
         case ID_ROOT_SETTINGS:

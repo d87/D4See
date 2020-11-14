@@ -78,6 +78,10 @@ inline PlaylistEntry* Playlist::Current() {
 	return &*it;
 }
 
+void Playlist::Clear(){
+	list.clear();
+}
+
 void Playlist::EraseCurrent() {
 	if (list.size() > 1) {
 		list.erase(list.begin() + offset);
@@ -124,6 +128,8 @@ PlaylistEntry* Playlist::Prev() {
 
 
 int Playlist::GeneratePlaylist(const std::wstring& initialPathStr) {
+	if (list.size() > 0)
+		list.clear();
 
 	fs::path initialPath(initialPathStr);
 	bool initialFileSpecified = !fs::is_directory(initialPath);

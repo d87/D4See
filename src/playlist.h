@@ -43,6 +43,7 @@ class Playlist {
 		Playlist(const std::wstring& initialFile, PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName);
 		void Refresh();
 		int GeneratePlaylist(const std::wstring& initialFile);
+		void Clear();
 		int OpenPrevDir();
 		int OpenNextDir();
 		void SetSortingMethod(PlaylistSortMethod sortMethod);

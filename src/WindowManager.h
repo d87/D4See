@@ -36,7 +36,7 @@ public:
     HWND hWnd;
     std::shared_ptr<ImageContainer> frame = nullptr;
     std::shared_ptr<ImageContainer> frame_prefetch = nullptr; // prefecth container
-    Playlist* playlist = nullptr;
+    Playlist playlist;
     PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
     D4See::InputHandler input;
 
@@ -86,7 +86,6 @@ public:
     void LimitPanOffset();
     void DiscardPrefetch();
     void SelectImage(std::shared_ptr<ImageContainer> f);
-    void SelectPlaylist(Playlist* playlist);
     void GetWindowSizeForImage(RECT& rrc);
     void ResizeForImage();
     void ManualZoom(float mod, float absolute = 0.0);
@@ -108,7 +107,6 @@ public:
     void HandleMenuCommand(unsigned int uIDItem);
     void UpdateWindowSizeInfo();
     void _TouchSizeEventTimestamp();
-    ~WindowManager();
     
 };
 
