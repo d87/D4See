@@ -35,7 +35,7 @@ VOID OnPaint() //HDC hdc)
 {
     using namespace std::chrono_literals;
 
-    ImageContainer* frame = gWinMgr.frame;
+    std::shared_ptr<ImageContainer>& frame = gWinMgr.frame;
 
     if (frame) {
 
@@ -357,7 +357,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     );
     hr = pD2DFactory->CreateHwndRenderTarget(props, D2D1::HwndRenderTargetProperties(hWnd, size), &pRenderTarget);
     
-    gWinMgr.SelectImage(new ImageContainer(hWnd, playlist->Current()->path, playlist->Current()->format));
+    gWinMgr.SelectImage(std::make_shared<ImageContainer>(hWnd, playlist->Current()->path, playlist->Current()->format));
     gWinMgr.frame->threadInitFinished.wait();
     gWinMgr.ResizeForImage();
 
@@ -400,7 +400,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                 case WM_FRAMEERROR:
                 case WM_FRAMEREADY: {
                     ImageContainer* f = (ImageContainer*)msg.wParam;
-                    if (f == gWinMgr.frame) {
+                    if (f == gWinMgr.frame.get()) {
                         //gWinMgr.newImagePending = true;
                         //RedrawWindow(hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE);
                         LOG("Accepted WM_FRAMEREADY for {0}", wide_to_utf8(f->filename));
@@ -427,7 +427,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
                     gWinMgr.SelectPlaylist(playlist);
 
                     auto cur = playlist->Current();
-                    gWinMgr.SelectImage(new ImageContainer(hWnd, cur->path, cur->format));
+                    gWinMgr.SelectImage(std::make_shared<ImageContainer>(hWnd, cur->path, cur->format));
 
                     break;
                 }
@@ -444,7 +444,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         auto delta = now - prevTime;
 
         if (gWinMgr.frame) {
-            ImageContainer* frame = gWinMgr.frame;
+            std::shared_ptr<ImageContainer>& frame = gWinMgr.frame;
             if (!frame->isAnimated) {
                 if (frame->decoderBatchId != frame->drawId) {
                     LOG("Batch Ids: {0} - {1}", frame->drawId, frame->decoderBatchId);

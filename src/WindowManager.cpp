@@ -13,8 +13,8 @@ void WindowManager::StopTimer(UINT_PTR id) {
 
 WindowManager::~WindowManager() {
     if (playlist) delete playlist;
-    if (frame) delete frame;
-    if (frame_prefetch) delete frame_prefetch;
+    //if (frame) delete frame;
+    //if (frame_prefetch) delete frame_prefetch;
 }
 
 //void ClearWindowForFrame(HWND hWnd, ImageContainer* f) {
@@ -53,12 +53,12 @@ void WindowManager::ShowPrefetch() {
 }
 
 void WindowManager::DiscardPrefetch() {
-    if (frame_prefetch)
-        delete frame_prefetch;
+    //if (frame_prefetch)
+        //delete frame_prefetch;
     frame_prefetch = nullptr;
 }
 
-void WindowManager::StartPrefetch(ImageContainer* f) {
+void WindowManager::StartPrefetch(std::shared_ptr<ImageContainer> f) {
     frame_prefetch = f;
     // Start 2 minute timer
     SetTimer(hWnd, D4S_PREFETCH_TIMEOUT, 120000, NULL);
@@ -94,11 +94,11 @@ void WindowManager::LoadImageFromPlaylist(int prefetchDir) {
         }
         else { // Changed direction or jumped more than 1
             DiscardPrefetch();
-            SelectImage(new ImageContainer(hWnd, cur->path, cur->format));
+            SelectImage(std::make_shared<ImageContainer>(hWnd, cur->path, cur->format));
         }
     }
     if (following) {
-        StartPrefetch(new ImageContainer(hWnd, following->path, following->format));
+        StartPrefetch(std::make_shared<ImageContainer>(hWnd, following->path, following->format));
     }
     else {
         frame_prefetch = nullptr;
@@ -245,11 +245,7 @@ void WindowManager::ToggleBorderless(int doRedraw) {
     }
 }
 
-void WindowManager::SelectImage(ImageContainer* f) {
-    if (frame != nullptr) {
-        delete frame;
-    }
-
+void WindowManager::SelectImage(std::shared_ptr<ImageContainer> f) {
     LOG_DEBUG("<<<<<<< FRAME SWITCH >>>>>>>");
     //LOG_DEBUG(" -- {0} --", f->filename);
     frame = f;
@@ -662,7 +658,7 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             if (filepath != L"") {
                 auto pl = new Playlist(filepath);
                 SelectPlaylist(pl);
-                SelectImage(new ImageContainer(hWnd, pl->Current()->path, pl->Current()->format));
+                SelectImage(std::make_shared<ImageContainer>(hWnd, pl->Current()->path, pl->Current()->format));
                 //std::cout << filepath.c_str() << std::endl;
             }
             break;

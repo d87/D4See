@@ -34,8 +34,8 @@ struct WINDOW_SAVED_DATA {
 class WindowManager {
 public:
     HWND hWnd;
-    ImageContainer* frame = nullptr;
-    ImageContainer* frame_prefetch = nullptr; // prefecth container
+    std::shared_ptr<ImageContainer> frame = nullptr;
+    std::shared_ptr<ImageContainer> frame_prefetch = nullptr; // prefecth container
     Playlist* playlist = nullptr;
     PlaylistSortMethod sortMethod = PlaylistSortMethod::ByName;
     D4See::InputHandler input;
@@ -81,11 +81,11 @@ public:
     void NextImage();
     void PreviousImage();
     void LoadImageFromPlaylist(int prefetchDir);
-    void StartPrefetch(ImageContainer* f);
+    void StartPrefetch(std::shared_ptr<ImageContainer> f);
     void ShowPrefetch();
     void LimitPanOffset();
     void DiscardPrefetch();
-    void SelectImage(ImageContainer* f);
+    void SelectImage(std::shared_ptr<ImageContainer> f);
     void SelectPlaylist(Playlist* playlist);
     void GetWindowSizeForImage(RECT& rrc);
     void ResizeForImage();
