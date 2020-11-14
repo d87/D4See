@@ -55,7 +55,7 @@ class ImageContainer {
 		int subimagesReady = 0; // Amount of frames fully decoded into DIBs.
 								// Should be the the upper limit for animation while decoding is still in progress
 
-		DecodeBuffer *image; // Abstraction of OIIO file decoding
+		DecodeBuffer image;
 		bool isAnimated = false;
 
 		std::atomic<ThreadState> thread_state { ThreadState::Uninitialized };
@@ -74,6 +74,7 @@ class ImageContainer {
 		ImageContainer(HWND hWnd, const std::wstring& filename, ImageFormat format);
 		~ImageContainer();
 		void _Init(HWND hWnd);
+		void Decode();
 		void OpenFile(const std::wstring& filename, ImageFormat format);
 		bool AdvanceAnimation(std::chrono::duration<float> elapsed);
 		//bool PrevSubimage();

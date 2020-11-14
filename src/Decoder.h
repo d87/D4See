@@ -1,5 +1,6 @@
 #pragma once
 #include "ImageFormats.h"
+#include "D4See.h"
 #include <d2d1.h>
 #include <stdint.h>
 #include <vector>

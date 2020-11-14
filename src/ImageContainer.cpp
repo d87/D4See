@@ -32,45 +32,34 @@ ImageContainer::~ImageContainer() {
         if (it->pBitmap)
             it->pBitmap->Release();
     }
-
-    if (image)
-        delete image;
 }
 
-void DecodingWork(ImageContainer *self) {
-
-    
-    self->image = new DecodeBuffer();
-    
-
-    DecodeBuffer* image = self->image;
-
-    bool threadInitDone = false;
+void ImageContainer::Decode() {
 
     try {
-	    image->Open(self->filename, self->format);
+	    image.Open(this->filename, this->format);
 
-        self->width = image->spec.width;
-        self->height = image->spec.height;
-        self->internalRotation = image->spec.internalRotation;
-        self->isAnimated = image->spec.isAnimated;
+        this->width = image.spec.width;
+        this->height = image.spec.height;
+        this->internalRotation = image.spec.internalRotation;
+        this->isAnimated = image.spec.isAnimated;
     }
     catch (const std::runtime_error& e) {
 
-        self->width = 800;
-        self->height = 600;
-        self->thread_error = e.what();
-        self->thread_state = ThreadState::Error;
-        self->threadInitPromise.set_value(true);
-        PostMessage(self->hWnd, WM_FRAMEERROR, (WPARAM)self, NULL);
+        this->width = 800;
+        this->height = 600;
+        this->thread_error = e.what();
+        this->thread_state = ThreadState::Error;
+        this->threadInitPromise.set_value(true);
+        PostMessage(this->hWnd, WM_FRAMEERROR, (WPARAM)this, NULL);
         LOG_ERROR(e.what());
     }
 
-    while (self->thread_state < ThreadState::Done) {
+    while (this->thread_state < ThreadState::Done) {
 
-        int subimage = self->subimagesReady;
+        int subimage = this->subimagesReady;
 
-        self->bitmap_mutex.lock();
+        this->bitmap_mutex.lock();
 
         ImageFrame  img;
         memset(&img, 0, sizeof(ImageFrame));
@@ -80,9 +69,9 @@ void DecodingWork(ImageContainer *self) {
         // next scan line starts on a 4-byte memory boundary. The 'pitch' member
         // of the Image structure contains width of each scan line (in bytes).
 
-        img.width = image->spec.width;
-        img.height = image->spec.height;
-        img.pitch = ((image->spec.width * 32 + 31) & ~31) >> 3;
+        img.width = image.spec.width;
+        img.height = image.spec.height;
+        img.pitch = ((image.spec.width * 32 + 31) & ~31) >> 3;
         img.pPixels = NULL;
         img.pBitmap = nullptr;
 
@@ -99,9 +88,9 @@ void DecodingWork(ImageContainer *self) {
         );
 
         DecoderStatus status = InProgress;
-        if (image->decoder->GetDirectPassType() != NULL) {
+        if (image.decoder->GetDirectPassType() != NULL) {
 
-            ID2D1BitmapRenderTarget * pFrameRT= image->decoder->GetFrameD2D1BitmapRT();
+            ID2D1BitmapRenderTarget * pFrameRT= image.decoder->GetFrameD2D1BitmapRT();
 
 			ID2D1Bitmap* pFrameToBeSaved = nullptr;
 
@@ -127,9 +116,9 @@ void DecodingWork(ImageContainer *self) {
 
 			SafeRelease(pFrameToBeSaved);
 
-            image->curSubimage++;
+            image.curSubimage++;
             status = SubimageFinished;
-            image->decoder->PrepareNextFrameBitmapSource();
+            image.decoder->PrepareNextFrameBitmapSource();
         }
         else {
 
@@ -143,13 +132,13 @@ void DecodingWork(ImageContainer *self) {
 
         }
 
-        self->frame.push_back(img);
-        ImageFrame* pImage = &self->frame[subimage];
+        this->frame.push_back(img);
+        ImageFrame* pImage = &this->frame[subimage];
 
         using namespace std::chrono_literals;
-        pImage->frameDelay = std::chrono::duration<float>(image->decoder->GetCurrentFrameDelay());
+        pImage->frameDelay = std::chrono::duration<float>(image.decoder->GetCurrentFrameDelay());
 
-        self->bitmap_mutex.unlock();
+        this->bitmap_mutex.unlock();
 
         long long numBytes = (long long)pImage->height * pImage->pitch;
         std::vector<BYTE> pixels(numBytes);
@@ -159,17 +148,16 @@ void DecodingWork(ImageContainer *self) {
 
         //GdiFlush(); // idk what it supposed to do, but it's causing a slowdown
 
-        if (!threadInitDone) {
-            threadInitDone = true;
-            self->curFrame = 0; // Set to 0 from -1
-            self->thread_state = ThreadState::Initialized;
-            self->threadInitPromise.set_value(true);
-            PostMessage(self->hWnd, WM_FRAMEREADY, (WPARAM)self, NULL);
+        if (this->thread_state == ThreadState::Uninitialized) {
+            this->curFrame = 0; // Set to 0 from -1
+            this->thread_state = ThreadState::Initialized;
+            this->threadInitPromise.set_value(true);
+            PostMessage(this->hWnd, WM_FRAMEREADY, (WPARAM)this, NULL);
         }
 
-        while (self->thread_state < ThreadState::Done && status == DecoderStatus::InProgress) {//&& !image->IsSubimageLoaded(subimage)) {
+        while (this->thread_state < ThreadState::Done && status == DecoderStatus::InProgress) {//&& !image.IsSubimageLoaded(subimage)) {
 
-            DecoderBatchReturns decodeInfo = image->PartialLoad(200000, true);
+            DecoderBatchReturns decodeInfo = image.PartialLoad(200000, true);
             status = decodeInfo.status;
             //LOG(status);
 
@@ -177,19 +165,19 @@ void DecodingWork(ImageContainer *self) {
             unsigned int yStart = decodeInfo.startLine;
             unsigned int yEnd = decodeInfo.endLine;
             int loadedScanlines = yEnd - yStart;
-            //Gdiplus::Rect rc(0, yStart, image->xres, loadedScanlines);
+            //Gdiplus::Rect rc(0, yStart, image.xres, loadedScanlines);
             //dib->LockBits(&rc, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &bitmapData);
 
 
             unsigned char* pRawBitmapOrig = &pImage->pPixels[(long long)yStart * pImage->pitch];
             unsigned char* pBatchStart = pRawBitmapOrig;
 
-            unsigned char* oiioBufferPointer = &image->pixels[(long long)yStart * image->spec.rowPitch];
+            unsigned char* oiioBufferPointer = &image.pixels[(long long)yStart * image.spec.rowPitch];
 
-            switch (image->spec.numChannels) {
+            switch (image.spec.numChannels) {
 
             case 3:
-                for (int i = 0; i < image->spec.width * loadedScanlines; i++) {
+                for (int i = 0; i < image.spec.width * loadedScanlines; i++) {
                     pRawBitmapOrig[0] = oiioBufferPointer[2];
                     pRawBitmapOrig[1] = oiioBufferPointer[1];
                     pRawBitmapOrig[2] = oiioBufferPointer[0];
@@ -200,7 +188,7 @@ void DecodingWork(ImageContainer *self) {
                 break;
 
             case 4:
-                for (int i = 0; i < image->spec.width * loadedScanlines; i++) {
+                for (int i = 0; i < image.spec.width * loadedScanlines; i++) {
                     pRawBitmapOrig[0] = oiioBufferPointer[2];
                     pRawBitmapOrig[1] = oiioBufferPointer[1];
                     pRawBitmapOrig[2] = oiioBufferPointer[0];
@@ -211,7 +199,7 @@ void DecodingWork(ImageContainer *self) {
                 break;
 
             case 2:
-                for (int i = 0; i < image->spec.width * loadedScanlines; i++) {
+                for (int i = 0; i < image.spec.width * loadedScanlines; i++) {
                     pRawBitmapOrig[0] = oiioBufferPointer[0];
                     pRawBitmapOrig[1] = oiioBufferPointer[0];
                     pRawBitmapOrig[2] = oiioBufferPointer[0];
@@ -222,7 +210,7 @@ void DecodingWork(ImageContainer *self) {
                 break;
 
             case 1:
-                for (int i = 0; i < image->spec.width * loadedScanlines; i++) {
+                for (int i = 0; i < image.spec.width * loadedScanlines; i++) {
                     pRawBitmapOrig[0] = oiioBufferPointer[0];
                     pRawBitmapOrig[1] = oiioBufferPointer[0];
                     pRawBitmapOrig[2] = oiioBufferPointer[0];
@@ -233,7 +221,7 @@ void DecodingWork(ImageContainer *self) {
                 break;
             }
 
-            self->decoderBatchId++;
+            this->decoderBatchId++;
 
             D2D1_RECT_U rect;
             rect.left = 0;
@@ -242,26 +230,26 @@ void DecodingWork(ImageContainer *self) {
             rect.bottom = yEnd;
 
             
-            //self->bitmap_mutex.lock();
+            //this->bitmap_mutex.lock();
             pImage->pBitmap->CopyFromMemory(&rect, pBatchStart, pImage->pitch);
-            //self->bitmap_mutex.unlock();
+            //this->bitmap_mutex.unlock();
         }
 
-        //self->thread_state = ThreadState::BatchReady;
+        //this->thread_state = ThreadState::BatchReady;
 
-        self->counter_mutex.lock();
-        self->subimagesReady++;
-        self->numSubimages = self->subimagesReady;
-        //if (self->subimagesReady > 1) {
-        //    self->isAnimated = true;
+        this->counter_mutex.lock();
+        this->subimagesReady++;
+        this->numSubimages = this->subimagesReady;
+        //if (this->subimagesReady > 1) {
+        //    this->isAnimated = true;
         //}
 
-        self->counter_mutex.unlock();
+        this->counter_mutex.unlock();
 
-        if (self->isAnimated) {
-            if (self->frameTimeElapsed < 0s) {
-                //self->PrevSubimage(); // seeking to previous frame, which is the same first frame at this point anyway
-                self->frameTimeElapsed = pImage->frameDelay; // Will start advancing animation
+        if (this->isAnimated) {
+            if (this->frameTimeElapsed < 0s) {
+                //this->PrevSubimage(); // seeking to previous frame, which is the same first frame at this point anyway
+                this->frameTimeElapsed = pImage->frameDelay; // Will start advancing animation
 
                 //std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
                 //std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
@@ -269,25 +257,23 @@ void DecodingWork(ImageContainer *self) {
         }
         
 
-        if (image->IsFullyLoaded()) {
+        if (image.IsFullyLoaded()) {
             
-            self->thread_state = ThreadState::Done;
+            this->thread_state = ThreadState::Done;
         }
         //else {
-        //    self->frame.resize(image->numSubimages);
+        //    this->frame.resize(image->numSubimages);
         //}
 
        
     }
-
-    delete self->image;
-    self->image= nullptr;
-
-	//self->threadPromise.set_value(true);
+	//this->threadPromise.set_value(true);
 }
 
 void ImageContainer::StartThread() {
-    decoderThread = std::thread(DecodingWork, this);  
+    decoderThread = std::thread([this]() {
+        this->Decode();
+    });
     threadInitFinished = threadInitPromise.get_future();
 }
 
@@ -322,7 +308,7 @@ bool ImageContainer::IsSubimageReady(int si) {
     int siReady = subimagesReady;
     counter_mutex.unlock();
     if (si >= siReady) {
-        if (image != nullptr) { // when all subimages are ready is's null
+        if (thread_state != ThreadState::Done) { // when all subimages are ready is's null
             return false; // Next frame isn't ready yet
         }
     }
@@ -348,10 +334,12 @@ bool ImageContainer::AdvanceAnimation(std::chrono::duration<float> elapsed) {
 
     auto activeSubimage = GetActiveSubimage();
 
-    if (frameTimeElapsed >= activeSubimage->frameDelay) {
-        frameTimeElapsed -= activeSubimage->frameDelay;
-        if (NextSubimage()) {
-            return true;
+    if (activeSubimage) {
+        if (frameTimeElapsed >= activeSubimage->frameDelay) {
+            frameTimeElapsed -= activeSubimage->frameDelay;
+            if (NextSubimage()) {
+                return true;
+            }
         }
     }
     return false;
