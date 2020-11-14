@@ -9,6 +9,10 @@
 #include "ImageFormats.h"
 #include "error.h"
 
+// For natural sort function StrCmpLogicalW
+#include <shlwapi.h>
+#pragma comment(lib, "Shlwapi.lib")
+
 enum class PlaylistSortMethod {
 	ByName,
 	ByDateModified
@@ -44,6 +48,7 @@ class Playlist {
 		void Refresh();
 		int GeneratePlaylist(const std::wstring& initialFile);
 		void Clear();
+		void Sort();
 		int OpenPrevDir();
 		int OpenNextDir();
 		void SetSortingMethod(PlaylistSortMethod sortMethod);

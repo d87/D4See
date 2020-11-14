@@ -208,11 +208,7 @@ int Playlist::GeneratePlaylist(const std::wstring& initialPathStr) {
 		return NULL;
 	}
 
-	if (sortMethod == PlaylistSortMethod::ByDateModified) {
-		std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
-			return a.tmFileWrite < b.tmFileWrite;
-		});
-	}	
+	this->Sort();
 
 	if (initialFileSpecified)
 		MoveCursor(initialPathStr);
@@ -274,6 +270,22 @@ int Playlist::OpenNextDir() {
 	return 0;
 }
 
+void Playlist::Sort(){
+	auto naturalSort = [](PlaylistEntry& a, PlaylistEntry& b) {
+		return StrCmpLogicalW(a.filename.c_str(), b.filename.c_str()) < 0;
+	};
+
+	if (sortMethod == PlaylistSortMethod::ByDateModified) {
+		auto lastModifiedSort = [&naturalSort](PlaylistEntry& a, PlaylistEntry& b) {
+			return (a.tmFileWrite == b.tmFileWrite) ? naturalSort(a, b) : (a.tmFileWrite < b.tmFileWrite);
+		};
+		std::sort(list.begin(), list.end(), lastModifiedSort);
+	}
+	else {
+		std::sort(list.begin(), list.end(), naturalSort);
+	}
+}
+
 
 void Playlist::SetSortingMethod(PlaylistSortMethod newSortMethod) {
 	sortMethod = newSortMethod;
@@ -282,16 +294,8 @@ void Playlist::SetSortingMethod(PlaylistSortMethod newSortMethod) {
 		auto cur = Current();
 		std::wstring oldCursor = cur->path;
 
-		if (newSortMethod == PlaylistSortMethod::ByDateModified) {
-			std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
-				return a.tmFileWrite < b.tmFileWrite;
-			});
-		}
-		else {
-			std::sort(list.begin(), list.end(), [](PlaylistEntry a, PlaylistEntry b) {
-				return a.filename < b.filename;
-			});
-		}
+		this->Sort();
+		
 		MoveCursor(oldCursor);
 	}
 }

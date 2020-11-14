@@ -7,9 +7,14 @@
 #include <setjmp.h>
 #include <libexif/exif-data.h>
 #include <libexif/exif-loader.h>
-#pragma(lib, "jpeg.lib")
-#pragma(lib, "turbojpeg.lib")
-#pragma(lib, "libexif.lib")
+#ifdef _DEBUG
+	#pragma comment(lib, "jpegd.lib")
+	#pragma comment(lib, "turbojpegd.lib")
+#else
+	#pragma comment(lib, "jpeg.lib")
+	#pragma comment(lib, "turbojpeg.lib")
+#endif
+#pragma comment(lib, "libexif.lib")
 
 namespace D4See {
 

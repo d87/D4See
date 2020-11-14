@@ -367,7 +367,6 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
     RegisterActions();
     LoadScript(L, "bindings.lua");
 
-
     //IsExtensionAssociated(".png1231541", "D4See.png");
 
 
