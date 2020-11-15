@@ -93,12 +93,13 @@ public:
     void ToggleAlwaysOnTop();
     void ToggleFullscreen();
     void ToggleBorderless(int doRedraw = 1);
-    void WriteOrigin();
+    //void WriteOrigin();
     void ReadOrigin();
 
     void RestoreConfigValues(D4See::Configuration& config);
 
     void UpdateOrigin();
+    void UpdateOriginFromWindow(HWND hWnd);
     bool WasGeneratingEvents();
     void Pan(int x, int y);
     bool SaveWindowParams(WINDOW_SAVED_DATA* cont);

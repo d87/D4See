@@ -321,7 +321,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR lpCmdLine, INT iCmdSho
         }
     }
 
-    gWinMgr.ReadOrigin();
+    gWinMgr.UpdateOriginFromWindow(GetForegroundWindow());
         
     //HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory);
     HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, &pD2DFactory);
@@ -565,7 +565,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message,
         RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE);
         if (!gWinMgr.WasGeneratingEvents()) {
             gWinMgr.UpdateOrigin();
-            gWinMgr.WriteOrigin();
+            //gWinMgr.WriteOrigin();
         }
         return 0;
     }

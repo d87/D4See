@@ -327,21 +327,27 @@ void WindowManager::ReadOrigin() {
     }    
 }
 
-void WindowManager::WriteOrigin() {
-    POINT origin;
-    origin.x = x_origin;
-    origin.y = y_origin;
-
-    fs::path root = GetExecutableDir();
-    fs::path file("origin.data");
-    fs::path path = root / file;
-    
-    write_file(path.string(), (const char*)&origin, sizeof(POINT));
-}
+//void WindowManager::WriteOrigin() {
+//    POINT origin;
+//    origin.x = x_origin;
+//    origin.y = y_origin;
+//
+//    fs::path root = GetExecutableDir();
+//    fs::path file("origin.data");
+//    fs::path path = root / file;
+//    
+//    write_file(path.string(), (const char*)&origin, sizeof(POINT));
+//}
 
 void WindowManager::UpdateOrigin() {
+    UpdateOriginFromWindow(hWnd); // Update from our window's HWND
+}
+
+// Also used to get initial origin point from the toplevel window at launch
+void WindowManager::UpdateOriginFromWindow(HWND hWindow) {
+    if (hWindow == NULL) return;
     RECT wrc;
-    GetWindowRect(hWnd, &wrc);
+    GetWindowRect(hWindow, &wrc);
     int h = wrc.bottom - wrc.top;
     int w = wrc.right - wrc.left;
     x_origin = wrc.left + w / 2;
