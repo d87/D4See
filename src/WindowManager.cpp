@@ -177,7 +177,7 @@ void WindowManager::ToggleAlwaysOnTop() {
 void WindowManager::ToggleFullscreen() {
     if (!isFullscreen) {
         bool isCurrentlyFullscreen = SaveWindowParams(&this->stash);
-        
+
     }
 
     isFullscreen = !isFullscreen;
@@ -324,7 +324,7 @@ void WindowManager::ReadOrigin() {
         int mh = GetSystemMetrics(SM_CYSCREEN);
         x_origin = mw/2;
         y_origin = mh/2;
-    }    
+    }
 }
 
 //void WindowManager::WriteOrigin() {
@@ -335,7 +335,7 @@ void WindowManager::ReadOrigin() {
 //    fs::path root = GetExecutableDir();
 //    fs::path file("origin.data");
 //    fs::path path = root / file;
-//    
+//
 //    write_file(path.string(), (const char*)&origin, sizeof(POINT));
 //}
 
@@ -405,7 +405,7 @@ void WindowManager::ManualZoomToPoint(float mod, float absolute, int zoomPointX,
     float x_click_offset_native = (canvas.x_poffset + zoomPointX) / old_scale;
     float y_click_offset_native = (canvas.y_poffset + zoomPointY) / old_scale;
 
-    // floating point zoompoint to client 
+    // floating point zoompoint to client
     float fzpx = static_cast<float>(zoomPointX) / canvas.w_client;
     float fzpy = static_cast<float>(zoomPointY) / canvas.h_client;
 
@@ -436,7 +436,7 @@ void WindowManager::GetWindowSizeForImage(RECT& rrc) {
     // 1) Find appropriate monitor for origin point
     // 1a) Don't change origin unless window was manually moved
 
-    POINT origin; 
+    POINT origin;
     origin.x = x_origin;
     origin.y = y_origin;
 
@@ -529,7 +529,7 @@ void WindowManager::GetWindowSizeForImage(RECT& rrc) {
 
     // if zoom lock is on it should override all autoscaling
     // manual scaling should start from current effective scale
-    
+
     // ---------
     // 2b) Calculate new window coords around that origin
 
@@ -540,7 +540,7 @@ void WindowManager::GetWindowSizeForImage(RECT& rrc) {
     int cut_height = std::min(canvas.h_scaled, h_screenwa);
 
     RECT new_client_area;
-    
+
     new_client_area.left = origin.x - cut_width / 2;
     new_client_area.right = (origin.x + cut_width) - cut_width / 2;
     new_client_area.top = origin.y - cut_height / 2;
@@ -568,7 +568,7 @@ void WindowManager::GetWindowSizeForImage(RECT& rrc) {
         int diff = new_window_area.right - screenrc.right;
         new_window_area.right -= diff;
         new_window_area.left-= diff;
-    }    
+    }
 
     if (new_window_area.left < screenrc.left) {
         int diff = new_window_area.left - screenrc.left;
@@ -593,7 +593,7 @@ void WindowManager::GetWindowSizeForImage(RECT& rrc) {
     rrc.right = new_window_area.right;
     rrc.bottom = new_window_area.bottom;
 
-    
+
 }
 
 void WindowManager::ResizeForImage() {
@@ -636,7 +636,7 @@ void WindowManager::ShowPopupMenu(POINT& p) {
     CheckMenuItem(popupMenu, ID_SORTBY_NAME, MF_BYCOMMAND | BOOLCOMMANDCHECK(sortMethod == PlaylistSortMethod::ByName));
     CheckMenuItem(popupMenu, ID_SORTBY_DATEMODIFIED, MF_BYCOMMAND | BOOLCOMMANDCHECK(sortMethod == PlaylistSortMethod::ByDateModified));
     EnableMenuItem(popupMenu, ID_ACTUALSIZE, MF_BYCOMMAND | BOOLCOMMANDENABLE(canvas.scale_manual != 1.0f));
-    
+
 
 
     TrackPopupMenu(popupMenu, TPM_LEFTBUTTON, p.x, p.y, 0, hWnd, 0);
@@ -670,6 +670,13 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             ManualZoom(-0.10f);
             break;
         }
+        case ID_ROTATECW: {
+            canvas.CycleRotation(+1);
+
+            ResizeForImage();
+            Redraw(RDW_ERASE);
+            break;
+        }
         case ID_SHRINKTOWIDTH: {
             shrinkToScreenWidth = !shrinkToScreenWidth;
             ResizeForImage();
@@ -693,7 +700,7 @@ void WindowManager::HandleMenuCommand(unsigned int uIDItem) {
             ResizeForImage();
             Redraw(RDW_ERASE);
             break;
-        }    
+        }
         case ID_ALWAYSONTOP: {
             ToggleAlwaysOnTop();
             break;
