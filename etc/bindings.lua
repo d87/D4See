@@ -21,11 +21,12 @@ BindAction("PAGEUP", "PREVIMAGE");
 BindAction("MWHEELUP", "PREVIMAGE");
 
 BindAction("SHIFT-PAGEDOWN", "NEXTDIR");
+BindAction("N", "NEXTDIR");
 BindAction("SHIFT-PAGEUP", "PREVDIR");
 
 BindAction("HOME", "FIRSTIMAGE");
 BindAction("END", "LASTIMAGE");
-BindAction("CTRL-L", "ZOOMLOCK");
+BindAction("L", "ZOOMLOCK");
 BindAction("T", "THUMBNAILVIEW");
 BindAction("CTRL-SUBTRACT", "TOGGLESCREENFIT");
 

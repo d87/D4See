@@ -36,6 +36,12 @@ bool TGADecoder::Open(FILE* f, const wchar_t* filename, ImageFormat format) {
 		return NULL;
 	}
 
+	if (TGA_IS_ENCODED(m_tga)) { // For some reason RLE tgas crash the lib
+		Close();
+		throw std::runtime_error("TGA: RLE is not supported");
+		return NULL;
+	}
+
 	if ((data->flags & TGA_IMAGE_ID) && m_tga->hdr.id_len != 0) {
 		if (TGAReadImageId(m_tga, &data->img_id) != TGA_OK) {
 			Close();
